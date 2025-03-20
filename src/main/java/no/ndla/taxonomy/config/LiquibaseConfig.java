@@ -102,7 +102,6 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
         liquibase.setLiquibaseSchema(schema);
         liquibase.setChangeLogParameters(Map.of("schema", schema));
         liquibase.setChangeLog(liquibaseProperties.getChangeLog());
-        liquibase.setContexts(liquibaseProperties.getContexts());
         return liquibase;
     }
 

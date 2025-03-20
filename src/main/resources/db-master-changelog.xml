@@ -14,601 +14,150 @@
     <include file="db-migrate-from-flyway.xml"/>
 
     <changeSet id="20190614 topic_resource_types" author="janespen">
-        <createTable tableName="topic_resource_type">
-            <column name="id" type="serial"><constraints primaryKey="true" /></column>
-            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="topic_resource_type_public_id" /></column>
-            <column name="topic_id" type="integer"><constraints referencedTableName="topic" referencedColumnNames="id" foreignKeyName="resource_type_topic_id_fkey"/></column>
-            <column name="resource_type_id" type="integer"><constraints referencedTableName="resource_type" referencedColumnNames="id" foreignKeyName="topic_resource_type_id_fkey"/></column>
-        </createTable>
-        <addUniqueConstraint tableName="topic_resource_type" columnNames="topic_id,resource_type_id" constraintName="topic_resource_type_unique" />
+        <validCheckSum>9:8ec4652ab1fb16040f393af9ea1854e6</validCheckSum>
     </changeSet>
 
     <changeSet id="20190622 create topic_tree_by_subject_id_view view" author="Jon-Eirik Pettersen">
         <validCheckSum>8:3d5d0d5752c5e425e50ff075d9169180</validCheckSum>
-        <!-- Modified query from old code migrated to a view for usage in queries -->
-        <createView viewName="topic_tree_by_subject_id_view" replaceIfExists="true">
-            WITH RECURSIVE topic_tree(topic_id, connection_id, parent_topic_id, topic_rank, topic_level, subject_id) AS
-            (
-
-            SELECT st.topic_id, 0 AS connection_id, 0 AS parent_topic_id, st.rank AS topic_rank, 0 AS topic_level,
-            st.subject_id AS subject_id
-            FROM subject_topic st
-
-            UNION ALL
-
-            SELECT ts.subtopic_id, ts.id AS connection_id, ts.topic_id, ts.rank as topic_rank, topic_level + 1,
-            topic_tree.subject_id subject_id
-            FROM topic_subtopic ts
-            INNER JOIN topic_tree ON ts.topic_id = topic_tree.topic_id)
-            SELECT topic_tree.* FROM topic_tree
-            ORDER BY topic_level;
-        </createView>
+        <validCheckSum>9:0134d4abe977adeae9e898aa3ff35358</validCheckSum>
     </changeSet>
 
     <changeSet id="20190623 create topic_tree_by_topic_id_view view" author="Jon-Eirik Pettersen">
-        <createView viewName="topic_tree_by_topic_id_view" replaceIfExists="true">
-            WITH RECURSIVE topic_tree(root_topic_id, topic_id, parent_topic_id, topic_rank, topic_level) AS (
-            SELECT ts_one.topic_id, ts_one.topic_id, 0 AS parent_topic_id, ts_one.rank AS topic_rank, 0 AS topic_level
-            FROM topic_subtopic ts_one
-            UNION ALL
-            SELECT topic_tree.root_topic_id, ts_next.subtopic_id, ts_next.topic_id, ts_next.rank AS topic_rank,
-            topic_level + 1
-            FROM topic_subtopic ts_next
-            INNER JOIN topic_tree on ts_next.topic_id = topic_tree.topic_id)
-            SELECT CONCAT(root_topic_id, '-', parent_topic_id, '-', topic_id) AS id, root_topic_id, topic_id,
-            parent_topic_id, MIN(topic_rank) AS topic_rank, MIN(topic_level) AS topic_level FROM topic_tree GROUP BY
-            root_topic_id,topic_id,parent_topic_id;
-        </createView>
+        <validCheckSum>9:7a8818319c684718bcc96a31024b4706</validCheckSum>
     </changeSet>
 
     <changeSet id="20190924 disable update triggers for cached_url before removing shared topics"
                author="Jon-Eirik Pettersen">
-        <sql splitStatements="false" stripComments="false">
-            DROP TRIGGER refresh_paths ON subject;
-            DROP TRIGGER refresh_paths ON topic;
-            DROP TRIGGER refresh_paths ON resource;
-            DROP TRIGGER refresh_paths ON subject_topic;
-            DROP TRIGGER refresh_paths ON topic_subtopic;
-            DROP TRIGGER refresh_paths ON topic_resource;
-        </sql>
+        <validCheckSum>9:ff3d4dbe87b49d2875d80666c3b2e8ab</validCheckSum>
     </changeSet>
 
     <changeSet id="20190924 clone and remove shared topics" author="Jon-Eirik Pettersen">
-        <customChange class="no.ndla.taxonomy.migration.RemoveSharedTopicsSqlChange"/>
+        <validCheckSum>9:239e086d02a5549648fed84ba9f789a3</validCheckSum>
     </changeSet>
 
     <changeSet id="20190925 re-create cached_url without primary connection column" author="Jon-Eirik Pettersen">
-        <sql>
-            DROP MATERIALIZED VIEW cached_url;
-
-            CREATE MATERIALIZED VIEW cached_url as (
-            WITH RECURSIVE tree (id, public_id, name, parent_public_id, level, path) AS (
-            SELECT
-            contexts.id,
-            contexts.public_id,
-            contexts.name,
-            cast(NULL AS VARCHAR) AS parent_public_id,
-            0 AS level,
-            '/' || substr(contexts.public_id, 5) AS path
-            FROM
-            (
-            SELECT
-            id,
-            public_id,
-            name
-            FROM subject
-
-            UNION ALL
-
-            SELECT
-            id,
-            public_id,
-            name
-            FROM topic
-            WHERE context = TRUE
-            ) contexts
-
-            UNION ALL
-
-            SELECT
-            child.id,
-            child.public_id,
-            child.name,
-            parent.public_id AS parent_public_id,
-            parent.level + 1 AS level,
-            parent.path || '/' || substr(child.public_id, 5)
-            FROM
-            (
-            SELECT
-            r.id,
-            r.public_id,
-            t.public_id AS parent_public_id,
-            r.name
-            FROM
-            resource r
-            INNER JOIN topic_resource tr ON tr.resource_id = r.id
-            INNER JOIN topic t ON tr.topic_id = t.id
-
-            UNION ALL
-
-            SELECT
-            st.id,
-            st.public_id,
-            t.public_id AS parent_public_id,
-            st.name
-            FROM topic t
-            INNER JOIN topic_subtopic tst ON t.id = tst.topic_id
-            INNER JOIN topic st ON tst.subtopic_id = st.id
-
-            UNION ALL
-
-            SELECT
-            t.id,
-            t.public_id,
-            s.public_id AS parent_public_id,
-            t.name
-            FROM
-            subject s
-            INNER JOIN subject_topic st ON s.id = st.subject_id
-            INNER JOIN topic t ON st.topic_id = t.id
-            ) child
-            INNER JOIN tree AS parent ON parent.public_id = child.parent_public_id
-            WHERE 1 = 1
-            )
-
-            SELECT
-            id,
-            public_id,
-            path,
-            parent_public_id
-            FROM
-            tree t
-            );
-        </sql>
-        <sql>
-            CREATE UNIQUE INDEX cached_url_path_idx ON cached_url (path);
-        </sql>
-        <sql>
-            CREATE INDEX cached_url_public_id_idx ON cached_url (public_id);
-        </sql>
+        <validCheckSum>9:dc2f84bf2f4500dd5255cda063115a30</validCheckSum>
     </changeSet>
 
     <changeSet id="20190925 re-enable update triggers for cached_url" author="Jon-Eirik Pettersen">
-        <sql splitStatements="false" stripComments="false">
-            create trigger refresh_paths
-            after insert or update or delete or truncate
-            on subject
-            execute procedure update_url_cache();
-
-            create trigger refresh_paths
-            after insert or update or delete or truncate
-            on topic
-            execute procedure update_url_cache();
-
-            create trigger refresh_paths
-            after insert or update or delete or truncate
-            on resource
-            execute procedure update_url_cache();
-
-            create trigger refresh_paths
-            after insert or update or delete or truncate
-            on subject_topic
-            execute procedure update_url_cache();
-
-            create trigger refresh_paths
-            after insert or update or delete or truncate
-            on topic_subtopic
-            execute procedure update_url_cache();
-
-            create trigger refresh_paths
-            after insert or update or delete or truncate
-            on topic_resource
-            execute procedure update_url_cache();
-        </sql>
-        <sql>
-            REFRESH MATERIALIZED VIEW CONCURRENTLY cached_url;
-        </sql>
+        <validCheckSum>9:01f246179b1b8a227cb73f432ac0ff9c</validCheckSum>
     </changeSet>
 
     <changeSet id="20190925 remove is_primary column from connection tables" author="Jon-Eirik Pettersen">
-        <dropColumn tableName="subject_topic" columnName="is_primary"/>
-        <dropColumn tableName="topic_subtopic" columnName="is_primary"/>
-        <dropColumn tableName="topic_resource" columnName="is_primary"/>
+        <validCheckSum>9:a727475d79d6633e5fa1603a7447aa49</validCheckSum>
     </changeSet>
 
     <changeSet id="20190925 add constraints to prevent shared topics or resources from being created"
                author="Jon-Eirik Pettersen">
-        <addUniqueConstraint tableName="topic_resource" columnNames="resource_id"
-                             constraintName="unique_topic_resource_resource_id"/>
-        <addUniqueConstraint tableName="topic_subtopic" columnNames="subtopic_id"
-                             constraintName="unique_topic_subtopic_subtopic_id"/>
-        <addUniqueConstraint tableName="subject_topic" columnNames="topic_id"
-                             constraintName="unique_subject_topic_topic_id"/>
-
-        <sql stripComments="false" splitStatements="false">
-            CREATE FUNCTION check_subject_topic_uniqueness() RETURNS trigger AS $$
-            BEGIN
-            IF EXISTS(SELECT child_topic_id FROM (SELECT id, topic_id AS child_topic_id FROM subject_topic UNION SELECT
-            id, subtopic_id AS child_topic_id FROM topic_subtopic) AS children GROUP BY child_topic_id HAVING COUNT(*) >
-            1) THEN
-            RAISE EXCEPTION 'More than one connection to parent object found';
-            END IF;
-
-            RETURN NULL;
-            END;
-            $$
-            LANGUAGE plpgsql
-        </sql>
-
-        <sql>
-            CREATE TRIGGER check_subject_topic_uniqueness_on_topic_subtopic AFTER INSERT OR UPDATE ON topic_subtopic
-            EXECUTE PROCEDURE check_subject_topic_uniqueness();
-        </sql>
-        <sql>
-            CREATE TRIGGER check_subject_topic_uniqueness_on_subject_topic AFTER INSERT OR UPDATE ON subject_topic
-            EXECUTE PROCEDURE check_subject_topic_uniqueness();
-        </sql>
+        <validCheckSum>9:70d70ca56b593fccd575a1bbafb2a1f3</validCheckSum>
     </changeSet>
 
     <changeSet id="20191114 re-add primary field to topic_resources" author="Jon-Eirik Pettersen">
-        <addColumn tableName="topic_resource">
-            <column name="is_primary" type="boolean" defaultValueBoolean="true">
-                <constraints nullable="false"/>
-            </column>
-        </addColumn>
+        <validCheckSum>9:938ffc9c03546741c124b04f3ba86314</validCheckSum>
     </changeSet>
 
     <changeSet id="20191114 remove update triggers before merging resources" author="Jon-Eirik Pettersen">
-        <sql splitStatements="false" stripComments="false">
-            DROP TRIGGER IF EXISTS refresh_paths ON subject;
-            DROP TRIGGER IF EXISTS refresh_paths ON topic;
-            DROP TRIGGER IF EXISTS refresh_paths ON resource;
-            DROP TRIGGER IF EXISTS refresh_paths ON subject_topic;
-            DROP TRIGGER IF EXISTS refresh_paths ON topic_subtopic;
-            DROP TRIGGER IF EXISTS refresh_paths ON topic_resource;
-        </sql>
+        <validCheckSum>9:767379ae6faeb486a7480cb21e2e174f</validCheckSum>
     </changeSet>
 
     <changeSet id="20191114 remove unique constraints for topic_resource" author="Jon-Eirik Pettersen">
-        <dropUniqueConstraint tableName="topic_resource" constraintName="unique_topic_resource_resource_id"/>
+        <validCheckSum>9:44f44d5277367e5f1bebde2fbb1266ec</validCheckSum>
     </changeSet>
 
     <changeSet id="20191115 merge resources with shared content" author="Jon-Eirik Pettersen">
-        <customChange class="no.ndla.taxonomy.migration.MergeSharedContentResourcesSqlChange"/>
+        <validCheckSum>9:0b4098efb0dfa5dcaf4acab348766bcb</validCheckSum>
     </changeSet>
 
     <changeSet id="20191115 set single primary resource connection" author="Jon-Eirik Pettersen">
-        <customChange class="no.ndla.taxonomy.migration.SetSinglePrimaryConnectionOnResourcesSqlChange"/>
+        <validCheckSum>9:e433630656857341bfce66598f45b7d7</validCheckSum>
     </changeSet>
 
     <changeSet id="20191115 re-create cached_url and update triggers" author="Jon-Eirik Pettersen">
-        <sql>
-            DROP MATERIALIZED VIEW cached_url;
-
-            CREATE MATERIALIZED VIEW cached_url as (
-            WITH RECURSIVE tree (id, public_id, name, parent_public_id, level, is_primary, path) AS (
-            SELECT
-            contexts.id,
-            contexts.public_id,
-            contexts.name,
-            cast(NULL AS VARCHAR) AS parent_public_id,
-            0 AS level,
-            TRUE AS is_primary,
-            '/' || substr(contexts.public_id, 5) AS path
-            FROM
-            (
-            SELECT
-            id,
-            public_id,
-            name
-            FROM subject
-
-            UNION ALL
-
-            SELECT
-            id,
-            public_id,
-            name
-            FROM topic
-            WHERE context = TRUE
-            ) contexts
-
-            UNION ALL
-
-            SELECT
-            child.id,
-            child.public_id,
-            child.name,
-            parent.public_id AS parent_public_id,
-            parent.level + 1 AS level,
-            child.is_primary AND parent.is_primary AS is_primary,
-            parent.path || '/' || substr(child.public_id, 5)
-            FROM
-            (
-            SELECT
-            r.id,
-            r.public_id,
-            t.public_id AS parent_public_id,
-            r.name,
-            tr.is_primary AS is_primary
-            FROM
-            resource r
-            INNER JOIN topic_resource tr ON tr.resource_id = r.id
-            INNER JOIN topic t ON tr.topic_id = t.id
-
-            UNION ALL
-
-            SELECT
-            st.id,
-            st.public_id,
-            t.public_id AS parent_public_id,
-            st.name,
-            TRUE AS is_primary
-            FROM topic t
-            INNER JOIN topic_subtopic tst ON t.id = tst.topic_id
-            INNER JOIN topic st ON tst.subtopic_id = st.id
-
-            UNION ALL
-
-            SELECT
-            t.id,
-            t.public_id,
-            s.public_id AS parent_public_id,
-            t.name,
-            TRUE AS is_primary
-            FROM
-            subject s
-            INNER JOIN subject_topic st ON s.id = st.subject_id
-            INNER JOIN topic t ON st.topic_id = t.id
-            ) child
-            INNER JOIN tree AS parent ON parent.public_id = child.parent_public_id
-            WHERE 1 = 1
-            )
-
-            SELECT
-            id,
-            public_id,
-            path,
-            is_primary,
-            parent_public_id
-            FROM
-            tree t
-            );
-        </sql>
-        <sql>
-            CREATE UNIQUE INDEX cached_url_path_idx ON cached_url (path);
-        </sql>
-        <sql>
-            CREATE INDEX cached_url_public_id_idx ON cached_url (public_id);
-        </sql>
-
-        <sql splitStatements="false" stripComments="false">
-            create trigger refresh_paths
-            after insert or update or delete or truncate
-            on subject
-            execute procedure update_url_cache();
-
-            create trigger refresh_paths
-            after insert or update or delete or truncate
-            on topic
-            execute procedure update_url_cache();
-
-            create trigger refresh_paths
-            after insert or update or delete or truncate
-            on resource
-            execute procedure update_url_cache();
-
-            create trigger refresh_paths
-            after insert or update or delete or truncate
-            on subject_topic
-            execute procedure update_url_cache();
-
-            create trigger refresh_paths
-            after insert or update or delete or truncate
-            on topic_subtopic
-            execute procedure update_url_cache();
-
-            create trigger refresh_paths
-            after insert or update or delete or truncate
-            on topic_resource
-            execute procedure update_url_cache();
-        </sql>
-        <sql>
-            REFRESH MATERIALIZED VIEW CONCURRENTLY cached_url;
-        </sql>
+        <validCheckSum>9:af1b6506a861e6e077a056b3f382405f</validCheckSum>
     </changeSet>
 
     <changeSet id="20191115 add unique constraint to prevent shared content_uri on resources"
                author="Jon-Eirik Pettersen">
-        <addUniqueConstraint tableName="resource" columnNames="content_uri"
-                             constraintName="unique_resource_content_uri"/>
+        <validCheckSum>9:693ad827a5ca76d74b91d14c0c4b87d6</validCheckSum>
     </changeSet>
 
     <changeSet id="20200504 add cached_paths table" author="Jon-Eirik Pettersen">
-        <createTable tableName="cached_path">
-            <column name="id" type="uuid">
-                <constraints primaryKey="true"/>
-            </column>
-            <column name="public_id" type="varchar(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="path" type="varchar(1000)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="is_primary" type="boolean">
-                <constraints nullable="false"/>
-            </column>
-            <column name="subject_id" type="integer"/>
-            <column name="topic_id" type="integer"/>
-            <column name="resource_id" type="integer"/>
-        </createTable>
+        <validCheckSum>9:d203a7f12b5c26afa1d6e4c1d90d6b8d</validCheckSum>
     </changeSet>
 
     <changeSet id="20200505 add foreign keys and indices to cached_paths" author="Jon-Eirik Pettersen">
-        <createIndex tableName="cached_path" indexName="cached_path_subject_id">
-            <column name="subject_id"/>
-        </createIndex>
-
-        <createIndex tableName="cached_path" indexName="cached_path_topic_id">
-            <column name="topic_id"/>
-        </createIndex>
-
-        <createIndex tableName="cached_path" indexName="cached_path_resource_id">
-            <column name="resource_id"/>
-        </createIndex>
-
-        <addForeignKeyConstraint baseTableName="cached_path" baseColumnNames="subject_id"
-                                 constraintName="fk_cached_path_subject_id"
-                                 referencedTableName="subject" referencedColumnNames="id"
-                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
-        <addForeignKeyConstraint baseTableName="cached_path" baseColumnNames="resource_id"
-                                 constraintName="fk_cached_path_resource_id"
-                                 referencedTableName="resource" referencedColumnNames="id"
-                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
-        <addForeignKeyConstraint baseTableName="cached_path" baseColumnNames="topic_id"
-                                 constraintName="fk_cached_path_topic_id"
-                                 referencedTableName="topic" referencedColumnNames="id"
-                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+        <validCheckSum>9:f80632e3f48fcfa57283082eaab51887</validCheckSum>
     </changeSet>
 
     <changeSet id="20200506 add unique constraint to cached_path path" author="Jon-Eirik Pettersen">
-        <addUniqueConstraint tableName="cached_path" columnNames="path" constraintName="unique_cached_path_path"/>
+        <validCheckSum>9:d3586a42bb5706fa0e5c3772df51d057</validCheckSum>
     </changeSet>
 
     <changeSet id="20200506 migrate data from cached_url materialized view to cached_path table"
                author="Jon-Eirik Pettersen">
-        <sql splitStatements="false" stripComments="false">
-            TRUNCATE cached_path;
-
-            INSERT INTO cached_path
-            SELECT
-            uuid_in(md5(random()::text || clock_timestamp()::text)::cstring) AS id,
-            public_id, path, is_primary,
-            (SELECT id FROM subject WHERE subject.public_id = cached_url.public_id) as subject_id,
-            (SELECT id FROM topic WHERE topic.public_id = cached_url.public_id) as topic_id,
-            (SELECT id FROM resource WHERE resource.public_id = cached_url.public_id) as resource_id
-            FROM cached_url;
-        </sql>
+        <validCheckSum>9:bac7180cfc3f82ce1790ddbca8688772</validCheckSum>
     </changeSet>
-    <changeSet id="20200506 delete cached_url materialized view" author="Jon-Eirik Pettersen">
-        <sql splitStatements="false" stripComments="false">
-            DROP TRIGGER IF EXISTS refresh_paths ON subject;
-            DROP TRIGGER IF EXISTS refresh_paths ON topic;
-            DROP TRIGGER IF EXISTS refresh_paths ON resource;
-            DROP TRIGGER IF EXISTS refresh_paths ON subject_topic;
-            DROP TRIGGER IF EXISTS refresh_paths ON topic_subtopic;
-            DROP TRIGGER IF EXISTS refresh_paths ON topic_resource;
 
-            DROP MATERIALIZED VIEW cached_url;
-        </sql>
+    <changeSet id="20200506 delete cached_url materialized view" author="Jon-Eirik Pettersen">
+        <validCheckSum>9:48d4558b23fc96f2d9cbf189228531c7</validCheckSum>
     </changeSet>
 
     <changeSet id="20200506 add auto_increment to serial columns" author="Jon-Eirik Pettersen">
         <validCheckSum>8:8a8f66f412d323763364dacdf98e5ddf</validCheckSum>
-        <!--
-            This was correctly set up by flyway migrations, but newly created databases after flyway
-            migration had some issues both on Postgres and H2, but not the embedded postgres used before on tests
-
-        <addAutoIncrement tableName="subject" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="subject_translation" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="topic" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="topic_translation" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="resource" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="resource_translation" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="filter" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="filter_translation" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="resource_type" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="resource_type_translation" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="subject_topic" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="topic_subtopic" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="topic_resource" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="topic_filter" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="resource_filter" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="relevance" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="relevance_translation" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="resource_resource_type" columnName="id" columnDataType="int"/>
-        <addAutoIncrement tableName="topic_resource_type" columnName="id" columnDataType="int"/>
-        -->
+        <validCheckSum>9:d41d8cd98f00b204e9800998ecf8427e</validCheckSum>
     </changeSet>
 
     <changeSet id="20200508 delete view topic_tree_by_subject_id_view" author="Jon-Eirik Pettersen">
-        <sql>DROP VIEW IF EXISTS topic_tree_by_subject_id_view</sql>
+        <validCheckSum>9:6b373c12db61bf0278245b352a9b10b4</validCheckSum>
     </changeSet>
+
     <changeSet id="20200508 delete view topic_tree_by_topic_id_view" author="Jon-Eirik Pettersen">
-        <sql>DROP VIEW IF EXISTS topic_tree_by_topic_id_view</sql>
+        <validCheckSum>9:8b8528db82101dc9fbb0a9e2bcc40eac</validCheckSum>
     </changeSet>
 
     <changeSet id="20200902 add content_uri to filter" author="Gunnar Velle">
-        <addColumn tableName="filter">
-            <column name="content_uri" type="varchar(255)">
-                <constraints nullable="true"/>
-            </column>
-        </addColumn>
+        <validCheckSum>9:074dfdb095715ca5b1a122c4c89961d5</validCheckSum>
     </changeSet>
 
     <changeSet id="20210118 add relevance_id to topic-subtopic" author="Max Moeschinger">
-        <addColumn tableName="topic_subtopic">
-            <column name="relevance_id" type="integer"><constraints nullable="true" /></column>
-        </addColumn>
-        <addColumn tableName="subject_topic">
-            <column name="relevance_id" type="integer"><constraints nullable="true" /></column>
-        </addColumn>
-        <addColumn tableName="topic_resource">
-            <column name="relevance_id" type="integer"><constraints nullable="true" /></column>
-        </addColumn>
+        <validCheckSum>9:70c00ec0ef09af49c50f547bb335af82</validCheckSum>
     </changeSet>
 
     <changeSet id="20210302 unlink filters" author="Jan-Espen Oversand">
-        <!-- incision that disconnects the filters from the rest of the structures -->
-        <dropForeignKeyConstraint baseTableName="resource_filter" constraintName="resource_filter_resource_id_fkey"/>
-        <dropForeignKeyConstraint baseTableName="resource_filter" constraintName="resource_filter_relevance_id_fkey"/>
-        <dropForeignKeyConstraint baseTableName="topic_filter" constraintName="topic_filter_topic_id_fkey"/>
-        <dropForeignKeyConstraint baseTableName="topic_filter" constraintName="topic_filter_relevance_id_fkey"/>
-        <dropForeignKeyConstraint baseTableName="filter" constraintName="filter_subject_id_fkey"/>
+        <validCheckSum>9:18b34f34d37befbba96372a0e76c6b6f</validCheckSum>
     </changeSet>
 
     <changeSet id="20210623" author="Gunnar Velle">
-        <!-- Adds active flag to cached_path to avoid database locks -->
-        <addColumn tableName="cached_path">
-            <column name="is_active" type="boolean" defaultValue="true">
-                <constraints nullable="false"/>
-            </column>
-        </addColumn>
+        <validCheckSum>9:05a8e42d003d2dab3493402156931805</validCheckSum>
     </changeSet>
 
     <changeSet id="20210623_2" author="Gunnar Velle">
-        <!-- remove constraint for unique path in cached_path -->
-        <dropUniqueConstraint tableName="cached_path" constraintName="unique_cached_path_path"/>
+        <validCheckSum>9:2de8129034e3deddc21e76ce4afdf82f</validCheckSum>
     </changeSet>
 
     <changeSet id="20210305 01 drop filter relations" author="Jan-Espen Oversand">
-        <dropTable tableName="resource_filter"/>
-        <dropTable tableName="topic_filter"/>
+        <validCheckSum>9:70e2e0547cd0fb9ff26e9b9ee1eb84ae</validCheckSum>
     </changeSet>
+
     <changeSet id="20210305 02 drop filters" author="Jan-Espen Oversand">
-        <dropTable tableName="filter_translation"/>
-        <dropTable tableName="filter"/>
+        <validCheckSum>9:11d81b943dd1dbbdf6f5c37fb1072dd4</validCheckSum>
     </changeSet>
 
     <changeSet id="20211005 unlink topic resources" author="Gunnar Velle">
-        <dropUniqueConstraint tableName="topic_resource_type" constraintName="topic_resource_type_public_id"/>
-        <dropForeignKeyConstraint baseTableName="topic_resource_type" constraintName="resource_type_topic_id_fkey"/>
-        <dropForeignKeyConstraint baseTableName="topic_resource_type" constraintName="topic_resource_type_id_fkey"/>
-        <dropUniqueConstraint tableName="topic_resource_type" constraintName="topic_resource_type_unique"/>
+        <validCheckSum>9:c64f58887bc6c8f7134f1803e4e1d972</validCheckSum>
     </changeSet>
+
     <changeSet id="20211005 drop topic resources" author="Gunnar Velle">
-        <dropTable tableName="topic_resource_type"/>
+        <validCheckSum>9:529de0b42a020dd5f5c1324d1aec6747</validCheckSum>
     </changeSet>
 
     <changeSet id="20211018 change language-code length" author="Gunnar Velle">
-        <modifyDataType tableName="relevance_translation" columnName="language_code" newDataType="varchar(7)"/>
-        <modifyDataType tableName="resource_translation" columnName="language_code" newDataType="varchar(7)"/>
+        <validCheckSum>9:b28ca9465168ede6001f351da5592652</validCheckSum>
         <modifyDataType tableName="resource_type_translation" columnName="language_code" newDataType="varchar(7)"/>
-        <modifyDataType tableName="subject_translation" columnName="language_code" newDataType="varchar(7)"/>
-        <modifyDataType tableName="topic_translation" columnName="language_code" newDataType="varchar(7)"/>
     </changeSet>
 
     <changeSet id="20211020 01 create tables for node" author="Gunnar Velle">
+        <validCheckSum>9:18a4c6f242d93e05f4511a9da1915ebb</validCheckSum>
         <createTable tableName="node">
             <column name="id" type="serial" autoIncrement="true">
                 <constraints primaryKey="true" uniqueConstraintName="node_pkey"/>
@@ -678,240 +227,85 @@
                                  constraintName="fk_node_resource_node_id"
                                  referencedTableName="node" referencedColumnNames="id"
                                  onDelete="RESTRICT" onUpdate="RESTRICT"/>
-        <addForeignKeyConstraint baseTableName="node_resource" baseColumnNames="resource_id"
-                                 constraintName="fk_node_resource_resource_id"
-                                 referencedTableName="resource" referencedColumnNames="id"
-                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
-
-        <createTable tableName="node_translation">
-            <column name="id" type="serial" autoIncrement="true">
-                <constraints primaryKey="true" uniqueConstraintName="node_translation_pkey"/>
-            </column>
-            <column name="node_id" type="integer">
-                <constraints nullable="false"/>
-            </column>
-            <column name="language_code" type="varchar(3)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="name" type="varchar(255)"/>
-        </createTable>
-        <addForeignKeyConstraint baseTableName="node_translation" baseColumnNames="node_id"
-                                 constraintName="fk_node_translation_node_id"
-                                 referencedTableName="node" referencedColumnNames="id"
-                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
-
-        <addColumn tableName="cached_path">
-            <column name="node_id" type="integer"/>
-        </addColumn>
-        <addForeignKeyConstraint baseTableName="cached_path" baseColumnNames="node_id"
-                                 constraintName="fk_cached_path_node_id"
-                                 referencedTableName="node" referencedColumnNames="id"
-                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
-
     </changeSet>
 
     <changeSet id="20211020 copy subjects to nodes" author="Gunnar Velle">
-        <sql splitStatements="false" stripComments="false">
-            INSERT INTO node (public_id, ident, node_type, name, content_uri, context)
-            SELECT public_id, REPLACE(public_id, 'urn:subject:', '') as ident, 'SUBJECT' as node_type, name, content_uri, true AS context FROM subject;
-        </sql>
+        <validCheckSum>9:ef713a50f0c2fc767442939c9ef13c31</validCheckSum>
     </changeSet>
+
     <changeSet id="20211020 copy topics to nodes" author="Gunnar Velle">
-        <sql splitStatements="false" stripComments="false">
-            INSERT INTO node (public_id, ident, node_type, name, content_uri, context)
-            SELECT public_id, REPLACE(public_id, 'urn:topic:', '') as ident, 'TOPIC' as node_type, name, content_uri, context FROM topic;
-        </sql>
+        <validCheckSum>9:2c0204ee3d89afef839ca2b7b219c268</validCheckSum>
     </changeSet>
+
     <changeSet id="20211020 copy subjects to nodes - relations" author="Gunnar Velle">
-        <sql splitStatements="false" stripComments="false">
-            INSERT INTO node_connection (public_id, parent_id, child_id, rank, relevance_id)
-            SELECT
-            r.public_id AS public_id,
-            (SELECT n.id FROM node n WHERE n.public_id = (SELECT s.public_id FROM subject s WHERE s.id = r.subject_id)) AS parent_id,
-            (SELECT n.id FROM node n WHERE n.public_id = (SELECT t.public_id FROM topic t WHERE t.id = r.topic_id)) AS child_id,
-            r.rank AS rank,
-            r.relevance_id AS relevance_id
-            FROM subject_topic r;
-        </sql>
+        <validCheckSum>9:036375a185236db2209da8053a76ca0b</validCheckSum>
     </changeSet>
+
     <changeSet id="20211020 copy topics to nodes - relations" author="Gunnar Velle">
-        <sql splitStatements="false" stripComments="false">
-            INSERT INTO node_connection (public_id, parent_id, child_id, rank, relevance_id)
-            SELECT
-            r.public_id AS public_id,
-            (SELECT n.id FROM node n WHERE n.public_id = (SELECT t.public_id FROM topic t WHERE t.id = r.topic_id)) AS parent_id,
-            (SELECT n.id FROM node n WHERE n.public_id = (SELECT t.public_id FROM topic t WHERE t.id = r.subtopic_id)) AS child_id,
-            r.rank AS rank,
-            r.relevance_id AS relevance_id
-            FROM topic_subtopic r;
-        </sql>
+        <validCheckSum>9:ac0d709a6daaf29956604a0e93f1866e</validCheckSum>
     </changeSet>
+
     <changeSet id="20211020 move cached paths from other to node" author="Gunnar Velle">
-        <sql splitStatements="false" stripComments="false">
-            UPDATE cached_path c SET node_id = (SELECT n.id FROM node n WHERE n.public_id = c.public_id);
-            UPDATE cached_path c SET subject_id = NULL WHERE c.subject_id IS NOT NULL;
-            UPDATE cached_path c SET topic_id = NULL WHERE c.topic_id IS NOT NULL;
-        </sql>
+        <validCheckSum>9:19c9f0e60b00e0558aa34fd55f1a46e0</validCheckSum>
     </changeSet>
+
     <changeSet id="20211020 copy translations from subjects to nodes" author="Gunnar Velle">
-        <sql splitStatements="false" stripComments="false">
-            INSERT INTO node_translation
-            (node_id, language_code, name)
-            SELECT
-            (SELECT n.id FROM node n WHERE n.public_id =
-            (SELECT s.public_id FROM subject s WHERE s.id = st.subject_id)
-            ) AS node_id,
-            st.language_code AS language_code,
-            st.name as name
-            FROM subject_translation st;
-        </sql>
+        <validCheckSum>9:52b34bff98b575b8ecdd51f11e04030a</validCheckSum>
     </changeSet>
+
     <changeSet id="20211020 copy translations from topics to nodes" author="Gunnar Velle">
-        <sql splitStatements="false" stripComments="false">
-            INSERT INTO node_translation
-            (node_id, language_code, name)
-            SELECT
-            (SELECT n.id FROM node n WHERE n.public_id =
-            (SELECT t.public_id FROM topic t WHERE t.id = tt.topic_id)
-            ) AS node_id,
-            tt.language_code AS language_code,
-            tt.name as name
-            FROM topic_translation tt;
-        </sql>
+        <validCheckSum>9:7eb8812305df6b1eb0d730ed2a5eaaab</validCheckSum>
     </changeSet>
+
     <changeSet id="20211020 copy resources from topics to nodes" author="Gunnar Velle">
-        <sql splitStatements="false" stripComments="false">
-            INSERT INTO node_resource
-            (node_id, public_id, resource_id, is_primary, rank, relevance_id)
-            SELECT
-            (SELECT n.id FROM node n WHERE n.public_id =
-            (SELECT t.public_id FROM topic t WHERE t.id = tr.topic_id)
-            ) AS node_id,
-            tr.public_id as public_id,
-            tr.resource_id as resource_id,
-            tr.is_primary AS is_primary,
-            tr.rank AS rank,
-            tr.relevance_id as relevance_id
-            FROM topic_resource tr;
-        </sql>
+        <validCheckSum>9:e8385c889e523ec1b56557bb65be9555</validCheckSum>
     </changeSet>
 
     <changeSet id="20211126 add root param to node" author="Gunnar Velle">
-        <addColumn tableName="node">
-            <column name="root" type="boolean" defaultValueBoolean="false"/>
-        </addColumn>
-        <sql splitStatements="false" stripComments="false">
-            UPDATE node SET root = true
-            WHERE node_type = 'SUBJECT';
-        </sql>
+        <validCheckSum>9:f642eb7f732f57df6d61ef91f1e90e86</validCheckSum>
     </changeSet>
 
     <changeSet id="20220104 add missing index for cached path" author="Gunnar Velle">
-        <createIndex tableName="cached_path" indexName="cached_path_node_id">
-            <column name="node_id"/>
-        </createIndex>
+        <validCheckSum>9:21872249bed3ef5452f11936a782deb1</validCheckSum>
         <addUniqueConstraint tableName="node" columnNames="public_id"
                              constraintName="node_public_id"/>
         <addUniqueConstraint tableName="node_resource" columnNames="node_id,resource_id"
                              constraintName="node_resource_unique"/>
-        <addUniqueConstraint tableName="node_connection" columnNames="child_id"
-                             constraintName="unique_node_connection_child_id"/>
         <addUniqueConstraint tableName="node_connection" columnNames="parent_id,child_id"
                              constraintName="node_connection_unique"/>
-        <addUniqueConstraint tableName="node_translation" columnNames="node_id,language_code"
-                             constraintName="node_language_unique" />
     </changeSet>
 
     <changeSet id="20220105 removes old fields" author="Gunnar Velle">
-        <dropColumn tableName="cached_path" columnName="subject_id"/>
-        <dropColumn tableName="cached_path" columnName="topic_id"/>
+        <validCheckSum>9:e21d5eaf69999ba79d1081219d7837ee</validCheckSum>
     </changeSet>
 
     <!-- Adapted from taxonomy metadata -->
     <changeSet id="20200212 create metadata table" author="jon-eirik.pettersen@cerpus.com">
-        <createTable tableName="metadata">
-            <column name="id" type="serial" autoIncrement="true"><constraints primaryKey="true" nullable="false" /></column>
-            <column name="created_at" type="datetime"><constraints nullable="false" /></column>
-            <column name="updated_at" type="datetime" />
-            <column name="visible" type="boolean" defaultValueBoolean="true">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
+        <validCheckSum>9:70a07debd12b137abfb99ec2ddf58ef9</validCheckSum>
     </changeSet>
 
     <changeSet id="20200212 create grep_code table" author="jon-eirik.pettersen@cerpus.com">
-        <createTable tableName="grep_code">
-            <column name="id" type="serial" autoIncrement="true"><constraints primaryKey="true" nullable="false" /></column>
-            <column name="code" type="varchar(50)"><constraints uniqueConstraintName="unique_grep_code_code" unique="true" nullable="false" /></column>
-            <column name="created_at" type="datetime"><constraints nullable="false" /></column>
-            <column name="updated_at" type="datetime" />
-        </createTable>
+        <validCheckSum>9:6fb51a707114376eef983d716e57c96e</validCheckSum>
     </changeSet>
 
     <changeSet id="20200212 create metadata_grep_code table" author="jon-eirik.pettersen@cerpus.com">
-        <createTable tableName="metadata_grep_code">
-            <column name="metadata_id" type="integer"><constraints nullable="false" /></column>
-            <column name="grep_code_id" type="integer">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-
-        <addPrimaryKey tableName="metadata_grep_code" columnNames="metadata_id,grep_code_id"/>
-
-        <addForeignKeyConstraint baseTableName="metadata_grep_code" baseColumnNames="metadata_id"
-                                 constraintName="fk_metadata_grep_code_entity_id"
-                                 referencedTableName="metadata" referencedColumnNames="id"/>
-        <addForeignKeyConstraint baseTableName="metadata_grep_code" baseColumnNames="grep_code_id"
-                                 constraintName="fk_metadata_grep_code_grep_code_id"
-                                 referencedTableName="grep_code" referencedColumnNames="id"/>
+        <validCheckSum>9:ef61b12153e5c3b41cd25a347d5e9659</validCheckSum>
     </changeSet>
 
     <changeSet id="20210408 create custom field table" author="jan.espen.oversand@cerpus.com">
-        <createTable tableName="custom_field">
-            <column name="id" type="serial" autoIncrement="true"><constraints primaryKey="true" nullable="false" /></column>
-            <column name="created_at" type="datetime"><constraints nullable="false" /></column>
-            <column name="updated_at" type="datetime" />
-            <column name="key" type="varchar(100)"><constraints unique="true" uniqueConstraintName="unique_taxonomy_custom_fields_key" nullable="false" /></column>
-        </createTable>
+        <validCheckSum>9:ab069f454f399b1373cdfa4d34e0bc92</validCheckSum>
     </changeSet>
 
     <changeSet id="20210408 create custom field value table" author="jan.espen.oversand@cerpus.com">
-        <createTable tableName="custom_field_value">
-            <column name="id" type="serial" autoIncrement="true"><constraints primaryKey="true" nullable="false" /></column>
-            <column name="metadata_id" type="integer"><constraints nullable="false" /></column>
-            <column name="custom_field_id" type="integer"><constraints nullable="false" /></column>
-            <column name="value" type="text"/>
-        </createTable>
-
-        <addUniqueConstraint constraintName="unique_metadata_id_custom_field_value" tableName="custom_field_value" columnNames="metadata_id,custom_field_id"/>
-
-        <addForeignKeyConstraint baseTableName="custom_field_value" baseColumnNames="metadata_id"
-                                 constraintName="fk_metadata_custom_field_value_id"
-                                 referencedTableName="metadata" referencedColumnNames="id"/>
-        <addForeignKeyConstraint baseTableName="custom_field_value" baseColumnNames="custom_field_id"
-                                 constraintName="fk_custom_field_custom_field_value_id"
-                                 referencedTableName="custom_field" referencedColumnNames="id"/>
+        <validCheckSum>9:a41c98f5e2a6a317f084679cc9c5d732</validCheckSum>
     </changeSet>
 
     <changeSet id="20220208 add metadata references" author="Gunnar Velle">
-        <addColumn tableName="node">
-            <column name="metadata_id" type="integer"/>
-        </addColumn>
-        <addColumn tableName="resource">
-            <column name="metadata_id" type="integer"/>
-        </addColumn>
-        <addForeignKeyConstraint baseTableName="node" baseColumnNames="metadata_id"
-                                 constraintName="fk_node_metadata_id"
-                                 referencedTableName="metadata" referencedColumnNames="id"
-                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
-        <addForeignKeyConstraint baseTableName="resource" baseColumnNames="metadata_id"
-                                 constraintName="fk_resource_metadata_id"
-                                 referencedTableName="metadata" referencedColumnNames="id"
-                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+        <validCheckSum>9:62357266166f8ae8533c800ce8ea5483</validCheckSum>
     </changeSet>
 
     <changeSet id="20220216 merge metadata into local base" author="Gunnar Velle">
-        <customChange class="no.ndla.taxonomy.migration.CopyDataFromMetadataServiceSqlChange"/>
+        <validCheckSum>9:97445a5cf07ed6d272bda0e119b98783</validCheckSum>
     </changeSet>
     <!-- Adapted from taxonomy metadata -->
 
@@ -950,71 +344,34 @@
     </changeSet>
 
     <changeSet id="20220302 drop old tables" author="Gunnar Velle">
-        <dropTable tableName="subject_topic"/>
-        <dropTable tableName="topic_subtopic"/>
-        <dropTable tableName="topic_resource"/>
-        <dropTable tableName="topic_translation"/>
-        <dropTable tableName="topic"/>
-        <dropTable tableName="subject_translation"/>
-        <dropTable tableName="subject"/>
+        <validCheckSum>9:9514fb93bf8930e271d0496b4ad1b1c5</validCheckSum>
     </changeSet>
 
-    <!-- metadata for connection object -->
     <changeSet id="20220920 add metadata to connections" author="Gunnar Velle">
-        <addColumn tableName="node_connection">
-            <column name="metadata_id" type="integer"/>
-        </addColumn>
-        <addColumn tableName="node_resource">
-            <column name="metadata_id" type="integer"/>
-        </addColumn>
-        <addForeignKeyConstraint baseTableName="node_connection" baseColumnNames="metadata_id"
-                                 constraintName="fk_node_connection_metadata_id"
-                                 referencedTableName="metadata" referencedColumnNames="id"
-                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
-        <addForeignKeyConstraint baseTableName="node_resource" baseColumnNames="metadata_id"
-                                 constraintName="fk_node_resource_metadata_id"
-                                 referencedTableName="metadata" referencedColumnNames="id"
-                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+        <validCheckSum>9:b67b20ac0fcac83180bd7c41f511ab98</validCheckSum>
     </changeSet>
+
     <changeSet id="20220920 populate connections with metadata" author="Gunnar Velle" ignore="true">
-        <customChange class="no.ndla.taxonomy.migration.CreateMetadataForConnectionsSqlChange">
-            <param name="schema" value="${schema}"/>
-        </customChange>
+        <validCheckSum>9:0a79757317f37ff7f301ac27a87cbe71</validCheckSum>
     </changeSet>
-    <!-- end metadata for connection object -->
 
     <changeSet id="20221019 change language-code length" author="Gunnar Velle">
-        <modifyDataType tableName="node_translation" columnName="language_code" newDataType="varchar(7)"/>
+        <validCheckSum>9:9d54a9289a3775c27b5204574caa3d4f</validCheckSum>
     </changeSet>
 
     <changeSet id="20221019 add index to improve composite index" author="Gunnar Velle">
+        <validCheckSum>9:9448d6aaa3ab7b7f2ad2b1d674e364df</validCheckSum>
         <createIndex tableName="node_connection" indexName="node_connection_parent_id">
             <column name="parent_id"/>
-        </createIndex>
-        <createIndex tableName="node_resource" indexName="node_resource_node_id">
-            <column name="node_id"/>
-        </createIndex>
-        <createIndex tableName="node_resource" indexName="node_resource_resource_id">
-            <column name="resource_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="20221129 add async changelog table" author="Gunnar Velle">
-        <createTable tableName="changelog">
-            <column name="id" type="serial" autoIncrement="true">
-                <constraints primaryKey="true" uniqueConstraintName="changelog_pkey"/>
-            </column>
-            <column name="public_id" type="varchar(255)"/>
-            <column name="source_schema" type="varchar(64)"/>
-            <column name="destination_schema" type="varchar(64)"/>
-            <column name="timestamp" type="timestamp with time zone"/>
-            <column name="clean_up" type="boolean" defaultValueBoolean="false"/>
-            <column name="done" type="boolean" defaultValueBoolean="false"/>
-        </createTable>
+        <validCheckSum>9:3036bdb81b37d382ad5a336f8b07e43a</validCheckSum>
     </changeSet>
 
     <changeSet id="20230103 Stop constraining max 1 node-parents" author="Jonas Natten">
-        <dropUniqueConstraint tableName="node_connection" constraintName="unique_node_connection_child_id"/>
+        <validCheckSum>9:d25aed09a17a4f3d9403fb03b683dd39</validCheckSum>
     </changeSet>
 
     <changeSet id="20230103 Add primary to node-connections :^)" author="Jonas Natten">
@@ -1026,73 +383,33 @@
     </changeSet>
 
     <changeSet id="20230103 Copy resources to nodes" author="Jonas Natten">
-        <sql splitStatements="false" stripComments="false">
-            INSERT INTO node (public_id, ident, node_type, name, content_uri, context, metadata_id)
-            SELECT public_id, REPLACE(public_id, 'urn:resource:', '') as ident, 'RESOURCE' as node_type, name, content_uri, false as context, metadata_id FROM resource;
-        </sql>
+        <validCheckSum>9:7b11ce2f635d49f1ca338aa174ae590b</validCheckSum>
     </changeSet>
 
     <changeSet id="20230103 Copy resources-connections to nodes" author="Jonas Natten">
-        <sql splitStatements="false" stripComments="false">
-            INSERT INTO node_connection (public_id, parent_id, child_id, rank, relevance_id, metadata_id, is_primary)
-            SELECT
-                rc.public_id AS public_id,
-                rc.node_id,
-                (SELECT n.id FROM node n WHERE n.public_id = (SELECT r.public_id FROM resource r WHERE r.id = rc.resource_id)) AS child_id,
-                rc.rank AS rank,
-                rc.relevance_id AS relevance_id,
-                rc.metadata_id,
-                rc.is_primary
-            FROM node_resource rc;
-        </sql>
+        <validCheckSum>9:183b45d81dcdabd0c59ba4abf03b25f8</validCheckSum>
     </changeSet>
 
     <changeSet id="20230103 Copy translations from resources to nodes" author="Jonas Natten">
-        <sql splitStatements="false" stripComments="false">
-            INSERT INTO node_translation
-                (node_id, language_code, name)
-            SELECT
-                (SELECT n.id FROM node n WHERE n.public_id =
-                                               (SELECT r.public_id FROM resource r WHERE r.id = rt.resource_id)
-                ) AS node_id,
-                rt.language_code AS language_code,
-                rt.name as name
-            FROM resource_translation rt;
-        </sql>
+        <validCheckSum>9:03c6e7b2cffa2e5b6b8d15f7e8b37fbc</validCheckSum>
     </changeSet>
 
     <changeSet id="20230103 Move to node ids for resource_resource_type" author="Jonas Natten">
-        <sql splitStatements="false" stripComments="false">
-            ALTER TABLE resource_resource_type DROP CONSTRAINT resource_resource_type_unique;
-            ALTER TABLE resource_resource_type DROP CONSTRAINT resource_resource_type_resource_id_fkey;
-            UPDATE resource_resource_type rrt
-                SET resource_id=(
-                    SELECT n.id FROM node n WHERE n.public_id = (
-                        SELECT r.public_id FROM resource r WHERE r.id = rrt.resource_id
-                    )
-                );
-            ALTER TABLE resource_resource_type ADD CONSTRAINT resource_resource_type_unique UNIQUE (resource_id, resource_type_id);
-            ALTER TABLE resource_resource_type ADD CONSTRAINT resource_resource_type_resource_id_fkey FOREIGN KEY (resource_id) REFERENCES node(id)
-        </sql>
+        <validCheckSum>9:f18d4b6c924f7ed414ae218b6c302132</validCheckSum>
+        <dropUniqueConstraint tableName="resource_resource_type" constraintName="resource_resource_type_unique"/>
+        <addUniqueConstraint tableName="resource_resource_type" columnNames="resource_id,resource_type_id" constraintName="resource_resource_type_unique"/>
+        <addForeignKeyConstraint baseTableName="resource_resource_type" baseColumnNames="resource_id"
+                                 constraintName="resource_resource_type_resource_id_fkey"
+                                 referencedTableName="node" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
     </changeSet>
 
     <changeSet id="20230103 Move to node ids for cached_paths for resources" author="Jonas Natten">
-        <sql splitStatements="false" stripComments="false">
-            UPDATE cached_path cp
-            SET node_id=(
-                SELECT n.id FROM node n WHERE n.public_id = (
-                    SELECT r.public_id FROM resource r WHERE r.id = cp.resource_id
-                )
-            )
-            WHERE resource_id IS NOT NULL;
-        </sql>
+        <validCheckSum>9:57e10187671b0768cbf591fcfcd05c85</validCheckSum>
     </changeSet>
 
     <changeSet id="20230103 Drop old resource tables" author="Jonas Natten">
-        <dropColumn tableName="cached_path" columnName="resource_id"/>
-        <dropTable tableName="resource_translation"/>
-        <dropTable tableName="node_resource"/>
-        <dropTable tableName="resource"/>
+        <validCheckSum>9:22ccd36e02a2aa6d0f59c7bca74bf06b</validCheckSum>
     </changeSet>
 
     <changeSet id="20230129 Add nodeConnection child index" author="Jonas Natten">
@@ -1108,60 +425,37 @@
     </changeSet>
 
     <changeSet id="20230208 Move visible to separate column for nodes" author="Jonas Natten">
+        <validCheckSum>9:d7c52d5cc8df8c7693b0f741b9182fb3</validCheckSum>
         <addColumn tableName="node">
             <column name="visible" type="boolean" defaultValueBoolean="true" />
         </addColumn>
-        <sql>
-            UPDATE node n
-            SET visible=(
-                SELECT m.visible FROM metadata m WHERE m.id = n.metadata_id
-            )
-        </sql>
         <createIndex tableName="node" indexName="node_is_visible_index">
             <column name="visible" />
         </createIndex>
     </changeSet>
 
     <changeSet id="20230208 Move visible to separate column for node_connection" author="Jonas Natten">
+        <validCheckSum>9:918c83e4cc72151bbf1a9762ab77e437</validCheckSum>
         <addColumn tableName="node_connection">
             <column name="visible" type="boolean" defaultValueBoolean="true" />
         </addColumn>
-        <sql>
-            UPDATE node_connection n
-            SET visible=(
-                SELECT m.visible FROM metadata m WHERE m.id = n.metadata_id
-            )
-        </sql>
         <createIndex tableName="node_connection" indexName="node_connection_is_visible_index">
             <column name="visible" />
         </createIndex>
     </changeSet>
 
     <changeSet id="20230208 Move translations to separate column for nodes" author="Jonas Natten">
+        <validCheckSum>9:bc0b836222b88d98448bf8f8a6afa799</validCheckSum>
         <addColumn tableName="node">
-            <column name="translations" type="jsonb" />
+            <column name="translations" type="jsonb" defaultValue="[]"/>
         </addColumn>
-        <sql>
-            UPDATE node n
-            SET translations=(
-                SELECT json_agg(trans) FROM (
-                    SELECT ((js->'f1')::jsonb-'id'-'node_id'-'language_code'|| jsonb_build_object('languageCode', js->'f1'->'language_code')) trans FROM (SELECT row_to_json(row(nt)) AS js FROM node tn
-                    INNER JOIN node_translation nt ON nt.node_id = tn.id
-                    WHERE tn.id = n.id) AS _
-                ) AS _
-            )
-        </sql>
-        <sql>
-            UPDATE node n
-            SET translations='[]'
-            WHERE translations is NULL
-        </sql>
         <addNotNullConstraint tableName="node" columnName="translations" />
     </changeSet>
 
     <changeSet id="20230208 Move translations to separate column for resource-types" author="Jonas Natten">
+        <validCheckSum>9:a2f2c447da51b053b8322d843e79a99a</validCheckSum>
         <addColumn tableName="resource_type">
-            <column name="translations" type="jsonb" />
+            <column name="translations" type="jsonb" defaultValue="[]"/>
         </addColumn>
         <sql>
             UPDATE resource_type rt
@@ -1173,187 +467,67 @@
                 ) AS _
             )
         </sql>
-        <sql>
-            UPDATE resource_type rt
-            SET translations='[]'
-            WHERE translations is NULL
-        </sql>
         <addNotNullConstraint tableName="resource_type" columnName="translations" />
+        <dropForeignKeyConstraint baseTableName="resource_type_translation" constraintName="resource_type_translation_resource_type_id_fkey" />
     </changeSet>
 
     <changeSet id="20230208 Move translations to separate column for relevances" author="Jonas Natten">
         <validCheckSum>8:895d7f163967dd6d6f3f65fb2547addc</validCheckSum>
-        <addColumn tableName="relevance">
-            <column name="translations" type="jsonb" />
-        </addColumn>
-        <sql>
-            UPDATE relevance r
-            SET translations=(
-                SELECT json_agg(trans) FROM (
-                    SELECT ((js->'f1')::jsonb-'id'-'relevance_id'-'language_code'|| jsonb_build_object('languageCode', js->'f1'->'language_code')) trans FROM (SELECT row_to_json(row(rt)) AS js FROM relevance tr
-                    INNER JOIN relevance_translation rt ON rt.relevance_id = tr.id
-                    WHERE rt.id = r.id) AS _
-                ) AS _
-            )
-        </sql>
-        <sql>
-            UPDATE relevance
-            SET translations='[]'
-            WHERE translations is NULL
-        </sql>
-        <addNotNullConstraint tableName="relevance" columnName="translations" />
+        <validCheckSum>9:916a1b4fabd1f638659670b50c477c09</validCheckSum>
     </changeSet>
 
     <changeSet id="20230213 Move grepcodes to a column for node" author="Jonas Natten">
+        <validCheckSum>9:67b79f181367490d741f0dbe713c5d64</validCheckSum>
         <addColumn tableName="node">
             <column name="grepcodes" type="jsonb"/>
         </addColumn>
-        <sql>
-            UPDATE node n
-            SET grepcodes=(
-                SELECT json_agg(codes) FROM (
-                    SELECT ((js->'f1')::jsonb-'id'-'node_id') codes
-                    FROM (SELECT row_to_json(row(gc)) AS js FROM node tn
-                    INNER JOIN metadata_grep_code mgc ON mgc.metadata_id = tn.metadata_id
-                    INNER JOIN grep_code gc on gc.id = mgc.grep_code_id
-                    WHERE tn.id = n.id) AS _
-                ) AS _
-            )
-        </sql>
-        <sql>
-            UPDATE node n
-            SET grepcodes='[]'
-            WHERE grepcodes is NULL
-        </sql>
         <addNotNullConstraint tableName="node" columnName="grepcodes" />
     </changeSet>
 
     <changeSet id="20230213 Move grepcodes to a column for node_connection" author="Jonas Natten">
+        <validCheckSum>9:0c1f2b44af68b610fa2c1869019805f0</validCheckSum>
         <addColumn tableName="node_connection">
             <column name="grepcodes" type="jsonb"/>
         </addColumn>
-        <sql>
-            UPDATE node_connection n
-            SET grepcodes=(
-                SELECT json_agg(codes) FROM (
-                    SELECT ((js->'f1')::jsonb-'id'-'node_id') codes
-                    FROM (SELECT row_to_json(row(gc)) AS js FROM node_connection tn
-                        INNER JOIN metadata_grep_code mgc ON mgc.metadata_id = tn.metadata_id
-                        INNER JOIN grep_code gc on gc.id = mgc.grep_code_id
-                        WHERE tn.id = n.id) AS _
-                ) AS _
-            )
-        </sql>
-        <sql>
-            UPDATE node_connection n
-            SET grepcodes='[]'
-            WHERE grepcodes is NULL
-        </sql>
         <addNotNullConstraint tableName="node" columnName="grepcodes" />
     </changeSet>
+
     <changeSet id="20230214 Move updated_at and created_at to columns node" author="Jonas Natten">
+        <validCheckSum>9:ba588865b08ea15c530488ded44b4ea5</validCheckSum>
         <addColumn tableName="node">
             <column name="updated_at" type="timestamp" />
             <column name="created_at" type="timestamp" />
         </addColumn>
-        <sql>
-            UPDATE node n
-            SET
-                updated_at=(SELECT updated_at FROM metadata m WHERE m.id = n.metadata_id),
-                created_at=(SELECT created_at FROM metadata m WHERE m.id = n.metadata_id)
-        </sql>
     </changeSet>
 
     <changeSet id="20230214 Move updated_at and created_at to columns node_connection" author="Jonas Natten">
+        <validCheckSum>9:85eaefa5cd7c5361077813c7478b3200</validCheckSum>
         <addColumn tableName="node_connection">
             <column name="updated_at" type="timestamp" />
             <column name="created_at" type="timestamp" />
         </addColumn>
-        <sql>
-            UPDATE node_connection n
-            SET
-                updated_at=(SELECT updated_at FROM metadata m WHERE m.id = n.metadata_id),
-                created_at=(SELECT created_at FROM metadata m WHERE m.id = n.metadata_id)
-        </sql>
     </changeSet>
 
     <changeSet id="20230214 Move custom field values to column for node" author="Jonas Natten">
+        <validCheckSum>9:31f5f1dbe8b75ae926d5b14ad7f32580</validCheckSum>
         <addColumn tableName="node">
             <column name="customfields" type="jsonb" />
         </addColumn>
-        <sql>
-            UPDATE node n
-            SET customfields=(
-                SELECT jsonb_object_agg(cf.key, cfv.value) FROM node sn
-                LEFT JOIN metadata m ON m.id = sn.metadata_id
-                LEFT JOIN custom_field_value cfv ON cfv.metadata_id = m.id
-                LEFT JOIN custom_field cf ON cf.id = cfv.custom_field_id
-                WHERE sn.id = n.id
-                AND cf.key IS NOT NULL AND cfv.value IS NOT NULL
-            )
-        </sql>
-        <sql>
-            UPDATE node n
-            SET customfields='{}'
-            WHERE customfields IS NULL
-        </sql>
     </changeSet>
 
     <changeSet id="20230214 Move custom field values to column for node_connection" author="Jonas Natten">
+        <validCheckSum>9:8e11df6e0053548bd666fd22ff907139</validCheckSum>
         <addColumn tableName="node_connection">
             <column name="customfields" type="jsonb" />
         </addColumn>
-        <sql>
-            UPDATE node_connection n
-            SET customfields=(
-                SELECT jsonb_object_agg(cf.key, cfv.value) FROM node_connection sn
-                LEFT JOIN metadata m ON m.id = sn.metadata_id
-                LEFT JOIN custom_field_value cfv ON cfv.metadata_id = m.id
-                LEFT JOIN custom_field cf ON cf.id = cfv.custom_field_id
-                WHERE sn.id = n.id
-                AND cf.key IS NOT NULL AND cfv.value IS NOT NULL
-            )
-        </sql>
-        <sql>
-            UPDATE node_connection n
-            SET customfields='{}'
-            WHERE customfields IS NULL
-        </sql>
     </changeSet>
 
     <changeSet id="20230215 Move cached paths to column" author="Jonas Natten">
-        <addColumn tableName="node">
-            <column name="cached_paths" type="text[]" />
-        </addColumn>
-        <addColumn tableName="node">
-            <column name="primary_paths" type="text[]" />
-        </addColumn>
-        <sql>
-            UPDATE node n
-            SET primary_paths=(
-                SELECT array_agg(cp.path) FROM node n2
-                INNER JOIN cached_path cp ON cp.node_id = n2.id AND cp.is_primary = true AND cp.is_active = true
-                WHERE n2.id = n.id
-            ),
-            cached_paths=(
-                SELECT array_agg(cp.path) FROM node n2
-                INNER JOIN cached_path cp ON cp.node_id = n2.id AND cp.is_primary = false AND cp.is_active = true
-                WHERE n2.id = n.id
-            )
-        </sql>
+        <validCheckSum>9:74b61881a845a89bd5e057b385e108f1</validCheckSum>
     </changeSet>
-    <changeSet id="202303082023 Clean up tables moved to columns" author="Jonas Natten">
-        <dropColumn tableName="node_connection" columnName="metadata_id" />
-        <dropColumn tableName="node" columnName="metadata_id" />
 
-        <dropTable tableName="custom_field_value" />
-        <dropTable tableName="custom_field" />
-        <dropTable tableName="cached_path" />
-        <dropTable tableName="metadata_grep_code" />
-        <dropTable tableName="metadata" />
-        <dropTable tableName="node_translation" />
-        <dropTable tableName="relevance_translation" />
-        <dropTable tableName="resource_type_translation" />
+    <changeSet id="202303082023 Clean up tables moved to columns" author="Jonas Natten">
+        <validCheckSum>9:1f2323cfc2a0f7ca0bdb227b5fa13976</validCheckSum>
     </changeSet>
 
     <changeSet id="20230314 Add created to version" author="Gunnar Velle">
@@ -1384,17 +558,11 @@
     </changeSet>
 
     <changeSet id="20230411 Drop cached path fields" author="Gunnar Velle">
-        <dropColumn tableName="node" columnName="cached_paths"/>
-        <dropColumn tableName="node" columnName="primary_paths"/>
+        <validCheckSum>9:f8b87a8ccd9e4bbaecfbe054aada166a</validCheckSum>
     </changeSet>
 
     <changeSet id="20230602 Drop root field" author="Gunnar Velle">
-        <sql>
-            UPDATE node n
-            SET context = root
-            WHERE root = true
-        </sql>
-        <dropColumn tableName="node" columnName="root"/>
+        <validCheckSum>9:cedfe04eff93aae2cd15f05d5ee495a3</validCheckSum>
     </changeSet>
 
     <changeSet id="20230614 Add contentURI index" author="Gunnar Velle">
@@ -1404,7 +572,7 @@
     </changeSet>
 
     <changeSet id="20230823 Clean up duplicate resources" author="Gunnar Velle">
-        <customChange class="no.ndla.taxonomy.migration.CleanUpDuplicateResourcesSqlChange"/>
+        <validCheckSum>9:dd5c8a7deaaa4c3011734aaaeccf85f3</validCheckSum>
     </changeSet>
 
     <changeSet id="20230823 Add schema and extension" author="Gunnar Velle" runAlways="true">
@@ -1434,6 +602,7 @@
     </changeSet>
 
     <changeSet id="20231020 Ensure all node-connections have relevance" author="Gunnar Velle">
+        <validCheckSum>9:b1d3ea677bbb9b6f5d51e6e76d9b7992</validCheckSum>
         <sql>
             UPDATE node_connection
             SET relevance_id = 1
@@ -1443,16 +612,7 @@
     </changeSet>
 
     <changeSet id="20231030 Add default translation based on basename" author="Gunnar Velle">
-        <sql>
-            UPDATE relevance r SET translations=(
-                SELECT CASE WHEN EXISTS (
-                    SELECT 1 FROM jsonb_array_elements(r.translations) as element
-                    WHERE element ->> 'languageCode' = 'nb'
-                ) THEN r.translations
-                ELSE r.translations || jsonb_build_object('languageCode', 'nb', 'name', r.name)
-                END
-            );
-        </sql>
+        <validCheckSum>9:267d9fd0a8f2030d32c53ea536e32b11</validCheckSum>
         <sql>
             UPDATE node n SET translations=(
                 SELECT CASE WHEN EXISTS (
@@ -1535,22 +695,14 @@
     </changeSet>
 
     <changeSet id="20240611 Drop changelog table" author="Gunnar Velle">
-        <dropTable tableName="changelog"/>
+        <validCheckSum>9:97bedb7ec3feece25b43370b1ac47d5e</validCheckSum>
     </changeSet>
 
     <changeSet id="20240814 Move relevances to column" author="Jonas Natten">
+        <validCheckSum>9:206507b41118c792e06646516003ff30</validCheckSum>
         <addColumn tableName="node_connection">
             <column name="relevance" type="text" />
         </addColumn>
-        <sql>
-            UPDATE node_connection n
-            SET relevance='CORE'
-            WHERE n.relevance_id = 1;
-
-            UPDATE node_connection n
-            SET relevance='SUPPLEMENTARY'
-            WHERE n.relevance_id = 2;
-        </sql>
         <createIndex tableName="node_connection" indexName="node_connection_relevance">
             <column name="relevance"/>
         </createIndex>

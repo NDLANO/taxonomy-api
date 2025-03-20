@@ -36,6 +36,9 @@ public class RelevanceDTO {
     @Schema(description = "List of language codes supported by translations")
     private Set<String> supportedLanguages;
 
+    /** Need a default constructor for Jackson */
+    public RelevanceDTO() {}
+
     public RelevanceDTO(Relevance relevance) {
         this.id = relevance.getPublicId();
         this.name = relevance.getTranslations().stream()
