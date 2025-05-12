@@ -31,7 +31,7 @@ public class DraftApiClient {
     private static final Logger logger = LoggerFactory.getLogger(DraftApiClient.class);
     private final RestClient restClient;
 
-    public DraftApiClient(@Value("${DRAFT_API_HOST}") String draftApiHost) {
+    public DraftApiClient(@Value("${DRAFT_API_HOST:draft-api}") String draftApiHost) {
         var baseUrl = String.format("http://%s/draft-api", draftApiHost);
         restClient = RestClient.builder()
                 .baseUrl(baseUrl)
