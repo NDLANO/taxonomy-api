@@ -11,6 +11,7 @@ import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.integration.DraftApiClient;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
@@ -28,16 +29,19 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     private final ContextUpdaterService contextUpdaterService;
     private final NodeRepository nodeRepository;
     private final QualityEvaluationService qualityEvaluationService;
+    private final DraftApiClient draftApiClient;
 
     public NodeConnectionServiceImpl(
             NodeConnectionRepository nodeConnectionRepository,
             ContextUpdaterService contextUpdaterService,
             NodeRepository nodeRepository,
-            QualityEvaluationService qualityEvaluationService) {
+            QualityEvaluationService qualityEvaluationService,
+            DraftApiClient draftApiClient) {
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.contextUpdaterService = contextUpdaterService;
         this.nodeRepository = nodeRepository;
         this.qualityEvaluationService = qualityEvaluationService;
+        this.draftApiClient = draftApiClient;
     }
 
     private NodeConnection doCreateConnection(
@@ -128,6 +132,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
         var newConnection = createConnection(parent, child, relevance, rank, isPrimary);
         qualityEvaluationService.updateQualityEvaluationOfNewConnection(parent, child);
+        draftApiClient.updateNotesWithNewConnection(newConnection);
         return nodeConnectionRepository.saveAndFlush(newConnection);
     }
 
@@ -144,6 +149,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         final var child = nodeConnection.getChild();
 
         qualityEvaluationService.removeQualityEvaluationOfDeletedConnection(nodeConnection);
+        draftApiClient.updateNotesWithDeletedConnection(nodeConnection);
 
         nodeConnection.disassociate();
         nodeConnectionRepository.delete(nodeConnection);
@@ -244,6 +250,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
             Relevance relevance,
             Optional<Integer> newRank,
             Optional<Boolean> isPrimary) {
+        draftApiClient.updateNotesWithUpdatedConnection(nodeConnection, relevance, isPrimary);
         newRank.ifPresent(integer -> updateRank(nodeConnection, integer));
         isPrimary.ifPresent(primary -> updatePrimaryConnection(nodeConnection, primary));
         updateRelevance(nodeConnection, relevance);
