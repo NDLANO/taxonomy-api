@@ -96,7 +96,7 @@ public class DraftApiClient {
         if (Objects.equals(childId.type, "article")) {
             var relevanceNotePart = newConnection
                     .getRelevance()
-                    .flatMap(r -> r.getTranslations().stream().findFirst().map(Translation::getName))
+                    .map(Relevance::getTranslatedName)
                     .map(s -> " som " + s)
                     .orElse("");
 

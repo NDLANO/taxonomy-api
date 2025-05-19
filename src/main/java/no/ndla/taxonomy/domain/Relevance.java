@@ -8,10 +8,7 @@
 package no.ndla.taxonomy.domain;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 
 public enum Relevance {
@@ -39,6 +36,14 @@ public enum Relevance {
 
     public Set<Translation> getTranslations() {
         return translations;
+    }
+
+    public String getTranslatedName() {
+        return this.getTranslations().stream()
+                .filter(t -> Objects.equals(t.getLanguageCode(), "nb"))
+                .findFirst()
+                .map(Translation::getName)
+                .orElseThrow();
     }
 
     Relevance(String uri, Set<Translation> translations) {
