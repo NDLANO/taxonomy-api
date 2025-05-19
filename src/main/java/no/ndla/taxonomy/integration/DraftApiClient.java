@@ -102,7 +102,7 @@ public class DraftApiClient {
 
             var noteString = String.format(
                     "Taksonomi: lagt til i %s med id '%s'%s", parent.getNodeType(), parentId.id, relevanceNotePart);
-            var note = DraftNotesDTO.fromNote(parentId.id, noteString);
+            var note = DraftNotesDTO.fromNote(childId.id, noteString);
             notesList.add(note);
         }
 
