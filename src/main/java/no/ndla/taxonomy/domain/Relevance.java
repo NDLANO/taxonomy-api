@@ -9,6 +9,7 @@ package no.ndla.taxonomy.domain;
 
 import java.net.URI;
 import java.util.*;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 
 public enum Relevance {
@@ -40,7 +41,7 @@ public enum Relevance {
 
     public String getTranslatedName() {
         return this.getTranslations().stream()
-                .filter(t -> Objects.equals(t.getLanguageCode(), "nb"))
+                .filter(t -> Objects.equals(t.getLanguageCode(), Constants.DefaultLanguage))
                 .findFirst()
                 .map(Translation::getName)
                 .orElseThrow();
