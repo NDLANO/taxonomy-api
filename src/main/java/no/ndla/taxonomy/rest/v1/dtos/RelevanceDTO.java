@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
 
 @Schema(name = "Relevance")
@@ -41,11 +40,7 @@ public class RelevanceDTO {
 
     public RelevanceDTO(Relevance relevance) {
         this.id = relevance.getPublicId();
-        this.name = relevance.getTranslations().stream()
-                .filter(t -> Objects.equals(t.getLanguageCode(), "nb"))
-                .findFirst()
-                .map(Translation::getName)
-                .orElseThrow();
+        this.name = relevance.getTranslatedName();
         this.translations =
                 relevance.getTranslations().stream().map(TranslationDTO::new).collect(Collectors.toSet());
         this.supportedLanguages =
