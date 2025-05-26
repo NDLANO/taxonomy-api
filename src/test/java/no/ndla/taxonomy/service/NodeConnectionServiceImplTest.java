@@ -16,6 +16,7 @@ import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.integration.DraftApiClient;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
@@ -48,12 +49,19 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
     @Autowired
     private Builder builder;
 
+    private DraftApiClient draftApiClient;
+
     @BeforeEach
     public void setUp() throws Exception {
         contextUpdaterService = mock(ContextUpdaterService.class);
+        draftApiClient = mock(DraftApiClient.class);
 
         service = new NodeConnectionServiceImpl(
-                nodeConnectionRepository, contextUpdaterService, nodeRepository, qualityEvaluationService);
+                nodeConnectionRepository,
+                contextUpdaterService,
+                nodeRepository,
+                qualityEvaluationService,
+                draftApiClient);
     }
 
     @Test
