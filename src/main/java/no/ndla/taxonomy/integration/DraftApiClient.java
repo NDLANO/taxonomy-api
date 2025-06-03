@@ -100,8 +100,11 @@ public class DraftApiClient {
                     .map(s -> " som " + s)
                     .orElse("");
 
-            var noteString = String.format(
-                    "Taksonomi: lagt til i %s med id '%s'%s", parent.getNodeType(), parentId.id, relevanceNotePart);
+            var template = "Taksonomi: lagt til i %s med id '%s'%s";
+            var noteString = String.format(template, parent.getNodeType(), parentId.id, relevanceNotePart);
+            if (parentId.type.equals("frontpage")) {
+                noteString = String.format(template, parent.getNodeType(), parent.getPublicId(), relevanceNotePart);
+            }
             var note = DraftNotesDTO.fromNote(childId.id, noteString);
             notesList.add(note);
         }
