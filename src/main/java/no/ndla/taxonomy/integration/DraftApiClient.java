@@ -13,10 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Translation;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.integration.dtos.DraftNotesDTO;
 import no.ndla.taxonomy.integration.dtos.UpdateNotesDTO;
 import org.slf4j.Logger;
@@ -76,13 +73,15 @@ public class DraftApiClient {
                     .orElse("barn");
 
             var noteString = String.format(
-                    "Taksonomi: %s med id '%s' lagt til som %s", child.getNodeType(), childId.id, relevanceNotePart);
+                    "Taksonomi: %s med id '%s' lagt til som %s",
+                    nodeTypeName(child.getNodeType()), childId.id, relevanceNotePart);
             var note = DraftNotesDTO.fromNote(parentId.id, noteString);
             notesList.add(note);
 
             if (newConnection.isPrimary().orElse(false)) {
                 var primaryNoteString = String.format(
-                        "Taksonomi: %s med id '%s' lagt til som primærkobling", child.getNodeType(), childId.id);
+                        "Taksonomi: %s med id '%s' lagt til som primærkobling",
+                        nodeTypeName(child.getNodeType()), childId.id);
                 var primaryNote = DraftNotesDTO.fromNote(parentId.id, primaryNoteString);
                 notesList.add(primaryNote);
             }
@@ -101,9 +100,11 @@ public class DraftApiClient {
                     .orElse("");
 
             var template = "Taksonomi: lagt til i %s med id '%s'%s";
-            var noteString = String.format(template, parent.getNodeType(), parentId.id, relevanceNotePart);
+            var noteString =
+                    String.format(template, nodeTypeName(parent.getNodeType()), parentId.id, relevanceNotePart);
             if (parentId.type.equals("frontpage")) {
-                noteString = String.format(template, parent.getNodeType(), parent.getPublicId(), relevanceNotePart);
+                noteString = String.format(
+                        template, nodeTypeName(parent.getNodeType()), parent.getPublicId(), relevanceNotePart);
             }
             var note = DraftNotesDTO.fromNote(childId.id, noteString);
             notesList.add(note);
@@ -142,7 +143,8 @@ public class DraftApiClient {
     private List<DraftNotesDTO> removedFromParentNotes(IdAndType parentId, IdAndType childId, Node parent) {
         var notesList = new ArrayList<DraftNotesDTO>();
         if (Objects.equals(childId.type, "article")) {
-            var noteString = String.format("Taksonomi: fjernet fra %s med id '%s'", parent.getNodeType(), parentId.id);
+            var noteString = String.format(
+                    "Taksonomi: fjernet fra %s med id '%s'", nodeTypeName(parent.getNodeType()), parentId.id);
             var note = DraftNotesDTO.fromNote(childId.id, noteString);
             notesList.add(note);
         }
@@ -152,7 +154,8 @@ public class DraftApiClient {
     private List<DraftNotesDTO> childRemovedNotes(IdAndType parentId, IdAndType childId, Node child) {
         var notesList = new ArrayList<DraftNotesDTO>();
         if (Objects.equals(parentId.type, "article")) {
-            var noteString = String.format("Taksonomi: %s med id '%s' fjernet", child.getNodeType(), childId.id);
+            var noteString =
+                    String.format("Taksonomi: %s med id '%s' fjernet", nodeTypeName(child.getNodeType()), childId.id);
             var note = DraftNotesDTO.fromNote(parentId.id, noteString);
             notesList.add(note);
         }
@@ -187,11 +190,12 @@ public class DraftApiClient {
                         childId.id,
                         String.format(
                                 "Taksonomi: satt som %s av %s med id '%s'",
-                                newRelevance, parent.getNodeType(), parentId.id)));
+                                newRelevance.getTranslatedName(), nodeTypeName(parent.getNodeType()), parentId.id)));
             }
             if (parentId.type.equals("article")) {
                 var note = String.format(
-                        "Taksonomi: %s med id '%s' satt som %s", child.getNodeType(), childId.id, newRelevance);
+                        "Taksonomi: %s med id '%s' satt som %s",
+                        nodeTypeName(child.getNodeType()), childId.id, newRelevance.getTranslatedName());
                 notes.add(DraftNotesDTO.fromNote(parentId.id, note));
             }
         }
@@ -199,9 +203,10 @@ public class DraftApiClient {
         var oldPrimary = nodeConnection.isPrimary().orElse(false);
         var newPrimary = newIsPrimary.orElse(false);
         if (oldPrimary != newPrimary && parentId.type.equals("article")) {
-            var note =
-                    String.format("Taksonomi: %s med id '%s' satt som primærkobling", child.getNodeType(), childId.id);
-            notes.add(DraftNotesDTO.fromNote(parentId.id, note));
+            var note = String.format(
+                    "Taksonomi: %s med id '%s' satt som primærkobling på %s med id '%s'",
+                    nodeTypeName(child.getNodeType()), childId.id, nodeTypeName(parent.getNodeType()), parentId.id);
+            notes.add(DraftNotesDTO.fromNote(childId.id, note));
         }
 
         if (!notes.isEmpty()) {
@@ -230,6 +235,16 @@ public class DraftApiClient {
         } catch (NumberFormatException e) {
             return Optional.empty();
         }
+    }
+
+    private String nodeTypeName(NodeType nodeType) {
+        return switch (nodeType) {
+            case NODE -> "node";
+            case TOPIC -> "emne";
+            case RESOURCE -> "ressurs";
+            case SUBJECT -> "fag";
+            case PROGRAMME -> "utdanningsprogram";
+        };
     }
 
     private void updateNotes(UpdateNotesDTO updateNotes) {
