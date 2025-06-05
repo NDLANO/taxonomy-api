@@ -189,7 +189,7 @@ public class DraftApiClient {
                 notes.add(DraftNotesDTO.fromNote(
                         childId.id,
                         String.format(
-                                "Taksonomi: satt som %s av %s med id '%s'",
+                                "Taksonomi: satt som %s for %s med id '%s'",
                                 newRelevance.getTranslatedName(), nodeTypeName(parent.getNodeType()), parentId.id)));
             }
             if (parentId.type.equals("article")) {
@@ -203,9 +203,10 @@ public class DraftApiClient {
         var oldPrimary = nodeConnection.isPrimary().orElse(false);
         var newPrimary = newIsPrimary.orElse(false);
         if (oldPrimary != newPrimary && parentId.type.equals("article")) {
+            var action = newPrimary ? "satt" : "fjernet";
             var note = String.format(
-                    "Taksonomi: %s med id '%s' satt som primærkobling på %s med id '%s'",
-                    nodeTypeName(child.getNodeType()), childId.id, nodeTypeName(parent.getNodeType()), parentId.id);
+                    "Taksonomi: %s som primærkobling på %s med id '%s'",
+                    action, nodeTypeName(parent.getNodeType()), parentId.id);
             notes.add(DraftNotesDTO.fromNote(childId.id, note));
         }
 
