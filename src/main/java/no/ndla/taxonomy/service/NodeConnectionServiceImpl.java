@@ -201,6 +201,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
                     foundNewPrimary.set(true);
                     updatedConnectables.add(connectable1);
                 } else if (setPrimaryTo) {
+                    draftApiClient.updatePrimaryNotesWithUpdatedConnection(connectable1, Optional.of(false));
                     connectable1.setPrimary(false);
                     updatedConnectables.add(connectable1);
                 }
@@ -247,13 +248,14 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     @Override
     public void updateParentChild(
             NodeConnection nodeConnection,
-            Relevance relevance,
+            Relevance newRelevance,
             Optional<Integer> newRank,
             Optional<Boolean> isPrimary) {
-        draftApiClient.updateNotesWithUpdatedConnection(nodeConnection, relevance, isPrimary);
+        draftApiClient.updateRelevanceNotesWithUpdatedConnection(nodeConnection, newRelevance);
+        draftApiClient.updatePrimaryNotesWithUpdatedConnection(nodeConnection, isPrimary);
         newRank.ifPresent(integer -> updateRank(nodeConnection, integer));
         isPrimary.ifPresent(primary -> updatePrimaryConnection(nodeConnection, primary));
-        updateRelevance(nodeConnection, relevance);
+        updateRelevance(nodeConnection, newRelevance);
 
         nodeConnection.getChild().ifPresent(contextUpdaterService::updateContexts);
     }

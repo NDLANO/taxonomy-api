@@ -162,8 +162,7 @@ public class DraftApiClient {
         return notesList;
     }
 
-    public void updateNotesWithUpdatedConnection(
-            NodeConnection nodeConnection, Relevance newRelevance, Optional<Boolean> newIsPrimary) {
+    public void updateRelevanceNotesWithUpdatedConnection(NodeConnection nodeConnection, Relevance newRelevance) {
         var maybeParent = nodeConnection.getParent();
         var maybeChild = nodeConnection.getChild();
         var maybeParentId = maybeParent.flatMap(p -> getId(p.getContentUri()));
@@ -199,6 +198,29 @@ public class DraftApiClient {
                 notes.add(DraftNotesDTO.fromNote(parentId.id, note));
             }
         }
+
+        if (!notes.isEmpty()) {
+            updateNotes(new UpdateNotesDTO(notes));
+        }
+    }
+
+    public void updatePrimaryNotesWithUpdatedConnection(NodeConnection nodeConnection, Optional<Boolean> newIsPrimary) {
+        var maybeParent = nodeConnection.getParent();
+        var maybeChild = nodeConnection.getChild();
+        var maybeParentId = maybeParent.flatMap(p -> getId(p.getContentUri()));
+        var maybeChildId = maybeChild.flatMap(c -> getId(c.getContentUri()));
+
+        if (maybeParent.isEmpty() || maybeChild.isEmpty() || maybeParentId.isEmpty() || maybeChildId.isEmpty()) {
+            logger.error(
+                    "Attempted to update draft with updated connection, but parent or child was missing. This is a bug somewhere.");
+            return;
+        }
+
+        var parent = maybeParent.get();
+        var parentId = maybeParentId.get();
+        var childId = maybeChildId.get();
+
+        var notes = new ArrayList<DraftNotesDTO>();
 
         var oldPrimary = nodeConnection.isPrimary().orElse(false);
         var newPrimary = newIsPrimary.orElse(false);
