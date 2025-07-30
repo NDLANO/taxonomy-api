@@ -21,7 +21,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 public class AbstractIntegrationTest {
 
     @Container
-    private static final PostgreSQLContainer<?> postgresDB = new PostgreSQLContainer<>("postgres:16.3");
+    private static final PostgreSQLContainer<?> postgresDB = new PostgreSQLContainer<>("postgres:17.5");
 
     @Autowired
     EntityManager entityManager;
