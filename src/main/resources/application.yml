@@ -61,6 +61,7 @@ spring:
       on-profile: staging
 
 auth0:
+  audience: ndla_system
   issuer: https://ndla-staging.eu.auth0.com/
   jwks.kid: NDFFOTUxMjQ1ODNDMTlBRkE0RkQ4NDc0RjUxNjUxREE0MTUyQTQ3NQ
 
@@ -73,6 +74,7 @@ spring:
       on-profile: prod
 
 auth0:
+  audience: ndla_system
   issuer: https://ndla.eu.auth0.com/
   jwks.kid: OEI1MUU4ODk5NzM5MzI2MzZDODk1N0YwQzdDMDQyODVCQzQ3QTI0MA
 
@@ -85,6 +87,7 @@ spring:
       on-profile: test
 
 auth0:
+  audience: ndla_system
   issuer: https://ndla-test.eu.auth0.com/
   jwks.kid: QzlEOTQ5M0NGMDk4NjExOEJGMjc2MjVFODhEQkE1NUI2NkE0RTQyRg
 
