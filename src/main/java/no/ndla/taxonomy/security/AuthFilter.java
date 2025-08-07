@@ -40,6 +40,9 @@ import org.springframework.web.filter.GenericFilterBean;
 @Order(2)
 public class AuthFilter extends GenericFilterBean {
 
+    @Value(value = "${auth0.audience}")
+    private String audience;
+
     @Value(value = "${auth0.issuer}")
     private String issuer;
 
@@ -79,7 +82,7 @@ public class AuthFilter extends GenericFilterBean {
 
     private DecodedJWT verifyWebToken(String token) {
         Algorithm algorithm = Algorithm.RSA256(publicKey, null);
-        JWTVerifier verifier = JWT.require(algorithm).withIssuer(issuer).build();
+        JWTVerifier verifier = JWT.require(algorithm).withAnyOfAudience(audience).build();
         return verifier.verify(token);
     }
 }
