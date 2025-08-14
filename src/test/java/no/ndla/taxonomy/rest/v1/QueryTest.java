@@ -39,7 +39,7 @@ public class QueryTest extends RestTest {
         var resources = testUtils.getObject(NodeDTO[].class, response);
 
         assertEquals(1, resources.length);
-        assertEquals(resources[0].getResourceTypes().size(), 1);
+        assertEquals(1, resources[0].getResourceTypes().size());
     }
 
     @Test
@@ -92,7 +92,7 @@ public class QueryTest extends RestTest {
         var resources = testUtils.getObject(NodeDTO[].class, response);
 
         assertEquals(1, resources.length);
-        assertEquals(resources[0].getResourceTypes().size(), 1);
+        assertEquals(1, resources[0].getResourceTypes().size());
         assertEquals("ressurs", resources[0].getName());
     }
 

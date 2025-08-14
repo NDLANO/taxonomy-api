@@ -28,7 +28,7 @@ public class NodeWithParents extends NodeDTO {
 
     public NodeWithParents() {}
 
-    public NodeWithParents(Node node, String languageCode, Optional<Boolean> includeContexts) {
+    public NodeWithParents(Node node, String languageCode, boolean includeContexts) {
         super(
                 Optional.empty(),
                 Optional.empty(),

@@ -57,7 +57,7 @@ public class NodePostPut implements UpdatableDto<Node> {
 
     @JsonProperty
     @Schema(description = "The language used at create time. Used to set default translation.", example = "nb")
-    public Optional<String> language = Optional.empty();
+    public String language = Constants.DefaultLanguage;
 
     @JsonProperty
     @Schema(description = "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.")
@@ -106,7 +106,7 @@ public class NodePostPut implements UpdatableDto<Node> {
         // Add translation only on post
         name.ifPresent(name -> {
             if (node.getId() == null) {
-                node.addTranslation(name, language.orElse(Constants.DefaultLanguage));
+                node.addTranslation(name, language);
             }
         });
     }

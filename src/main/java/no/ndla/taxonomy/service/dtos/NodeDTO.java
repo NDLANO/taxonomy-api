@@ -106,7 +106,7 @@ public class NodeDTO {
             Node entity,
             String languageCode,
             Optional<String> contextId,
-            Optional<Boolean> includeContexts,
+            boolean includeContexts,
             boolean filterProgrammes,
             boolean isVisible,
             boolean includeParents) {
@@ -170,11 +170,11 @@ public class NodeDTO {
             this.context = Optional.of(contextDto);
         });
 
-        includeContexts
-                .filter(Boolean::booleanValue)
-                .ifPresent(includeCtx -> this.contexts = filteredContexts.stream()
-                        .map(ctx -> getTaxonomyContextDTO(entity, ctx, parentContexts))
-                        .toList());
+        if (includeContexts) {
+            this.contexts = filteredContexts.stream()
+                    .map(ctx -> getTaxonomyContextDTO(entity, ctx, parentContexts))
+                    .toList();
+        }
     }
 
     private TaxonomyContextDTO getTaxonomyContextDTO(

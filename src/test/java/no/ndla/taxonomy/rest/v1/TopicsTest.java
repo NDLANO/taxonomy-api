@@ -374,16 +374,11 @@ public class TopicsTest extends RestTest {
 
     private static class ConnectionTypeCounter {
         private final ConnectionDTO[] connections;
-        private int subjectCount;
         private int parentCount;
         private int childCount;
 
         ConnectionTypeCounter(ConnectionDTO[] connections) {
             this.connections = connections;
-        }
-
-        int getSubjectCount() {
-            return subjectCount;
         }
 
         int getParentCount() {
@@ -395,14 +390,10 @@ public class TopicsTest extends RestTest {
         }
 
         ConnectionTypeCounter countTypes() {
-            subjectCount = 0;
             parentCount = 0;
             childCount = 0;
             for (ConnectionDTO connection : connections) {
                 switch (connection.getType()) {
-                    case "parent-subject":
-                        subjectCount++;
-                        break;
                     case "parent":
                         parentCount++;
                         break;

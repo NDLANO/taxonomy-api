@@ -117,8 +117,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
+                "",
+                true,
                 false,
                 10,
                 1,
@@ -131,8 +131,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
+                "",
+                true,
                 false,
                 10,
                 1,
@@ -144,8 +144,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
+                "",
+                true,
                 false,
                 10,
                 1,
@@ -156,9 +156,9 @@ public class NodeServiceTest extends AbstractIntegrationTest {
 
         assertEquals(subjects.getResults().getFirst().getId(), subject.getPublicId());
 
-        assertEquals(subjects.getTotalCount(), 1);
-        assertEquals(topics.getTotalCount(), 4);
-        assertEquals(all.getTotalCount(), 5);
+        assertEquals(1, subjects.getTotalCount());
+        assertEquals(4, topics.getTotalCount());
+        assertEquals(5, all.getTotalCount());
     }
 
     @Test
@@ -172,8 +172,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.of("tiger"),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
+                "",
+                true,
                 false,
                 10,
                 1,
@@ -183,7 +183,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty());
 
         assertEquals(result.getResults().getFirst().getId(), tiger.getPublicId());
-        assertEquals(result.getTotalCount(), 1);
+        assertEquals(1, result.getTotalCount());
     }
 
     @Test
@@ -201,8 +201,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.of(idList),
                 Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
+                "",
+                true,
                 false,
                 10,
                 1,
@@ -211,16 +211,16 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.empty());
 
-        assertEquals(result.getResults().get(0).getId(), new URI("urn:topic:1"));
-        assertEquals(result.getResults().get(1).getId(), new URI("urn:topic:2"));
-        assertEquals(result.getTotalCount(), 2);
+        assertEquals(new URI("urn:topic:1"), result.getResults().get(0).getId());
+        assertEquals(new URI("urn:topic:2"), result.getResults().get(1).getId());
+        assertEquals(2, result.getTotalCount());
 
         var result2 = searchService.search(
                 Optional.of("Ape"),
                 Optional.of(idList),
                 Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
+                "",
+                true,
                 false,
                 10,
                 1,
@@ -229,8 +229,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.empty());
 
-        assertEquals(result2.getResults().getFirst().getId(), new URI("urn:topic:1"));
-        assertEquals(result2.getTotalCount(), 1);
+        assertEquals(new URI("urn:topic:1"), result2.getResults().getFirst().getId());
+        assertEquals(1, result2.getTotalCount());
     }
 
     @Test
@@ -253,8 +253,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of(idList),
-                Optional.empty(),
-                Optional.empty(),
+                "",
+                true,
                 false,
                 10,
                 1,
@@ -265,6 +265,6 @@ public class NodeServiceTest extends AbstractIntegrationTest {
 
         assertAnyTrue(result.getResults(), res -> res.getId().equals(URI.create("urn:topic:1")));
         assertAnyTrue(result.getResults(), res -> res.getId().equals(URI.create("urn:topic:4")));
-        assertEquals(result.getTotalCount(), 2);
+        assertEquals(2, result.getTotalCount());
     }
 }

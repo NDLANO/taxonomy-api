@@ -39,12 +39,11 @@ public class Queries {
             @PathVariable("contentURI") Optional<URI> contentURI,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
-                    Optional<String> language,
+                    String language,
             @Parameter(description = "Whether to filter out contexts if a parent (or the node itself) is non-visible")
                     @RequestParam(value = "filterVisibles", required = false, defaultValue = "true")
                     boolean filterVisibles) {
-        return nodeService.getSearchableByContentUri(
-                contentURI, filterVisibles, language.orElse(Constants.DefaultLanguage));
+        return nodeService.getSearchableByContentUri(contentURI, filterVisibles, language);
     }
 
     @GetMapping("/contextId")
@@ -54,8 +53,8 @@ public class Queries {
             @RequestParam("contextId") Optional<String> contextId,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
-                    Optional<String> language) {
-        return nodeService.getContextByContextId(contextId, language.orElse(Constants.DefaultLanguage));
+                    String language) {
+        return nodeService.getContextByContextId(contextId, language);
     }
 
     @GetMapping("/path")
@@ -67,8 +66,8 @@ public class Queries {
             @RequestParam("path") Optional<String> path,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
-                    Optional<String> language) {
-        return nodeService.getContextByPath(path, language.orElse(Constants.DefaultLanguage));
+                    String language) {
+        return nodeService.getContextByPath(path, language);
     }
 
     @GetMapping("/resources")
@@ -81,7 +80,7 @@ public class Queries {
             @RequestParam("contentURI") Optional<URI> contentURI,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
-                    Optional<String> language,
+                    String language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false)
                     Optional<String> key,
             @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false)
@@ -101,7 +100,7 @@ public class Queries {
             @RequestParam("contentURI") URI contentURI,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
-                    Optional<String> language,
+                    String language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false)
                     Optional<String> key,
             @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false)

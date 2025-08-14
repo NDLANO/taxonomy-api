@@ -54,7 +54,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     public List<NodeDTO> getAllSubjects(
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
-                    Optional<String> language,
+                    String language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false)
                     Optional<String> key,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false)
@@ -72,7 +72,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                 value,
                 isVisible,
                 Optional.empty(),
-                Optional.of(true),
+                true,
                 true,
                 Optional.empty(),
                 Optional.empty());
@@ -85,7 +85,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     public SearchResultDTO<NodeDTO> searchSubjects(
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
-                    Optional<String> language,
+                    String language,
             @Parameter(description = "How many results to return per page")
                     @RequestParam(value = "pageSize", defaultValue = "10")
                     int pageSize,
@@ -105,7 +105,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                 ids,
                 contentUris,
                 Optional.of(List.of(NodeType.SUBJECT)),
-                Optional.of(true),
+                true,
                 true,
                 Optional.empty(),
                 Optional.empty());
@@ -118,11 +118,10 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     public SearchResultDTO<NodeDTO> getSubjectPage(
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
-                    Optional<String> language,
+                    String language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
-        return nodes.getNodePage(
-                language, page, pageSize, Optional.of(NodeType.SUBJECT), Optional.of(true), true, true);
+        return nodes.getNodePage(language, page, pageSize, Optional.of(NodeType.SUBJECT), true, true, true);
     }
 
     @Deprecated
@@ -135,8 +134,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             @PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
-                    Optional<String> language) {
-        return nodes.getNode(id, Optional.empty(), Optional.empty(), Optional.of(true), true, true, language);
+                    String language) {
+        return nodes.getNode(id, Optional.empty(), Optional.empty(), true, true, true, language);
     }
 
     @Deprecated
@@ -181,15 +180,15 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             @PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
-                    Optional<String> language,
+                    String language,
             @Parameter(description = "If true, subtopics are fetched recursively")
                     @RequestParam(value = "recursive", required = false, defaultValue = "false")
                     boolean recursive,
             @Parameter(description = "Select by relevance. If not specified, all nodes will be returned.")
                     @RequestParam(value = "relevance", required = false)
                     Optional<URI> relevance) {
-        var children = nodes.getChildren(
-                id, Optional.of(List.of(NodeType.TOPIC)), recursive, language, Optional.of(true), true, true);
+        var children =
+                nodes.getChildren(id, Optional.of(List.of(NodeType.TOPIC)), recursive, language, true, true, true);
         return relevance
                 .map(rel -> children.stream()
                         .filter(node -> node.getRelevanceId().isPresent()
@@ -222,7 +221,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             @PathVariable("subjectId") URI subjectId,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
-                    Optional<String> language,
+                    String language,
             @Parameter(
                             description =
                                     "Filter by resource type id(s). If not specified, resources of all types will be returned."
@@ -232,6 +231,6 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Select by relevance. If not specified, all resources will be returned.")
                     @RequestParam(value = "relevance", required = false)
                     Optional<URI> relevance) {
-        return nodes.getResources(subjectId, language, Optional.of(true), true, true, true, resourceTypeIds, relevance);
+        return nodes.getResources(subjectId, language, true, true, true, true, resourceTypeIds, relevance);
     }
 }

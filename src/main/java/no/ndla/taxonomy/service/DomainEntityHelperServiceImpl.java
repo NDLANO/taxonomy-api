@@ -13,8 +13,6 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Transactional(readOnly = true)
 public class DomainEntityHelperServiceImpl implements DomainEntityHelperService {
-    final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
 

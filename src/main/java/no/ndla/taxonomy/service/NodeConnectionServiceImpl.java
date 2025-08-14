@@ -237,14 +237,6 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         this.saveConnections(Collections.singletonList(connection));
     }
 
-    private void updateRankableConnection(NodeConnection connection, boolean isPrimary, Integer newRank) {
-        updatePrimaryConnection(connection, isPrimary);
-
-        if (newRank != null) {
-            updateRank(connection, newRank);
-        }
-    }
-
     @Override
     public void updateParentChild(
             NodeConnection nodeConnection,

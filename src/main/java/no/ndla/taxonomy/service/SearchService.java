@@ -7,8 +7,6 @@
 
 package no.ndla.taxonomy.service;
 
-import static org.springframework.data.jpa.domain.Specification.where;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -20,8 +18,6 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -29,7 +25,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class SearchService {
 
-    Logger logger = LoggerFactory.getLogger(getClass().getName());
     private final NodeRepository nodeRepository;
 
     public SearchService(NodeRepository nodeRepository) {
@@ -44,8 +39,8 @@ public class SearchService {
             Optional<String> query,
             Optional<List<String>> ids,
             Optional<List<String>> contentUris,
-            Optional<String> language,
-            Optional<Boolean> includeContexts,
+            String language,
+            boolean includeContexts,
             boolean filterProgrammes,
             int pageSize,
             int page,
@@ -100,8 +95,8 @@ public class SearchService {
             Optional<String> query,
             Optional<List<String>> ids,
             Optional<List<String>> contentUris,
-            Optional<String> language,
-            Optional<Boolean> includeContexts,
+            String language,
+            boolean includeContexts,
             boolean filterProgrammes,
             int pageSize,
             int page,
@@ -113,7 +108,7 @@ public class SearchService {
         if (page < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
 
         var pageRequest = PageRequest.of(page - 1, pageSize);
-        Specification<Node> spec = where(base());
+        Specification<Node> spec = base();
 
         if (query.isPresent()) {
             spec = spec.and(withNameLike(query.get()));
@@ -133,7 +128,7 @@ public class SearchService {
         var rootNode = rootId.flatMap(nodeRepository::findFirstByPublicId);
         var parentNode = parentId.flatMap(nodeRepository::findFirstByPublicId);
 
-        var languageCode = language.orElse("");
+        var languageCode = language != null ? language : "";
         var dtos = fetched.stream()
                 .map(r -> new NodeDTO(
                         rootNode,

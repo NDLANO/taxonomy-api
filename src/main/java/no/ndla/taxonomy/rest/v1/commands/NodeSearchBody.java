@@ -25,7 +25,7 @@ public class NodeSearchBody {
 
     @Schema(description = "ISO-639-1 language code", example = "nb")
     @JsonProperty
-    public Optional<String> language = Optional.of(Constants.DefaultLanguage);
+    public String language = Constants.DefaultLanguage;
 
     @Schema(description = "How many results to return per page")
     @JsonProperty
@@ -53,7 +53,7 @@ public class NodeSearchBody {
 
     @Schema(description = "Include all contexts")
     @JsonProperty
-    public Optional<Boolean> includeContexts = Optional.empty();
+    public boolean includeContexts = false;
 
     @Schema(description = "Filter out programme contexts")
     @JsonProperty
