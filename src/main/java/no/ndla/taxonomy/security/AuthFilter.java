@@ -82,7 +82,8 @@ public class AuthFilter extends GenericFilterBean {
 
     private DecodedJWT verifyWebToken(String token) {
         Algorithm algorithm = Algorithm.RSA256(publicKey, null);
-        JWTVerifier verifier = JWT.require(algorithm).withAnyOfAudience(audience).build();
+        JWTVerifier verifier =
+                JWT.require(algorithm).withAnyOfAudience(audience).build();
         return verifier.verify(token);
     }
 }

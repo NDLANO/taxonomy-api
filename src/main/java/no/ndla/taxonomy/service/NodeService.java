@@ -39,7 +39,6 @@ public class NodeService {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final NodeConnectionService connectionService;
-    private final TreeSorter topicTreeSorter;
     private final DomainEntityHelperService domainEntityHelperService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
@@ -51,13 +50,11 @@ public class NodeService {
             NodeConnectionRepository nodeConnectionRepository,
             NodeRepository nodeRepository,
             RecursiveNodeTreeService recursiveNodeTreeService,
-            TreeSorter topicTreeSorter,
             TreeSorter treeSorter,
             ContextUpdaterService contextUpdaterService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
-        this.topicTreeSorter = topicTreeSorter;
         this.domainEntityHelperService = domainEntityHelperService;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = treeSorter;
@@ -85,7 +82,7 @@ public class NodeService {
             Optional<Boolean> isRoot,
             Optional<Boolean> isContext,
             MetadataFilters metadataFilters,
-            Optional<Boolean> includeContexts,
+            boolean includeContexts,
             boolean filterProgrammes,
             boolean includeParents,
             Optional<URI> rootId,
@@ -142,42 +139,19 @@ public class NodeService {
                 .toList();
     }
 
-    public List<NodeChildDTO> getFilteredChildConnections(URI nodePublicId, String languageCode) {
-        Node node = nodeRepository
-                .findFirstByPublicId(nodePublicId)
-                .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
-        final List<NodeConnection> childConnections =
-                nodeConnectionRepository.findAllByParentPublicIdIncludingChildAndChildTranslations(nodePublicId);
-
-        final var wrappedList = childConnections.stream()
-                .map(nodeConnection -> new NodeChildDTO(
-                        Optional.of(node), nodeConnection, languageCode, Optional.of(false), false, true))
-                .toList();
-
-        return topicTreeSorter.sortList(wrappedList);
-    }
-
     public NodeDTO getNode(
             URI publicId,
-            Optional<String> language,
+            String language,
             Optional<URI> rootId,
             Optional<URI> parentId,
-            Optional<Boolean> includeContexts,
+            boolean includeContexts,
             boolean filterProgrammes,
             boolean isVisible) {
         var node = getNode(publicId);
         var root = rootId.flatMap(this::getMaybeNode);
         var parent = parentId.flatMap(this::getMaybeNode);
         return new NodeDTO(
-                root,
-                parent,
-                node,
-                language.orElse(Constants.DefaultLanguage),
-                Optional.empty(),
-                includeContexts,
-                filterProgrammes,
-                isVisible,
-                true);
+                root, parent, node, language, Optional.empty(), includeContexts, filterProgrammes, isVisible, true);
     }
 
     public Optional<Node> getMaybeNode(URI publicId) {
@@ -194,7 +168,7 @@ public class NodeService {
             Optional<URI> relevanceId,
             Optional<String> languageCode,
             boolean recursive,
-            Optional<Boolean> includeContexts,
+            boolean includeContexts,
             boolean filterProgrammes,
             boolean isVisible) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
@@ -244,7 +218,7 @@ public class NodeService {
             Optional<URI> relevanceId,
             Set<ResourceTreeSortable> sortableListToAddTo,
             Optional<String> languageCode,
-            Optional<Boolean> includeContexts,
+            boolean includeContexts,
             boolean filterProgrammes,
             boolean isVisible) {
         final List<NodeConnection> nodeResources;

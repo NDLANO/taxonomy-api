@@ -67,7 +67,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     public List<NodeDTO> getAllResources(
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
-                    Optional<String> language,
+                    String language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false)
                     Optional<URI> contentUri,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false)
@@ -87,7 +87,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                 value,
                 isVisible,
                 Optional.empty(),
-                Optional.of(true),
+                true,
                 true,
                 Optional.empty(),
                 Optional.empty());
@@ -100,7 +100,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     public SearchResultDTO<NodeDTO> searchResources(
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
-                    Optional<String> language,
+                    String language,
             @Parameter(description = "How many results to return per page")
                     @RequestParam(value = "pageSize", defaultValue = "10")
                     int pageSize,
@@ -120,7 +120,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                 ids,
                 contentUris,
                 Optional.of(List.of(NodeType.RESOURCE)),
-                Optional.of(true),
+                true,
                 true,
                 Optional.empty(),
                 Optional.empty());
@@ -133,11 +133,10 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     public SearchResultDTO<NodeDTO> getResourcePage(
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
-                    Optional<String> language,
+                    String language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
-        return nodes.getNodePage(
-                language, page, pageSize, Optional.of(NodeType.RESOURCE), Optional.of(true), true, true);
+        return nodes.getNodePage(language, page, pageSize, Optional.of(NodeType.RESOURCE), true, true, true);
     }
 
     @Deprecated
@@ -148,8 +147,8 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
-                    Optional<String> language) {
-        return nodes.getNode(id, Optional.empty(), Optional.empty(), Optional.of(true), true, true, language);
+                    String language) {
+        return nodes.getNode(id, Optional.empty(), Optional.empty(), true, true, true, language);
     }
 
     @Deprecated
@@ -212,11 +211,10 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
-                    Optional<String> language) {
+                    String language) {
 
         return resourceResourceTypeRepository.resourceResourceTypeByParentId(id).stream()
-                .map(resourceResourceType -> new ResourceTypeWithConnectionDTO(
-                        resourceResourceType, language.orElse(Constants.DefaultLanguage)))
+                .map(resourceResourceType -> new ResourceTypeWithConnectionDTO(resourceResourceType, language))
                 .toList();
     }
 
@@ -228,8 +226,8 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
-                    Optional<String> language) {
-        return nodes.getNodeFull(id, language, Optional.of(true));
+                    String language) {
+        return nodes.getNodeFull(id, language, true);
     }
 
     @Deprecated

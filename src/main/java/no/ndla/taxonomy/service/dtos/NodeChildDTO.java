@@ -45,7 +45,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
             Optional<Node> root,
             NodeConnection nodeConnection,
             String language,
-            Optional<Boolean> includeContexts,
+            boolean includeContexts,
             boolean filterProgrammes,
             boolean isVisible) {
         super(
@@ -83,7 +83,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
                 parent,
                 language,
                 Optional.empty(),
-                Optional.of(false),
+                false,
                 false,
                 true,
                 false);

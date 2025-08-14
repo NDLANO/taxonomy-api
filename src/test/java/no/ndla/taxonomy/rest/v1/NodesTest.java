@@ -1776,8 +1776,7 @@ public class NodesTest extends RestTest {
 
     public QualityEvaluationDTO getRandomGrade() {
         var x = new Random().nextInt(5) + 1;
-        var dto = new QualityEvaluationDTO(Grade.fromInt(x), Optional.of("Random grade " + x));
-        return dto;
+        return new QualityEvaluationDTO(Grade.fromInt(x), Optional.of("Random grade " + x));
     }
 
     public void testQualityEvaluationAverage(Node inputNode, int expectedCount, double expectedAverage) {
