@@ -119,8 +119,9 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
                     String language,
-            @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
-            @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
+            @Parameter(description = "The page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
+            @Parameter(description = "Size of page to fetch") @RequestParam(value = "pageSize", defaultValue = "10")
+                    int pageSize) {
         return nodes.getNodePage(language, page, pageSize, Optional.of(NodeType.SUBJECT), true, true, true);
     }
 

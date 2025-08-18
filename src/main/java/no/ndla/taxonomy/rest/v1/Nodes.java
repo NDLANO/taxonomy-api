@@ -208,10 +208,11 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
                     String language,
-            @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
-            @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize,
+            @Parameter(description = "The page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
+            @Parameter(description = "Size of page to fetch") @RequestParam(value = "pageSize", defaultValue = "10")
+                    int pageSize,
             @Parameter(name = "nodeType", description = "Filter by nodeType") Optional<NodeType> nodeType,
-            @Parameter(name = "includeContexts", description = "Include all contexts")
+            @Parameter(description = "Include all contexts")
                     @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
                     boolean includeContexts,
             @Parameter(description = "Filter out programme contexts")
@@ -220,14 +221,10 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Only visible contexts")
                     @RequestParam(value = "isVisible", required = false, defaultValue = "true")
                     boolean isVisible) {
-        if (page.isEmpty() || pageSize.isEmpty()) {
-            throw new IllegalArgumentException("Need both page and pageSize to return data");
-        }
-        if (page.get() < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
+        if (page < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
 
-        var ids = nodeType.map(
-                        nt -> nodeRepository.findIdsByTypePaginated(PageRequest.of(page.get() - 1, pageSize.get()), nt))
-                .orElseGet(() -> nodeRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get())));
+        var ids = nodeType.map(nt -> nodeRepository.findIdsByTypePaginated(PageRequest.of(page - 1, pageSize), nt))
+                .orElseGet(() -> nodeRepository.findIdsPaginated(PageRequest.of(page - 1, pageSize)));
         var results = nodeRepository.findByIds(ids.getContent());
         var contents = results.stream()
                 .map(node -> new NodeDTO(
@@ -241,7 +238,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                         isVisible,
                         false))
                 .collect(Collectors.toList());
-        return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
+        return new SearchResultDTO<>(ids.getTotalElements(), page, pageSize, contents);
     }
 
     @GetMapping("/{id}")
@@ -253,7 +250,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<URI> rootId,
             @Parameter(description = "Id to parent id in context.") @RequestParam(value = "parentId", required = false)
                     Optional<URI> parentId,
-            @Parameter(name = "includeContexts", description = "Include all contexts")
+            @Parameter(description = "Include all contexts")
                     @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
                     boolean includeContexts,
             @Parameter(description = "Filter out programme contexts")

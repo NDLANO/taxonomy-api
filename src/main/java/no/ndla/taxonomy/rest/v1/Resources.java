@@ -134,8 +134,9 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
                     String language,
-            @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
-            @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
+            @Parameter(description = "The page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
+            @Parameter(description = "Size of page to fetch") @RequestParam(value = "pageSize", defaultValue = "10")
+                    int pageSize) {
         return nodes.getNodePage(language, page, pageSize, Optional.of(NodeType.RESOURCE), true, true, true);
     }
 
@@ -191,8 +192,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> cloneResource(
-            @Parameter(name = "id", description = "Id of resource to clone", example = "urn:resource:1")
-                    @PathVariable("id")
+            @Parameter(description = "Id of resource to clone", example = "urn:resource:1") @PathVariable("id")
                     URI publicId,
             @Parameter(name = "resource", description = "Object containing contentUri. Other values are ignored.")
                     @RequestBody
