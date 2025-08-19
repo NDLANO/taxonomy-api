@@ -69,7 +69,7 @@ public class DraftApiClient {
         if (Objects.equals(parentId.type, "article")) {
             var relevanceNotePart = newConnection
                     .getRelevance()
-                    .flatMap(r -> r.getTranslations().stream().findFirst().map(Translation::getName))
+                    .map(Relevance::getTranslatedName)
                     .orElse("barn");
 
             var noteString = String.format(
