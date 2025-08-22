@@ -152,7 +152,7 @@ export interface NodePostPut {
     /**
      * The language used at create time. Used to set default translation.
      */
-    language?: string;
+    language: string;
     /**
      * The name of the node. Required on create.
      */
@@ -263,11 +263,11 @@ export interface NodeSearchBody {
     /**
      * Include all contexts
      */
-    includeContexts?: boolean;
+    includeContexts: boolean;
     /**
      * ISO-639-1 language code
      */
-    language?: string;
+    language: string;
     /**
      * Filter by nodeType
      */
