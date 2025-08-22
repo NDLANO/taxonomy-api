@@ -74,17 +74,15 @@ public class TopicSubtopics {
     @Operation(summary = "Gets all connections between topics and subtopics paginated")
     @Transactional(readOnly = true)
     public SearchResultDTO<TopicSubtopicDTO> getTopicSubtopicPage(
-            @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
-            @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
-        if (page.isEmpty() || pageSize.isEmpty()) {
-            throw new IllegalArgumentException("Need both page and pageSize to return data");
-        }
-        if (page.get() < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
+            @Parameter(description = "The page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
+            @Parameter(description = "Size of page to fetch") @RequestParam(value = "pageSize", defaultValue = "10")
+                    int pageSize) {
+        if (page < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
 
-        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
+        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page - 1, pageSize));
         var results = nodeConnectionRepository.findByIds(ids.getContent());
         var contents = results.stream().map(TopicSubtopicDTO::new).collect(Collectors.toList());
-        return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
+        return new SearchResultDTO<>(ids.getTotalElements(), page, pageSize, contents);
     }
 
     @Deprecated

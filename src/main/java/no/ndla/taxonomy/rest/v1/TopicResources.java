@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
@@ -62,20 +61,20 @@ public class TopicResources {
     @Operation(summary = "Gets all connections between topic and resources paginated")
     @Transactional(readOnly = true)
     public SearchResultDTO<TopicResourceDTO> getTopicResourcePage(
-            @Parameter(name = "page", description = "The page to fetch", required = true) Optional<Integer> page,
-            @Parameter(name = "pageSize", description = "Size of page to fetch", required = true)
-                    Optional<Integer> pageSize) {
-        if (page.isEmpty() || pageSize.isEmpty()) {
-            throw new IllegalArgumentException("Need both page and pageSize to return data");
-        }
-        if (page.get() < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
+            @Parameter(description = "The page to fetch", required = true)
+                    @RequestParam(value = "page", defaultValue = "1")
+                    int page,
+            @Parameter(description = "Size of page to fetch", required = true)
+                    @RequestParam(value = "pageSize", defaultValue = "10")
+                    int pageSize) {
+        if (page < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
 
-        var pageRequest = PageRequest.of(page.get() - 1, pageSize.get());
+        var pageRequest = PageRequest.of(page - 1, pageSize);
         var connections = nodeConnectionRepository.findIdsPaginatedByChildNodeType(pageRequest, NodeType.RESOURCE);
         var ids = connections.stream().map(DomainEntity::getId).collect(Collectors.toList());
         var results = nodeConnectionRepository.findByIds(ids);
         var contents = results.stream().map(TopicResourceDTO::new).collect(Collectors.toList());
-        return new SearchResultDTO<>(connections.getTotalElements(), page.get(), pageSize.get(), contents);
+        return new SearchResultDTO<>(connections.getTotalElements(), page, pageSize, contents);
     }
 
     @Deprecated
