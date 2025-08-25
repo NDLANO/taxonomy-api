@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @ControllerAdvice
@@ -83,6 +84,7 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({
         NullPointerException.class,
+        RestClientException.class
     })
     protected ResponseEntity<String> handleRestOfExceptions(RuntimeException exception) {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
