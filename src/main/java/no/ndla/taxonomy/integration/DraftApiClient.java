@@ -271,17 +271,31 @@ public class DraftApiClient {
     }
 
     private void updateNotes(UpdateNotesDTO updateNotes) {
-        var response = restClient
-                .post()
-                .uri("/v1/drafts/notes")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(updateNotes)
-                .retrieve()
-                .toBodilessEntity();
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            logger.error(
-                    "Got status code '{}' with when updating notes",
-                    response.getStatusCode().value());
+        int maxRetries = 3;
+        int attempt = 0;
+        while (attempt < maxRetries) {
+            var response = restClient
+                    .post()
+                    .uri("/v1/drafts/notes")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(updateNotes)
+                    .retrieve()
+                    .onStatus(status -> status.value() == 409, (request, resp) -> {
+                        // Don't throw exception, will retry in the loop
+                    })
+                    .toBodilessEntity();
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return;
+            } else if (response.getStatusCode().value() == 409) {
+                attempt++;
+                continue;
+            } else {
+                logger.error(
+                        "Got status code '{}' when updating notes",
+                        response.getStatusCode().value());
+                break;
+            }
         }
     }
 }
