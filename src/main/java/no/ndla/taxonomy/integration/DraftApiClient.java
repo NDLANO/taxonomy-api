@@ -289,7 +289,6 @@ public class DraftApiClient {
                 return;
             } else if (response.getStatusCode().value() == 409) {
                 attempt++;
-                continue;
             } else {
                 logger.error(
                         "Got status code '{}' when updating notes",
