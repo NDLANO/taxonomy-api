@@ -402,6 +402,9 @@
                                  constraintName="resource_resource_type_resource_id_fkey"
                                  referencedTableName="node" referencedColumnNames="id"
                                  onDelete="RESTRICT" onUpdate="RESTRICT"/>
+        <addForeignKeyConstraint baseTableName="resource_resource_type" baseColumnNames="resource_type_id"
+                                 constraintName="resource_resource_type_resource_type_id_fkey"
+                                 referencedTableName="resource_type" referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="20230103 Move to node ids for cached_paths for resources" author="Jonas Natten">
@@ -759,6 +762,14 @@
         <addColumn tableName="node">
             <column name="child_quality_evaluation_sum" type="int" defaultValueNumeric="0" />
         </addColumn>
+    </changeSet>
+    
+    <changeSet id="20250819 Recreate resource_resourcetype foreign key with cascade delete" author="Gunnar Velle">
+        <dropForeignKeyConstraint baseTableName="resource_resource_type" constraintName="resource_resource_type_resource_type_id_fkey"/>
+        <addForeignKeyConstraint baseTableName="resource_resource_type" baseColumnNames="resource_type_id"
+                                 constraintName="resource_resource_type_resource_type_id_fkey"
+                                 referencedTableName="resource_type" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
     </changeSet>
 
 </databaseChangeLog>
