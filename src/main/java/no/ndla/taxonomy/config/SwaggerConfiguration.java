@@ -54,6 +54,7 @@ public class SwaggerConfiguration {
 
     @Bean
     public OpenAPI API(ObjectMapperProvider objectMapperProvider) {
+        // Need this to support Java 8 types like Optional<> for request parameters
         objectMapperProvider.jsonMapper().registerModule(new com.fasterxml.jackson.datatype.jdk8.Jdk8Module());
         return new OpenAPI()
                 .components(components())
