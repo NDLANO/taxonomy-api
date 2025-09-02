@@ -23,6 +23,7 @@ import io.swagger.v3.oas.models.servers.Server;
 import java.util.List;
 import java.util.Map;
 import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springdoc.core.providers.ObjectMapperProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,7 +53,9 @@ public class SwaggerConfiguration {
     private String termsUrl;
 
     @Bean
-    public OpenAPI API() {
+    public OpenAPI API(ObjectMapperProvider objectMapperProvider) {
+        // Need this to support Java 8 types like Optional<> for request parameters
+        objectMapperProvider.jsonMapper().registerModule(new com.fasterxml.jackson.datatype.jdk8.Jdk8Module());
         return new OpenAPI()
                 .components(components())
                 .servers(servers())
