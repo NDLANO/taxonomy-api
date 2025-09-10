@@ -11,11 +11,16 @@ import static no.ndla.taxonomy.config.Constants.DefaultLanguage;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
+import java.util.Optional;
+
 import no.ndla.taxonomy.domain.ResourceType;
 
 public class SearchableTaxonomyResourceType {
     @JsonProperty
     private String id;
+
+    @JsonProperty
+    private Optional<String> parentId;
 
     @JsonProperty
     private HashMap<String, String> name;
@@ -25,6 +30,7 @@ public class SearchableTaxonomyResourceType {
     public SearchableTaxonomyResourceType(ResourceType resourceType) {
         var translations = resourceType.getTranslations();
         this.id = resourceType.getPublicId().toString();
+        this.parentId = resourceType.getParent().map(rt -> rt.getPublicId().toString());
         this.name = new HashMap<>();
         this.name.put(DefaultLanguage, resourceType.getName());
 
