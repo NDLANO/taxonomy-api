@@ -434,6 +434,7 @@ export interface SearchResult<T> {
 export interface SearchableTaxonomyResourceType {
     id: string;
     name: Record<string, string>;
+    parentId?: string;
 }
 
 export interface SubjectPostPut {
