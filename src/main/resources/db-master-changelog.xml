@@ -772,7 +772,7 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
-    <changeSet id="20151001 Rename top level resourcetypes" author="Gunnar Velle">
+    <changeSet id="20251001 Rename top level resourcetypes" author="Gunnar Velle">
         <sql>
             UPDATE resource_type
             SET name = 'Oppgave', translations = '[{"name":"Oppgave","languageCode":"nb"},{"name":"Oppgåve","languageCode":"nn"},{"name":"Task","languageCode":"en"},{"name":"Bargobihtát","languageCode":"se"}]'
