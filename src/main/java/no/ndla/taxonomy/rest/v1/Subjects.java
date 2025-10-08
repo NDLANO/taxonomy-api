@@ -59,7 +59,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                     Optional<String> key,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false)
                     Optional<String> value,
-            @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false)
+            @Parameter(description = "Filter contexts by visibility")
+                    @RequestParam(value = "isVisible", required = false)
                     Optional<Boolean> isVisible) {
         return nodes.getAllNodes(
                 Optional.of(List.of(NodeType.SUBJECT)),
