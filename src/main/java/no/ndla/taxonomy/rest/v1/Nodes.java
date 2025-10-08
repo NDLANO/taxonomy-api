@@ -101,11 +101,11 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<String> key,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false)
                     Optional<String> value,
-            @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false)
-                    Optional<Boolean> isVisible,
             @Parameter(description = "Filter by context id. Beware: handled separately from other parameters!")
                     @RequestParam(value = "contextId", required = false)
                     Optional<String> contextId,
+            @Parameter(description = "Only visible contexts") @RequestParam(value = "isVisible", required = false)
+                    Optional<Boolean> isVisible,
             @Parameter(description = "Include all contexts")
                     @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
                     boolean includeContexts,

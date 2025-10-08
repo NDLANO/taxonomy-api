@@ -62,7 +62,6 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             LEFT JOIN n.parentConnections pc
             WHERE ((:#{#nodeTypes == null} = true) OR n.nodeType in (:nodeTypes))
             AND ((:#{#publicIds == null} = true) OR n.publicId in (:publicIds))
-            AND (:isVisible IS NULL OR n.visible = :isVisible)
             AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, cast(:metadataFilterKey as text)) IS NOT NULL)
             AND (:metadataFilterValue IS NULL OR cast(jsonb_path_query_array(n.customfields, '$.*') as text) like :metadataFilterValue)
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
@@ -72,7 +71,6 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     List<Integer> findIdsFiltered(
             Optional<List<NodeType>> nodeTypes,
             Optional<List<URI>> publicIds,
-            Optional<Boolean> isVisible,
             Optional<String> metadataFilterKey,
             Optional<String> metadataFilterValue,
             Optional<URI> contentUri,

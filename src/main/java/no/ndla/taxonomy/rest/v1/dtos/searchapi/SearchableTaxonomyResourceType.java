@@ -12,7 +12,6 @@ import static no.ndla.taxonomy.config.Constants.DefaultLanguage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
 import java.util.Optional;
-
 import no.ndla.taxonomy.domain.ResourceType;
 
 public class SearchableTaxonomyResourceType {
