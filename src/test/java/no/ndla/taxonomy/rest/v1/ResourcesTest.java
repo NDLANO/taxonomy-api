@@ -163,14 +163,6 @@ public class ResourcesTest extends RestTest {
                         .isVisible(false))));
 
         {
-            final var response = testUtils.getResource("/v1/resources?isVisible=false");
-            final var resources = testUtils.getObject(NodeDTO[].class, response);
-
-            assertEquals(2, resources.length);
-            assertAnyTrue(resources, s -> "The inner planets".equals(s.getName()));
-            assertAnyTrue(resources, s -> "Observing Uranus".equals(s.getName()));
-        }
-        {
             final var response = testUtils.getResource("/v1/resources?key=custom&value=value");
             final var resources = testUtils.getObject(NodeDTO[].class, response);
 

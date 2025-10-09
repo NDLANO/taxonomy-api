@@ -95,7 +95,6 @@ public class NodeService {
             ids = nodeRepository.findIdsFiltered(
                     nodeType,
                     publicIds,
-                    metadataFilters.getVisible(),
                     metadataFilters.getKey(),
                     metadataFilters.getLikeQueryValue(),
                     contentUri,

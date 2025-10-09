@@ -503,14 +503,13 @@ public class NodesTest extends RestTest {
             assertAllTrue(nodes, t -> isValidId(t.getId()));
         }
         {
-            var response = testUtils.getResource("/v1/nodes?isVisible=true");
+            var response = testUtils.getResource("/v1/nodes?nodeType=TOPIC,NODE");
             final var nodes = testUtils.getObject(NodeDTO[].class, response);
-            assertEquals(5, nodes.length);
-            assertAnyTrue(nodes, t -> "Basic science".equals(t.getName()));
+            assertEquals(4, nodes.length);
             assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
             assertAnyTrue(nodes, t -> "trigonometry".equals(t.getName()));
-            assertAnyTrue(nodes, t -> "Arts and crafts".equals(t.getName()));
             assertAnyTrue(nodes, t -> "Random node".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "Subnode".equals(t.getName()));
         }
     }
 

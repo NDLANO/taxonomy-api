@@ -101,11 +101,12 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<String> key,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false)
                     Optional<String> value,
-            @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false)
-                    Optional<Boolean> isVisible,
             @Parameter(description = "Filter by context id. Beware: handled separately from other parameters!")
                     @RequestParam(value = "contextId", required = false)
                     Optional<String> contextId,
+            @Parameter(description = "Filter contexts by visibility")
+                    @RequestParam(value = "isVisible", required = false)
+                    Optional<Boolean> isVisible,
             @Parameter(description = "Include all contexts")
                     @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
                     boolean includeContexts,
@@ -218,7 +219,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
                     boolean filterProgrammes,
-            @Parameter(description = "Only visible contexts")
+            @Parameter(description = "Filter contexts by visibility")
                     @RequestParam(value = "isVisible", required = false, defaultValue = "true")
                     boolean isVisible) {
         if (page < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
@@ -256,7 +257,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "true")
                     boolean filterProgrammes,
-            @Parameter(description = "Only visible contexts")
+            @Parameter(description = "Filter contexts by visibility")
                     @RequestParam(value = "isVisible", required = false, defaultValue = "true")
                     boolean isVisible,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
@@ -336,7 +337,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
                     boolean filterProgrammes,
-            @Parameter(description = "Only visible contexts")
+            @Parameter(description = "Filter contexts by visibility")
                     @RequestParam(value = "isVisible", required = false, defaultValue = "true")
                     boolean isVisible) {
         final var node = nodeRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundException("Node", id));
@@ -414,7 +415,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
                     boolean filterProgrammes,
-            @Parameter(description = "Only visible contexts")
+            @Parameter(description = "Filter contexts by visibility")
                     @RequestParam(value = "isVisible", required = false, defaultValue = "true")
                     boolean isVisible,
             @Parameter(description = "If true, resources from children are fetched recursively")
