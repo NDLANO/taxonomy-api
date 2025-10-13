@@ -45,7 +45,12 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     }
 
     private NodeConnection doCreateConnection(
-            Node parent, Node child, boolean requestedPrimary, Relevance relevance, int rank) {
+            Node parent,
+            Node child,
+            boolean requestedPrimary,
+            Relevance relevance,
+            int rank,
+            NodeConnectionType connectionType) {
         if (child.getParentConnections().isEmpty()) {
             // First connected is always primary regardless of request
             requestedPrimary = true;
@@ -54,7 +59,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         NodeConnection connection;
 
         if (parent != null) {
-            connection = NodeConnection.create(parent, child, relevance);
+            connection = NodeConnection.create(parent, child, relevance, connectionType);
         } else {
             throw new IllegalArgumentException("Unknown parent-child connection");
         }
@@ -75,17 +80,28 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     }
 
     private NodeConnection createConnection(
-            Node parent, Node child, Relevance relevance, int rank, Optional<Boolean> isPrimary) {
-        return doCreateConnection(parent, child, isPrimary.orElse(true), relevance, rank);
+            Node parent,
+            Node child,
+            Relevance relevance,
+            int rank,
+            Optional<Boolean> isPrimary,
+            NodeConnectionType connectionType) {
+        return doCreateConnection(parent, child, isPrimary.orElse(true), relevance, rank, connectionType);
     }
 
-    public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank) {
-        return this.connectParentChild(parent, child, relevance, rank, Optional.empty());
+    NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank) {
+        return this.connectParentChild(
+                parent, child, relevance, rank, Optional.empty(), NodeConnectionType.BRANCH);
     }
 
     @Override
     public NodeConnection connectParentChild(
-            Node parent, Node child, Relevance relevance, Integer rank, Optional<Boolean> isPrimary) {
+            Node parent,
+            Node child,
+            Relevance relevance,
+            Integer rank,
+            Optional<Boolean> isPrimary,
+            NodeConnectionType connectionType) {
         if (!child.getParentConnections().isEmpty()) {
             if (child.getNodeType() == NodeType.TOPIC) throw new DuplicateConnectionException();
 
@@ -130,7 +146,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
                     + 1;
         }
 
-        var newConnection = createConnection(parent, child, relevance, rank, isPrimary);
+        var newConnection = createConnection(parent, child, relevance, rank, isPrimary, connectionType);
         qualityEvaluationService.updateQualityEvaluationOfNewConnection(parent, child);
         draftApiClient.updateNotesWithNewConnection(newConnection);
         return nodeConnectionRepository.saveAndFlush(newConnection);

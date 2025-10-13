@@ -414,7 +414,8 @@ public class Builder {
         }
 
         public NodeBuilder resource(Node resource, boolean primary) {
-            entityManager.persist(NodeConnection.create(node, resource, Relevance.CORE, primary));
+            entityManager.persist(
+                    NodeConnection.create(node, resource, Relevance.CORE, NodeConnectionType.BRANCH, primary));
 
             contextUpdaterService.updateContexts(resource);
 

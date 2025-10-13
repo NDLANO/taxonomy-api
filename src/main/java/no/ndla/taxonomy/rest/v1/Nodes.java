@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
@@ -356,6 +357,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     .collect(Collectors.toList());
         } else {
             childrenIds = node.getChildConnections().stream()
+                    .filter(cc -> cc.getConnectionType().equals(NodeConnectionType.BRANCH))
                     .map(NodeConnection::getChild)
                     .filter(Optional::isPresent)
                     .map(Optional::get)

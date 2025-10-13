@@ -772,4 +772,12 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
+    <changeSet id="20251007 Add NodeConnectionType" author="Gunnar Velle">
+        <addColumn tableName="node_connection">
+            <column name="connection_type" type="varchar(255)" defaultValue="BRANCH">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

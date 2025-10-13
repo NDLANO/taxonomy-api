@@ -105,8 +105,8 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
         var relevance = Relevance.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
         var rank = command.rank.orElse(null);
 
-        final var nodeConnection =
-                connectionService.connectParentChild(parent, child, relevance, rank, command.primary);
+        final var nodeConnection = connectionService.connectParentChild(
+                parent, child, relevance, rank, command.primary, NodeConnectionType.BRANCH);
 
         var location = URI.create("/node-resources/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();

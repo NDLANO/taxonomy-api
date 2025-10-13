@@ -56,6 +56,10 @@ public class NodeConnection extends DomainEntity
     @UpdateTimestamp
     private Instant updated_at;
 
+    @Enumerated(EnumType.STRING)
+    @Column
+    private NodeConnectionType connectionType = NodeConnectionType.BRANCH;
+
     public NodeConnection() {
         setPublicId(URI.create("urn:node-connection:" + UUID.randomUUID()));
     }
@@ -65,6 +69,7 @@ public class NodeConnection extends DomainEntity
         this.relevance = nodeConnection.relevance;
         this.parent = nodeConnection.parent;
         this.child = nodeConnection.child;
+        this.connectionType = nodeConnection.connectionType;
         setPublicId(nodeConnection.getPublicId());
         setPrimary(nodeConnection.isPrimary().orElse(false));
         setMetadata(new Metadata(nodeConnection.getMetadata()));
@@ -77,11 +82,21 @@ public class NodeConnection extends DomainEntity
         this.rank = rank;
     }
 
+    public static NodeConnection create(
+            Node parent, Node child, Relevance relevance, NodeConnectionType connectionType) {
+        return NodeConnection.create(parent, child, relevance, connectionType, true);
+    }
+
     public static NodeConnection create(Node parent, Node child, Relevance relevance) {
-        return NodeConnection.create(parent, child, relevance, true);
+        return NodeConnection.create(parent, child, relevance, NodeConnectionType.BRANCH, true);
     }
 
     public static NodeConnection create(Node parent, Node child, Relevance relevance, boolean isPrimary) {
+        return NodeConnection.create(parent, child, relevance, NodeConnectionType.BRANCH, isPrimary);
+    }
+
+    public static NodeConnection create(
+            Node parent, Node child, Relevance relevance, NodeConnectionType connectionType, boolean isPrimary) {
         if (child == null || parent == null) {
             throw new NullPointerException("Both parent and child must be present.");
         }
@@ -94,6 +109,7 @@ public class NodeConnection extends DomainEntity
         nodeConnection.child = child;
         nodeConnection.isPrimary = isPrimary;
         nodeConnection.relevance = relevance;
+        nodeConnection.connectionType = connectionType;
 
         parent.addChildConnection(nodeConnection);
         child.addParentConnection(nodeConnection);
@@ -240,6 +256,10 @@ public class NodeConnection extends DomainEntity
         return this.updated_at;
     }
 
+    public NodeConnectionType getConnectionType() {
+        return connectionType;
+    }
+
     @Override
     public int compareTo(NodeConnection o) {
         return getPublicId().compareTo(o.getPublicId());
@@ -257,6 +277,7 @@ public class NodeConnection extends DomainEntity
         return rank == that.rank
                 && Objects.equals(parent, that.parent)
                 && Objects.equals(child, that.child)
-                && Objects.equals(relevance, that.relevance);
+                && Objects.equals(relevance, that.relevance)
+                && Objects.equals(connectionType, that.connectionType);
     }
 }

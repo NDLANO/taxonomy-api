@@ -9,8 +9,11 @@ package no.ndla.taxonomy.rest.v1.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import java.net.URI;
 import java.util.Optional;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 
 public class NodeConnectionPOST {
     @JsonProperty
@@ -32,4 +35,9 @@ public class NodeConnectionPOST {
     @JsonProperty
     @Schema(description = "Relevance id", example = "urn:relevance:core")
     public Optional<URI> relevanceId = Optional.empty();
+
+    @JsonProperty
+    @Enumerated(EnumType.STRING)
+    @Schema(description = "Type connection", example = "PARENT_CHILD", defaultValue = "PARENT_CHILD")
+    public Optional<NodeConnectionType> connectionType = Optional.empty();
 }

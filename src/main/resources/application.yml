@@ -42,9 +42,7 @@ management:
     port: ${taxonomy.management.port:5001}
   endpoint.health.probes.enabled: true
 
-
 ---
-
 spring:
   profiles:
     activate:

@@ -12,10 +12,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 import java.util.Set;
-import no.ndla.taxonomy.domain.Builder;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.integration.DraftApiClient;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -179,7 +176,8 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
 
         final var relevance = Relevance.CORE;
 
-        final var connection1 = service.connectParentChild(topic1, resource1, relevance, null, Optional.of(true));
+        final var connection1 = service.connectParentChild(
+                topic1, resource1, relevance, null, Optional.of(true), NodeConnectionType.BRANCH);
         assertNotNull(connection1);
         assertSame(topic1, connection1.getParent().orElse(null));
         assertSame(resource1, connection1.getResource().orElse(null));
@@ -188,7 +186,8 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
 
         verify(contextUpdaterService, atLeastOnce()).updateContexts(resource1);
 
-        final var connection2 = service.connectParentChild(topic1, resource2, relevance, null, Optional.of(true));
+        final var connection2 = service.connectParentChild(
+                topic1, resource2, relevance, null, Optional.of(true), NodeConnectionType.BRANCH);
         assertNotNull(connection2);
         assertSame(topic1, connection2.getParent().orElse(null));
         assertSame(resource2, connection2.getResource().orElse(null));
@@ -198,7 +197,8 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertTrue(connection1.isPrimary().orElseThrow());
         assertEquals(1, connection1.getRank());
 
-        final var connection3 = service.connectParentChild(topic2, resource2, relevance, null, Optional.of(false));
+        final var connection3 = service.connectParentChild(
+                topic2, resource2, relevance, null, Optional.of(false), NodeConnectionType.BRANCH);
         assertFalse(connection3.isPrimary().orElseThrow());
         assertEquals(1, connection3.getRank());
 
@@ -206,7 +206,8 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertTrue(connection2.isPrimary().orElseThrow());
 
         // Test setting primary, should set old primary to non-primary
-        final var connection4 = service.connectParentChild(topic3, resource2, relevance, null, Optional.of(true));
+        final var connection4 = service.connectParentChild(
+                topic3, resource2, relevance, null, Optional.of(true), NodeConnectionType.BRANCH);
         assertTrue(connection4.isPrimary().orElseThrow());
         assertEquals(1, connection4.getRank());
 
@@ -214,25 +215,30 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertFalse(connection2.isPrimary().orElseThrow());
 
         // Test ranking
-        final var connection5 = service.connectParentChild(topic4, resource1, relevance, null, Optional.of(true));
+        final var connection5 = service.connectParentChild(
+                topic4, resource1, relevance, null, Optional.of(true), NodeConnectionType.BRANCH);
         assertEquals(1, connection5.getRank());
 
-        final var connection6 = service.connectParentChild(topic4, resource2, relevance, null, Optional.of(true));
+        final var connection6 = service.connectParentChild(
+                topic4, resource2, relevance, null, Optional.of(true), NodeConnectionType.BRANCH);
         assertEquals(1, connection5.getRank());
         assertEquals(2, connection6.getRank());
 
-        final var connection7 = service.connectParentChild(topic4, resource3, relevance, 1, Optional.of(true));
+        final var connection7 = service.connectParentChild(
+                topic4, resource3, relevance, 1, Optional.of(true), NodeConnectionType.BRANCH);
         assertEquals(2, connection5.getRank());
         assertEquals(3, connection6.getRank());
         assertEquals(1, connection7.getRank());
 
-        final var connection8 = service.connectParentChild(topic4, resource4, relevance, 2, Optional.of(true));
+        final var connection8 = service.connectParentChild(
+                topic4, resource4, relevance, 2, Optional.of(true), NodeConnectionType.BRANCH);
         assertEquals(3, connection5.getRank());
         assertEquals(4, connection6.getRank());
         assertEquals(1, connection7.getRank());
         assertEquals(2, connection8.getRank());
 
-        final var connection9 = service.connectParentChild(topic4, resource5, relevance, 5, Optional.of(true));
+        final var connection9 = service.connectParentChild(
+                topic4, resource5, relevance, 5, Optional.of(true), NodeConnectionType.BRANCH);
         assertEquals(3, connection5.getRank());
         assertEquals(4, connection6.getRank());
         assertEquals(1, connection7.getRank());
@@ -240,16 +246,17 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertEquals(5, connection9.getRank());
 
         // First topic connection for a resource will be primary regardless of request
-        final var forcedPrimaryConnection1 =
-                service.connectParentChild(topic4, resource6, relevance, 0, Optional.of(false));
+        final var forcedPrimaryConnection1 = service.connectParentChild(
+                topic4, resource6, relevance, 0, Optional.of(false), NodeConnectionType.BRANCH);
         assertTrue(forcedPrimaryConnection1.isPrimary().orElseThrow());
-        final var forcedPrimaryConnection2 =
-                service.connectParentChild(topic4, resource7, relevance, 1, Optional.of(false));
+        final var forcedPrimaryConnection2 = service.connectParentChild(
+                topic4, resource7, relevance, 1, Optional.of(false), NodeConnectionType.BRANCH);
         assertTrue(forcedPrimaryConnection2.isPrimary().orElseThrow());
 
         // Trying to add duplicate connection
         try {
-            service.connectParentChild(topic4, resource4, relevance, 0, Optional.of(false));
+            service.connectParentChild(
+                    topic4, resource4, relevance, 0, Optional.of(false), NodeConnectionType.BRANCH);
             fail("Expected DuplicateConnectionException");
         } catch (DuplicateConnectionException ignored) {
         }

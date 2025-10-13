@@ -104,7 +104,8 @@ public class TopicResources {
         var rank = command.rank.orElse(null);
 
         final NodeConnection topicResource;
-        topicResource = connectionService.connectParentChild(topic, resource, relevance, rank, command.primary);
+        topicResource = connectionService.connectParentChild(
+                topic, resource, relevance, rank, command.primary, NodeConnectionType.BRANCH);
 
         URI location = URI.create("/topic-resources/" + topicResource.getPublicId());
         return ResponseEntity.created(location).build();
