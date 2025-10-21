@@ -11,6 +11,7 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.TaxonomyContext;
 import no.ndla.taxonomy.domain.UrlMapping;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -163,7 +164,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
             final var resolvedUrl = new ResolvedUrl();
             // Pick either the context matching path or the primary context
-            context.or(() -> leafNode.pickContext(Optional.empty(), Optional.empty(), Optional.empty(), Set.of()))
+            context.or(() -> leafNode.pickContext(
+                            Optional.empty(), NodeConnectionType.BRANCH, Optional.empty(), Optional.empty(), Set.of()))
                     .map(Optional::of)
                     .orElseThrow(() -> new NotFoundServiceException("No context found for path"))
                     .ifPresent(ctx -> {

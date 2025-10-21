@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.commands.SubjectPostPut;
@@ -189,8 +190,15 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Select by relevance. If not specified, all nodes will be returned.")
                     @RequestParam(value = "relevance", required = false)
                     Optional<URI> relevance) {
-        var children =
-                nodes.getChildren(id, Optional.of(List.of(NodeType.TOPIC)), recursive, language, true, true, true);
+        var children = nodes.getChildren(
+                id,
+                Optional.of(List.of(NodeType.TOPIC)),
+                List.of(NodeConnectionType.BRANCH),
+                recursive,
+                language,
+                true,
+                true,
+                true);
         return relevance
                 .map(rel -> children.stream()
                         .filter(node -> node.getRelevanceId().isPresent()

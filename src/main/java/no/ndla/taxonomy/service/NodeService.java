@@ -114,6 +114,7 @@ public class NodeService {
                                     root,
                                     parent,
                                     node,
+                                    NodeConnectionType.BRANCH,
                                     language,
                                     contextId,
                                     includeContexts,
@@ -150,7 +151,16 @@ public class NodeService {
         var root = rootId.flatMap(this::getMaybeNode);
         var parent = parentId.flatMap(this::getMaybeNode);
         return new NodeDTO(
-                root, parent, node, language, Optional.empty(), includeContexts, filterProgrammes, isVisible, true);
+                root,
+                parent,
+                node,
+                NodeConnectionType.BRANCH,
+                language,
+                Optional.empty(),
+                includeContexts,
+                filterProgrammes,
+                isVisible,
+                true);
     }
 
     public Optional<Node> getMaybeNode(URI publicId) {

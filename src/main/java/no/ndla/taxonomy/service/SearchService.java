@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
@@ -134,6 +135,7 @@ public class SearchService {
                         rootNode,
                         parentNode,
                         r,
+                        NodeConnectionType.BRANCH,
                         languageCode,
                         Optional.empty(),
                         includeContexts,

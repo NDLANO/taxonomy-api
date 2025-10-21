@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.commands.TopicPostPut;
@@ -186,7 +187,15 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     String language) {
-        return nodes.getChildren(id, Optional.of(List.of(NodeType.TOPIC)), false, language, true, true, true);
+        return nodes.getChildren(
+                id,
+                Optional.of(List.of(NodeType.TOPIC)),
+                List.of(NodeConnectionType.BRANCH),
+                false,
+                language,
+                true,
+                true,
+                true);
     }
 
     @Deprecated

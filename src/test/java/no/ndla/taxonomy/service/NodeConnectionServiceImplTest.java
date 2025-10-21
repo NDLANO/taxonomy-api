@@ -255,8 +255,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
 
         // Trying to add duplicate connection
         try {
-            service.connectParentChild(
-                    topic4, resource4, relevance, 0, Optional.of(false), NodeConnectionType.BRANCH);
+            service.connectParentChild(topic4, resource4, relevance, 0, Optional.of(false), NodeConnectionType.BRANCH);
             fail("Expected DuplicateConnectionException");
         } catch (DuplicateConnectionException ignored) {
         }

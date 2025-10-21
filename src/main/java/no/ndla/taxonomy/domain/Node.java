@@ -280,22 +280,27 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Optional<String> getPrimaryPath() {
-        return pickContext(Optional.empty(), Optional.empty(), Optional.empty(), Set.of())
+        return pickContext(Optional.empty(), NodeConnectionType.BRANCH, Optional.empty(), Optional.empty(), Set.of())
                 .map(TaxonomyContext::path);
     }
 
     /**
      * Picks a context based on parameters. If no parameters or no matches, pick by comparing path and primary
      *
-     * @param contextId  If this is present, return the context with corresponding id
-     * @param parent     If this is present, filter contexts where parent is in parentIds
-     * @param root       If this is present, return context with this publicId as root. Else pick context containing roots
-     *                   publicId.
-     * @param contextSet Possibly filtered set of contexts to choose from
+     * @param contextId      If this is present, return the context with corresponding id
+     * @param connectionType If this is present, return the default context
+     * @param parent         If this is present, filter contexts where parent is in parentIds
+     * @param root           If this is present, return context with this publicId as root. Else pick context containing roots
+     *                       publicId.
+     * @param contextSet     Possibly filtered set of contexts to choose from
      * @return Context
      */
     public Optional<TaxonomyContext> pickContext(
-            Optional<String> contextId, Optional<Node> parent, Optional<Node> root, Set<TaxonomyContext> contextSet) {
+            Optional<String> contextId,
+            NodeConnectionType connectionType,
+            Optional<Node> parent,
+            Optional<Node> root,
+            Set<TaxonomyContext> contextSet) {
         var contexts = !contextSet.isEmpty() ? contextSet : getContexts();
         var maybeContext = contextId.flatMap(
                 id -> contexts.stream().filter(c -> c.contextId().equals(id)).findFirst());
@@ -310,8 +315,8 @@ public class Node extends DomainObject implements EntityWithMetadata {
                         .filter(c -> c.parentIds().contains(p.getPublicId().toString()))
                         .collect(Collectors.toSet()))
                 .orElse(containsParent);
-        // If no context is found based on params, return the one with the shortest path
-        var filtered = containsRoot.isEmpty() ? contextSet : containsRoot;
+        // If no context is found based on params, or connection is of type LINK return the one with the shortest path
+        var filtered = connectionType == NodeConnectionType.LINK || containsRoot.isEmpty() ? contextSet : containsRoot;
         return filtered.stream().min((context1, context2) -> {
             final var inPath1 =
                     context1.path().contains(root.map(Node::getPathPart).orElse("other"));

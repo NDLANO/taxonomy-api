@@ -90,8 +90,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     }
 
     NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank) {
-        return this.connectParentChild(
-                parent, child, relevance, rank, Optional.empty(), NodeConnectionType.BRANCH);
+        return this.connectParentChild(parent, child, relevance, rank, Optional.empty(), NodeConnectionType.BRANCH);
     }
 
     @Override
