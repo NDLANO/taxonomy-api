@@ -772,6 +772,14 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
+    <changeSet id="20251001 Rename top level resourcetypes" author="Gunnar Velle">
+        <sql>
+            UPDATE resource_type
+            SET name = 'Oppgave', translations = '[{"name":"Oppgave","languageCode":"nb"},{"name":"Oppgåve","languageCode":"nn"},{"name":"Task","languageCode":"en"},{"name":"Bargobihtát","languageCode":"se"}]'
+            WHERE public_id = 'urn:resourcetype:tasksAndActivities';
+        </sql>
+    </changeSet>
+    
     <changeSet id="20251007 Add NodeConnectionType" author="Gunnar Velle">
         <addColumn tableName="node_connection">
             <column name="connection_type" type="varchar(255)" defaultValue="BRANCH">
