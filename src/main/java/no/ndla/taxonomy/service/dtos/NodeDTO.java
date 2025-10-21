@@ -154,7 +154,7 @@ public class NodeDTO {
 
         Set<TaxonomyContext> parentContexts = includeParents ? entity.getAllParentContexts() : Set.of();
         Optional<TaxonomyContext> selected =
-                entity.pickContext(contextId, connectionType, parent, root, filteredContexts);
+                entity.pickContext(contextId, parent, root, connectionType, filteredContexts);
         selected.ifPresent(ctx -> {
             var contextDto = getTaxonomyContextDTO(entity, ctx, parentContexts);
 

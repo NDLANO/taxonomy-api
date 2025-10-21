@@ -165,7 +165,7 @@ public class UrlResolverServiceImpl implements UrlResolverService {
             final var resolvedUrl = new ResolvedUrl();
             // Pick either the context matching path or the primary context
             context.or(() -> leafNode.pickContext(
-                            Optional.empty(), NodeConnectionType.BRANCH, Optional.empty(), Optional.empty(), Set.of()))
+                            Optional.empty(), Optional.empty(), Optional.empty(), NodeConnectionType.BRANCH, Set.of()))
                     .map(Optional::of)
                     .orElseThrow(() -> new NotFoundServiceException("No context found for path"))
                     .ifPresent(ctx -> {

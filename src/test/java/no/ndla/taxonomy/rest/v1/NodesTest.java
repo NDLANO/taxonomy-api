@@ -617,17 +617,19 @@ public class NodesTest extends RestTest {
         assertEquals(0, node.getMetadata().getGrepCodes().size());
     }
 
-
     @Test
     public void create_link_to_another_node() throws Exception {
         Node electricity =
                 builder.node(NodeType.TOPIC, s -> s.name("Electricity").publicId("urn:topic:1"));
-        Node chemistry =
-                builder.node(NodeType.TOPIC, s -> s.name("Chemistry").publicId("urn:topic:2"));
+        Node chemistry = builder.node(NodeType.TOPIC, s -> s.name("Chemistry").publicId("urn:topic:2"));
         builder.node(
-                NodeType.SUBJECT, s -> s.isContext(true).name("Physics").publicId("urn:subject:1").child(electricity));
-        builder.node(
-                NodeType.SUBJECT, s -> s.isContext(true).name("Biology").publicId("urn:subject:2").child(chemistry).link(electricity));
+                NodeType.SUBJECT,
+                s -> s.isContext(true).name("Physics").publicId("urn:subject:1").child(electricity));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
+                .name("Biology")
+                .publicId("urn:subject:2")
+                .child(chemistry)
+                .link(electricity));
 
         {
             var response = testUtils.getResource("/v1/nodes/urn:subject:1/nodes");
@@ -644,14 +646,14 @@ public class NodesTest extends RestTest {
             assertEquals(Optional.of("/subject:2/topic:2"), children[0].getPath());
         }
         {
-            var response = testUtils.getResource("/v1/nodes/urn:subject:2/nodes?connectionTypes=" + NodeConnectionType.LINK);
+            var response =
+                    testUtils.getResource("/v1/nodes/urn:subject:2/nodes?connectionTypes=" + NodeConnectionType.LINK);
             final var links = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(1, links.length);
             assertEquals(URI.create("urn:topic:1"), links[0].getId());
             assertEquals(Optional.of("/subject:1/topic:1"), links[0].getPath()); // Links points to default path
             assertEquals(1, links[0].getContexts().size());
         }
-
     }
 
     /**

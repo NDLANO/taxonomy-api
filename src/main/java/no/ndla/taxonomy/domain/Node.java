@@ -280,7 +280,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Optional<String> getPrimaryPath() {
-        return pickContext(Optional.empty(), NodeConnectionType.BRANCH, Optional.empty(), Optional.empty(), Set.of())
+        return pickContext(Optional.empty(), Optional.empty(), Optional.empty(), NodeConnectionType.BRANCH, Set.of())
                 .map(TaxonomyContext::path);
     }
 
@@ -288,18 +288,18 @@ public class Node extends DomainObject implements EntityWithMetadata {
      * Picks a context based on parameters. If no parameters or no matches, pick by comparing path and primary
      *
      * @param contextId      If this is present, return the context with corresponding id
-     * @param connectionType If this is present, return the default context
      * @param parent         If this is present, filter contexts where parent is in parentIds
      * @param root           If this is present, return context with this publicId as root. Else pick context containing roots
      *                       publicId.
+     * @param connectionType If this is present and of type LINK, return the default context
      * @param contextSet     Possibly filtered set of contexts to choose from
      * @return Context
      */
     public Optional<TaxonomyContext> pickContext(
             Optional<String> contextId,
-            NodeConnectionType connectionType,
             Optional<Node> parent,
             Optional<Node> root,
+            NodeConnectionType connectionType,
             Set<TaxonomyContext> contextSet) {
         var contexts = !contextSet.isEmpty() ? contextSet : getContexts();
         var maybeContext = contextId.flatMap(
