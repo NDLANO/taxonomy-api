@@ -38,6 +38,6 @@ public class NodeConnectionPOST {
 
     @JsonProperty
     @Enumerated(EnumType.STRING)
-    @Schema(description = "Type connection", example = "BRANCH", defaultValue = "BRANCH")
+    @Schema(description = "Connection type", example = "BRANCH", defaultValue = "BRANCH")
     public Optional<NodeConnectionType> connectionType = Optional.empty();
 }
