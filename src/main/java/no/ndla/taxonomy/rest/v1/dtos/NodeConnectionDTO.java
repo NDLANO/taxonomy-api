@@ -50,7 +50,7 @@ public class NodeConnectionDTO {
 
     @JsonProperty
     @Enumerated(EnumType.STRING)
-    @Schema(description = "Type connection")
+    @Schema(description = "Connection type")
     public NodeConnectionType connectionType;
 
     NodeConnectionDTO() {}
