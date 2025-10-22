@@ -14,8 +14,7 @@ import no.ndla.taxonomy.domain.ResourceType;
 import org.springframework.data.jpa.repository.Query;
 
 public interface ResourceTypeRepository extends TaxonomyRepository<ResourceType> {
-    @Query(
-            """
+    @Query("""
             SELECT DISTINCT rt
             FROM ResourceType rt
             LEFT JOIN FETCH rt.subtypes

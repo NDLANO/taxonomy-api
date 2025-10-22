@@ -61,8 +61,7 @@ public class SwaggerConfiguration {
                 .servers(servers())
                 .info(new Info()
                         .title("NDLA Taxonomy API")
-                        .description(
-                                """
+                        .description("""
                                         Rest service and graph database for organizing content.
 
                                         When you remove an entity, its associations are also deleted. E.g., if you remove a subject, its associations to any topics are removed. The topics themselves are not affected.""")
