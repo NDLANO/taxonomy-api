@@ -31,8 +31,8 @@ public class RelevancesTest extends RestTest {
         RelevanceDTO[] relevances = testUtils.getObject(RelevanceDTO[].class, response);
 
         assertEquals(2, relevances.length);
-        assertAnyTrue(relevances, f -> f.name.equals("Kjernestoff"));
-        assertAnyTrue(relevances, f -> f.name.equals("Tilleggsstoff"));
+        assertAnyTrue(relevances, f -> "Kjernestoff".equals(f.name));
+        assertAnyTrue(relevances, f -> "Tilleggsstoff".equals(f.name));
     }
 
     @Test

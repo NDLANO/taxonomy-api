@@ -388,15 +388,15 @@ public class ResourcesTest extends RestTest {
         assertEquals(2, result.length);
         assertAnyTrue(
                 result,
-                rt -> rt.getName().equals("Article")
-                        && rt.getId().toString().equals("urn:resourcetype:2")
-                        && rt.getParentId().get().toString().equals("urn:resourcetype:1")
+                rt -> "Article".equals(rt.getName())
+                        && "urn:resourcetype:2".equals(rt.getId().toString())
+                        && "urn:resourcetype:1".equals(rt.getParentId().get().toString())
                         && rt.getConnectionId().toString().contains("urn:resource-resourcetype"));
         assertAnyTrue(
                 result,
-                rt -> rt.getName().equals("Video")
-                        && rt.getId().toString().equals("urn:resourcetype:3")
-                        && rt.getParentId().get().toString().equals("urn:resourcetype:1"));
+                rt -> "Video".equals(rt.getName())
+                        && "urn:resourcetype:3".equals(rt.getId().toString())
+                        && "urn:resourcetype:1".equals(rt.getParentId().get().toString()));
     }
 
     @Test
@@ -811,8 +811,11 @@ public class ResourcesTest extends RestTest {
         final var resources = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(3, resources.length);
-        assertAnyTrue(resources, r -> r.getPath().get().equals("/subject:1/topic:1/resource:1"));
-        assertAnyTrue(resources, r -> r.getPath().get().equals("/subject:1/topic:2/resource:2"));
-        assertAnyTrue(resources, r -> r.getPath().get().equals("/subject:1/topic:2/topic:3/resource:3"));
+        assertAnyTrue(resources, r -> "/subject:1/topic:1/resource:1"
+                .equals(r.getPath().get()));
+        assertAnyTrue(resources, r -> "/subject:1/topic:2/resource:2"
+                .equals(r.getPath().get()));
+        assertAnyTrue(resources, r -> "/subject:1/topic:2/topic:3/resource:3"
+                .equals(r.getPath().get()));
     }
 }

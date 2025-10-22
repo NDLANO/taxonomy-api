@@ -14,7 +14,7 @@ import no.ndla.taxonomy.domain.exceptions.IdFormatException;
 public class URNValidator {
     public void validate(URI id, DomainEntity entity) {
         final String[] idParts = id.toString().split(":");
-        if (!idParts[0].equals("urn")) {
+        if (!"urn".equals(idParts[0])) {
             throw new IdFormatException("Id should start with urn:");
         }
         if (!idParts[1].equals(entity.getEntityName())) {

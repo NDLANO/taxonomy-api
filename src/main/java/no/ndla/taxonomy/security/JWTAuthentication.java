@@ -59,10 +59,10 @@ public class JWTAuthentication implements Authentication {
             final JWTPermission jwtPermission = new JWTPermission(jwtPermissionString);
             if (jwtPermission.getApi() != null
                     && jwtPermission.getPermission() != null
-                    && jwtPermission.getApi().equals(TAXONOMY_API)) {
-                if (jwtPermission.getPermission().equals(WRITE_PERMISSION))
+                    && TAXONOMY_API.equals(jwtPermission.getApi())) {
+                if (WRITE_PERMISSION.equals(jwtPermission.getPermission()))
                     authorities.add(new SimpleGrantedAuthority("TAXONOMY_WRITE"));
-                if (jwtPermission.getPermission().equals(ADMIN_PERMISSION))
+                if (ADMIN_PERMISSION.equals(jwtPermission.getPermission()))
                     authorities.add(new SimpleGrantedAuthority("TAXONOMY_ADMIN"));
             }
         }

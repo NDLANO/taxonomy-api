@@ -25,8 +25,8 @@ public class RelevanceTranslationsTest extends RestTest {
         RelevanceDTO[] relevances = testUtils.getObject(RelevanceDTO[].class, response);
 
         assertEquals(2, relevances.length);
-        assertAnyTrue(relevances, s -> s.name.equals("Kjernestoff"));
-        assertAnyTrue(relevances, s -> s.name.equals("Tilleggsstoff"));
+        assertAnyTrue(relevances, s -> "Kjernestoff".equals(s.name));
+        assertAnyTrue(relevances, s -> "Tilleggsstoff".equals(s.name));
     }
 
     @Test
@@ -48,10 +48,10 @@ public class RelevanceTranslationsTest extends RestTest {
                 TranslationDTO[].class, testUtils.getResource("/v1/relevances/" + id + "/translations"));
 
         assertEquals(4, translations.length);
-        assertAnyTrue(translations, t -> t.name.equals("Kjernestoff") && t.language.equals("nb"));
-        assertAnyTrue(translations, t -> t.name.equals("Core content") && t.language.equals("en"));
-        assertAnyTrue(translations, t -> t.name.equals("Kjernestoff") && t.language.equals("nn"));
-        assertAnyTrue(translations, t -> t.name.equals("Guovddášávnnas") && t.language.equals("se"));
+        assertAnyTrue(translations, t -> "Kjernestoff".equals(t.name) && "nb".equals(t.language));
+        assertAnyTrue(translations, t -> "Core content".equals(t.name) && "en".equals(t.language));
+        assertAnyTrue(translations, t -> "Kjernestoff".equals(t.name) && "nn".equals(t.language));
+        assertAnyTrue(translations, t -> "Guovddášávnnas".equals(t.name) && "se".equals(t.language));
     }
 
     @Test

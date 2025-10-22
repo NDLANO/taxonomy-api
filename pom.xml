@@ -266,6 +266,21 @@
                         </format>
                     </formats>
                     <java>
+                        <cleanthat>
+                            <version>2.23</version>
+                            <sourceJdk>21</sourceJdk>
+                            <mutators>
+                                <mutator>SafeAndConsensual</mutator>
+                            </mutators>
+                            <mutators>
+                                <!-- List of mutators: https://github.com/solven-eu/cleanthat/blob/master/MUTATORS.generated.MD -->
+                                <mutator>ArithmethicAssignment</mutator>
+                                <mutator>ForEachToIterableForEach</mutator>
+                                <mutator>LiteralsFirstInComparisons</mutator>
+                            </mutators>
+                            <!-- optional. Default to false, not to include draft mutators from Composite mutators -->
+                            <includeDraft>false</includeDraft>
+                        </cleanthat>
                         <toggleOffOn />
                         <palantirJavaFormat>
                             <version>2.81.0</version>

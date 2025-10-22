@@ -105,9 +105,9 @@ public class ResourceTranslationsTest extends RestTest {
                 TranslationDTO[].class, testUtils.getResource("/v1/resources/" + id + "/translations"));
 
         assertEquals(3, translations.length);
-        assertAnyTrue(translations, t -> t.name.equals("Introduksjon til algebra") && t.language.equals("nb"));
-        assertAnyTrue(translations, t -> t.name.equals("Introduction to algrebra") && t.language.equals("en"));
-        assertAnyTrue(translations, t -> t.name.equals("Introduktion bis Algebra") && t.language.equals("de"));
+        assertAnyTrue(translations, t -> "Introduksjon til algebra".equals(t.name) && "nb".equals(t.language));
+        assertAnyTrue(translations, t -> "Introduction to algrebra".equals(t.name) && "en".equals(t.language));
+        assertAnyTrue(translations, t -> "Introduktion bis Algebra".equals(t.name) && "de".equals(t.language));
     }
 
     @Test

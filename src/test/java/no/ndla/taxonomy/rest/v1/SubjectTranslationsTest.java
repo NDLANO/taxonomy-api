@@ -38,8 +38,8 @@ public class SubjectTranslationsTest extends RestTest {
         var subjects = testUtils.getObject(NodeDTO[].class, response);
 
         assertEquals(2, subjects.length);
-        assertAnyTrue(subjects, s -> s.getName().equals("Matematikk"));
-        assertAnyTrue(subjects, s -> s.getName().equals("Kjemi"));
+        assertAnyTrue(subjects, s -> "Matematikk".equals(s.getName()));
+        assertAnyTrue(subjects, s -> "Kjemi".equals(s.getName()));
     }
 
     @Test
@@ -104,9 +104,9 @@ public class SubjectTranslationsTest extends RestTest {
                 TranslationDTO[].class, testUtils.getResource("/v1/subjects/" + id + "/translations"));
 
         assertEquals(3, translations.length);
-        assertAnyTrue(translations, t -> t.name.equals("Matematikk") && t.language.equals("nb"));
-        assertAnyTrue(translations, t -> t.name.equals("Mathematics") && t.language.equals("en"));
-        assertAnyTrue(translations, t -> t.name.equals("Mathematik") && t.language.equals("de"));
+        assertAnyTrue(translations, t -> "Matematikk".equals(t.name) && "nb".equals(t.language));
+        assertAnyTrue(translations, t -> "Mathematics".equals(t.name) && "en".equals(t.language));
+        assertAnyTrue(translations, t -> "Mathematik".equals(t.name) && "de".equals(t.language));
     }
 
     @Test
@@ -157,10 +157,10 @@ public class SubjectTranslationsTest extends RestTest {
 
         assertEquals(2, resources.length);
 
-        assertAnyTrue(resources, r -> r.getName().equals("Introduksjon til trigonometri"));
-        assertAnyTrue(resources, r -> r.getName().equals("Introduksjon til calculus"));
-        assertAllTrue(
-                resources, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
+        assertAnyTrue(resources, r -> "Introduksjon til trigonometri".equals(r.getName()));
+        assertAnyTrue(resources, r -> "Introduksjon til calculus".equals(r.getName()));
+        assertAllTrue(resources, r -> "Artikkel"
+                .equals(r.getResourceTypes().iterator().next().getName()));
     }
 
     private NodeDTO getSubject(URI id, String language) throws Exception {

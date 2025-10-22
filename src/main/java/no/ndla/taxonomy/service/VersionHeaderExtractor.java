@@ -42,7 +42,7 @@ public class VersionHeaderExtractor {
             if (versionHash == null) {
                 // No header, check published and use for gets
                 Optional<Version> published = versionRepository.findFirstByVersionType(VersionType.PUBLISHED);
-                if (published.isPresent() && req.getMethod().equals("GET")) {
+                if (published.isPresent() && "GET".equals(req.getMethod())) {
                     // Use published for all GETs
                     return versionService.schemaFromHash(published.get().getHash());
                 }

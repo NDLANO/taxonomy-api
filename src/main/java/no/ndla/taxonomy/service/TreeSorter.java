@@ -46,7 +46,7 @@ public class TreeSorter {
     public <T extends Sortable> List<T> sortList(Collection<T> elements) {
         final var elementsByParent = new HashMap<URI, Collection<T>>();
 
-        for (var element : elements) {
+        elements.forEach(element -> {
             var foundParent = false;
             if (element.getSortableParentId() != null) {
                 for (var element2 : elements) {
@@ -66,7 +66,7 @@ public class TreeSorter {
 
             elementsByParent.computeIfAbsent(parentId, k -> new ArrayList<>());
             elementsByParent.get(parentId).add(element);
-        }
+        });
 
         return new ArrayList<>(this.addElements(elementsByParent, null));
     }
