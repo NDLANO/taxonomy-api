@@ -80,6 +80,10 @@ export interface NodeConnection {
      */
     childId: string;
     /**
+     * Connection type
+     */
+    connectionType: NodeConnectionType;
+    /**
      * Connection id
      */
     id: string;
@@ -110,6 +114,10 @@ export interface NodeConnectionPOST {
      * Child id
      */
     childId: string;
+    /**
+     * Connection type
+     */
+    connectionType?: NodeConnectionType;
     parentId: string;
     /**
      * If this connection is primary.
@@ -833,6 +841,8 @@ export interface VersionPostPut {
 export type DateAsString = string;
 
 export type Grade = 1 | 2 | 3 | 4 | 5;
+
+export type NodeConnectionType = "BRANCH" | "LINK";
 
 export type NodeType = "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME";
 
