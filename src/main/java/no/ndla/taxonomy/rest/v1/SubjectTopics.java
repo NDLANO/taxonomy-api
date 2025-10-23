@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -107,8 +108,8 @@ public class SubjectTopics {
         var topic = nodeRepository.getByPublicId(command.topicid);
         var relevance = Relevance.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
         var rank = command.rank.orElse(null);
-        final var nodeConnection =
-                connectionService.connectParentChild(subject, topic, relevance, rank, Optional.empty());
+        final var nodeConnection = connectionService.connectParentChild(
+                subject, topic, relevance, rank, Optional.empty(), NodeConnectionType.BRANCH);
         var location = URI.create("/subject-topics/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();
     }

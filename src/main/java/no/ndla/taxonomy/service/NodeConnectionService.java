@@ -10,14 +10,16 @@ package no.ndla.taxonomy.service;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Optional;
-import no.ndla.taxonomy.domain.DomainEntity;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.*;
 
 public interface NodeConnectionService {
     NodeConnection connectParentChild(
-            Node parent, Node child, Relevance relevance, Integer rank, Optional<Boolean> isPrimary);
+            Node parent,
+            Node child,
+            Relevance relevance,
+            Integer rank,
+            Optional<Boolean> isPrimary,
+            NodeConnectionType connectionType);
 
     void disconnectParentChild(Node parent, Node child);
 

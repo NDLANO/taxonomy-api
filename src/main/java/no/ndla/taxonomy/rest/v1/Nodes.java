@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
@@ -232,6 +233,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                         Optional.empty(),
                         Optional.empty(),
                         node,
+                        NodeConnectionType.BRANCH,
                         language,
                         Optional.empty(),
                         includeContexts,
@@ -325,6 +327,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                                     "Filter by nodeType, could be a comma separated list, defaults to Topics and Subjects (Resources are quite slow). :^)")
                     @RequestParam(value = "nodeType", required = false)
                     Optional<List<NodeType>> nodeType,
+            @Parameter(description = "Only connections of given type are returned")
+                    @RequestParam(value = "connectionTypes", defaultValue = "BRANCH")
+                    List<NodeConnectionType> connectionTypes,
             @Parameter(description = "If true, children are fetched recursively")
                     @RequestParam(value = "recursive", required = false, defaultValue = "false")
                     boolean recursive,
@@ -356,6 +361,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     .collect(Collectors.toList());
         } else {
             childrenIds = node.getChildConnections().stream()
+                    .filter(cc -> connectionTypes.contains(cc.getConnectionType()))
                     .map(NodeConnection::getChild)
                     .filter(Optional::isPresent)
                     .map(Optional::get)

@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
@@ -111,8 +112,9 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
         Node child = nodeRepository.getByPublicId(command.childId);
         var relevance = Relevance.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
         var rank = command.rank.orElse(null);
+        var connectionType = command.connectionType.orElse(NodeConnectionType.BRANCH);
         final var nodeConnection =
-                connectionService.connectParentChild(parent, child, relevance, rank, command.primary);
+                connectionService.connectParentChild(parent, child, relevance, rank, command.primary, connectionType);
 
         URI location = URI.create("/node-child/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();

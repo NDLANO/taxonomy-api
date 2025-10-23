@@ -160,7 +160,7 @@ public class NodeResourcesTest extends RestTest {
 
     @Test
     public void cannot_unset_primary_node() throws Exception {
-        URI id = save(NodeConnection.create(newTopic(), newResource(), Relevance.CORE, true))
+        URI id = save(NodeConnection.create(newTopic(), newResource(), Relevance.CORE, NodeConnectionType.BRANCH, true))
                 .getPublicId();
 
         testUtils.updateResource(

@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 
 @Schema(name = "NodeWithParents")
@@ -33,6 +34,7 @@ public class NodeWithParents extends NodeDTO {
                 Optional.empty(),
                 Optional.empty(),
                 node,
+                NodeConnectionType.BRANCH,
                 languageCode,
                 Optional.empty(),
                 includeContexts,

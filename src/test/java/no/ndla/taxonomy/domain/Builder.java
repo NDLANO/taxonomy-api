@@ -378,6 +378,12 @@ public class Builder {
             return this;
         }
 
+        public NodeBuilder link(Node other) {
+            entityManager.persist(NodeConnection.create(node, other, Relevance.CORE, NodeConnectionType.LINK));
+            contextUpdaterService.updateContexts(other);
+            return this;
+        }
+
         public NodeBuilder resource() {
             return resource(null, null);
         }
@@ -414,7 +420,8 @@ public class Builder {
         }
 
         public NodeBuilder resource(Node resource, boolean primary) {
-            entityManager.persist(NodeConnection.create(node, resource, Relevance.CORE, primary));
+            entityManager.persist(
+                    NodeConnection.create(node, resource, Relevance.CORE, NodeConnectionType.BRANCH, primary));
 
             contextUpdaterService.updateContexts(resource);
 

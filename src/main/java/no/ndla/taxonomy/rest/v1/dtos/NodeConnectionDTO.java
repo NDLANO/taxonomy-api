@@ -9,9 +9,12 @@ package no.ndla.taxonomy.rest.v1.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import java.net.URI;
 import java.util.Optional;
 import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
 
@@ -45,6 +48,11 @@ public class NodeConnectionDTO {
     @Schema(description = "Metadata for entity. Read only.")
     private MetadataDTO metadata;
 
+    @JsonProperty
+    @Enumerated(EnumType.STRING)
+    @Schema(description = "Connection type")
+    public NodeConnectionType connectionType;
+
     NodeConnectionDTO() {}
 
     public NodeConnectionDTO(NodeConnection nodeConnection) {
@@ -54,6 +62,7 @@ public class NodeConnectionDTO {
         relevanceId = nodeConnection.getRelevance().map(Relevance::getPublicId);
         primary = true;
         rank = nodeConnection.getRank();
+        connectionType = nodeConnection.getConnectionType();
         metadata = new MetadataDTO(nodeConnection.getMetadata());
     }
 }

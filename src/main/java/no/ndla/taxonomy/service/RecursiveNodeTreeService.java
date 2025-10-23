@@ -10,6 +10,7 @@ package no.ndla.taxonomy.service;
 import java.net.URI;
 import java.util.*;
 import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,8 @@ public class RecursiveNodeTreeService {
                     var child = nodeConnection.getChild();
                     var parent = nodeConnection.getParent();
                     if (child.isEmpty() || parent.isEmpty()) return;
+
+                    if (!nodeConnection.getConnectionType().equals(NodeConnectionType.BRANCH)) return;
 
                     var childId = child.get().getPublicId();
                     var parentId = parent.get().getPublicId();
