@@ -16,8 +16,7 @@ public interface ResourceResourceTypeRepository extends TaxonomyRepository<Resou
     @Query("SELECT rrt FROM ResourceResourceType rrt JOIN FETCH rrt.node r JOIN FETCH rrt.resourceType")
     List<ResourceResourceType> findAllIncludingResourceAndResourceType();
 
-    @Query(
-            """
+    @Query("""
             SELECT rrt FROM ResourceResourceType rrt
             JOIN FETCH rrt.node
             JOIN FETCH rrt.resourceType rt

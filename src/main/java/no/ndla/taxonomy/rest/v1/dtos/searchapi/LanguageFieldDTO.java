@@ -26,18 +26,18 @@ public class LanguageFieldDTO<V> extends HashMap<String, V> {
     public static LanguageFieldDTO<String> fromLanguageField(LanguageField<String> languageField) {
         var dto = new LanguageFieldDTO<String>();
         Set<String> keySet = languageField.keySet();
-        for (String key : keySet) {
+        keySet.forEach(key -> {
             dto.put(key, languageField.get(key));
-        }
+        });
         return dto;
     }
 
     public static LanguageFieldDTO<List<String>> fromLanguageFieldList(LanguageField<List<String>> languageField) {
         var dto = new LanguageFieldDTO<List<String>>();
         Set<String> keySet = languageField.keySet();
-        for (String key : keySet) {
+        keySet.forEach(key -> {
             dto.put(key, languageField.get(key));
-        }
+        });
         return dto;
     }
 }

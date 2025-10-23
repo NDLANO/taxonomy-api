@@ -30,8 +30,8 @@ public class ResourceTypeTranslationsTest extends RestTest {
         ResourceTypeDTO[] resourceTypes = testUtils.getObject(ResourceTypeDTO[].class, response);
 
         assertTrue(resourceTypes.length >= 2);
-        assertAnyTrue(resourceTypes, s -> s.name.equals("Artikkel"));
-        assertAnyTrue(resourceTypes, s -> s.name.equals("Forelesning"));
+        assertAnyTrue(resourceTypes, s -> "Artikkel".equals(s.name));
+        assertAnyTrue(resourceTypes, s -> "Forelesning".equals(s.name));
     }
 
     @Test
@@ -95,9 +95,9 @@ public class ResourceTypeTranslationsTest extends RestTest {
                 TranslationDTO[].class, testUtils.getResource("/v1/resource-types/" + id + "/translations"));
 
         assertEquals(3, translations.length);
-        assertAnyTrue(translations, t -> t.name.equals("Artikkel") && t.language.equals("nb"));
-        assertAnyTrue(translations, t -> t.name.equals("Article") && t.language.equals("en"));
-        assertAnyTrue(translations, t -> t.name.equals("Artikel") && t.language.equals("de"));
+        assertAnyTrue(translations, t -> "Artikkel".equals(t.name) && "nb".equals(t.language));
+        assertAnyTrue(translations, t -> "Article".equals(t.name) && "en".equals(t.language));
+        assertAnyTrue(translations, t -> "Artikel".equals(t.name) && "de".equals(t.language));
     }
 
     @Test

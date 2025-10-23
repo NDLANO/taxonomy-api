@@ -28,8 +28,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     @Query(value = "SELECT n.id FROM Node n ORDER BY n.id", countQuery = "SELECT count(*) from Node")
     Page<Integer> findIdsPaginated(Pageable pageable);
 
-    @Query(
-            """
+    @Query("""
             SELECT DISTINCT n FROM Node n
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType rt
@@ -38,8 +37,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             """)
     List<Node> findByIds(Collection<Integer> ids);
 
-    @Query(
-            """
+    @Query("""
             SELECT n
             FROM Node n
             LEFT JOIN FETCH n.parentConnections pc
@@ -48,16 +46,14 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     Stream<Node> findNodesWithQualityEvaluation();
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query(
-            """
+    @Query("""
             UPDATE Node n
             SET n.childQualityEvaluationSum = 0,
                 n.childQualityEvaluationCount = 0
             """)
     void wipeQualityEvaluationAverages();
 
-    @Query(
-            """
+    @Query("""
             SELECT n.id FROM Node n
             LEFT JOIN n.parentConnections pc
             WHERE ((:#{#nodeTypes == null} = true) OR n.nodeType in (:nodeTypes))
@@ -77,13 +73,10 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             Optional<Boolean> isRoot,
             Optional<Boolean> isContext);
 
-    @Query(
-            value =
-                    """
+    @Query(value = """
             SELECT n.id FROM Node n
             WHERE (:contextId IS NULL OR n.contextids @> jsonb_build_array(:contextId))
-            """,
-            nativeQuery = true)
+            """, nativeQuery = true)
     List<Integer> findIdsByContextId(Optional<String> contextId);
 
     @Query(
@@ -91,8 +84,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             countQuery = "SELECT count(*) from Node n where n.nodeType = :nodeType")
     Page<Integer> findIdsByTypePaginated(Pageable pageable, NodeType nodeType);
 
-    @Query(
-            """
+    @Query("""
             SELECT DISTINCT n FROM Node n
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType
@@ -103,8 +95,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             """)
     List<Node> findProgrammes();
 
-    @Query(
-            """
+    @Query("""
             SELECT DISTINCT n FROM Node n
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType
@@ -115,8 +106,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             """)
     List<Node> findRootSubjects();
 
-    @Query(
-            """
+    @Query("""
             SELECT DISTINCT n FROM Node n
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType

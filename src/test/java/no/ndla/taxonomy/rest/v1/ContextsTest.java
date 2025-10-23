@@ -105,8 +105,8 @@ public class ContextsTest extends RestTest {
 
         assertEquals(2, contexts.length);
 
-        assertAnyTrue(contexts, c -> c.name.equals("Emne 1"));
-        assertAnyTrue(contexts, c -> c.name.equals("Fag 1"));
+        assertAnyTrue(contexts, c -> "Emne 1".equals(c.name));
+        assertAnyTrue(contexts, c -> "Fag 1".equals(c.name));
     }
 
     // TODO Set is not ordered
@@ -126,6 +126,6 @@ public class ContextsTest extends RestTest {
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
         final var topicIndexDocument = testUtils.getObject(NodeDTO.class, response);
-        assertAnyTrue(topicIndexDocument.getPaths(), p -> p.equals("/topic:1"));
+        assertAnyTrue(topicIndexDocument.getPaths(), p -> "/topic:1".equals(p));
     }
 }

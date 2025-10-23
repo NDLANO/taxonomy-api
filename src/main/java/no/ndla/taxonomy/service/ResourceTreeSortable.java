@@ -47,15 +47,15 @@ public class ResourceTreeSortable implements TreeSorter.Sortable {
     public int getSortableRank() {
         // Sort subject-topic relations first, then topic-resource, then topic-topic
 
-        if (type.equals("resource")) {
+        if ("resource".equals(type)) {
             return rank - 10000;
         }
 
-        if (type.equals("topic") && parentType.equals("topic")) {
+        if ("topic".equals(type) && "topic".equals(parentType)) {
             return rank - 1000;
         }
 
-        if (type.equals("node") && parentType.equals("node")) {
+        if ("node".equals(type) && "node".equals(parentType)) {
             return rank - 1000;
         }
 

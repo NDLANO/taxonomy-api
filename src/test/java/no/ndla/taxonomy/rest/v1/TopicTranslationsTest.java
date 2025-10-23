@@ -33,8 +33,8 @@ public class TopicTranslationsTest extends RestTest {
         final var topics = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(2, topics.length);
-        assertAnyTrue(topics, s -> s.getName().equals("Trigonometri"));
-        assertAnyTrue(topics, s -> s.getName().equals("Integrasjon"));
+        assertAnyTrue(topics, s -> "Trigonometri".equals(s.getName()));
+        assertAnyTrue(topics, s -> "Integrasjon".equals(s.getName()));
     }
 
     @Test
@@ -101,9 +101,9 @@ public class TopicTranslationsTest extends RestTest {
                 TranslationDTO[].class, testUtils.getResource("/v1/topics/" + id + "/translations"));
 
         assertEquals(3, translations.length);
-        assertAnyTrue(translations, t -> t.name.equals("Trigonometri") && t.language.equals("nb"));
-        assertAnyTrue(translations, t -> t.name.equals("Trigonometry") && t.language.equals("en"));
-        assertAnyTrue(translations, t -> t.name.equals("Trigonometrie") && t.language.equals("de"));
+        assertAnyTrue(translations, t -> "Trigonometri".equals(t.name) && "nb".equals(t.language));
+        assertAnyTrue(translations, t -> "Trigonometry".equals(t.name) && "en".equals(t.language));
+        assertAnyTrue(translations, t -> "Trigonometrie".equals(t.name) && "de".equals(t.language));
     }
 
     @Test
@@ -138,8 +138,8 @@ public class TopicTranslationsTest extends RestTest {
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "Introduksjon til calculus".equals(r.getName()));
         assertAnyTrue(result, r -> "Introduksjon til integrasjon".equals(r.getName()));
-        assertAllTrue(
-                result, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
+        assertAllTrue(result, r -> "Artikkel"
+                .equals(r.getResourceTypes().iterator().next().getName()));
     }
 
     @Test
@@ -161,8 +161,8 @@ public class TopicTranslationsTest extends RestTest {
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "ressurs 1".equals(r.getName()));
         assertAnyTrue(result, r -> "ressurs 2".equals(r.getName()));
-        assertAllTrue(
-                result, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
+        assertAllTrue(result, r -> "Artikkel"
+                .equals(r.getResourceTypes().iterator().next().getName()));
     }
 
     private NodeDTO getTopic(URI id, String language) throws Exception {

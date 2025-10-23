@@ -17,8 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 
 public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnection> {
-    @Query(
-            """
+    @Query("""
             SELECT DISTINCT nc
             FROM NodeConnection nc
             JOIN FETCH nc.parent p
@@ -28,8 +27,7 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             """)
     List<NodeConnection> findAllByNodeIdInIncludingTopicAndSubtopic(Set<URI> nodeId, List<NodeType> nodeTypes);
 
-    @Query(
-            """
+    @Query("""
             SELECT DISTINCT nc FROM NodeConnection nc
             LEFT JOIN nc.child c
             LEFT JOIN nc.parent p
@@ -52,17 +50,13 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             countQuery = "SELECT count(*) from NodeConnection")
     Page<Integer> findIdsPaginated(Pageable pageable);
 
-    @Query(
-            value =
-                    """
+    @Query(value = """
             SELECT nc
             FROM NodeConnection nc
             JOIN nc.child c
             WHERE c.nodeType = :nodeType
             ORDER BY nc.id
-            """,
-            countQuery =
-                    """
+            """, countQuery = """
             SELECT count(nc)
             FROM NodeConnection nc
             JOIN nc.child c
@@ -80,8 +74,7 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             "SELECT DISTINCT nc FROM NodeConnection nc JOIN FETCH nc.child c JOIN FETCH nc.parent n WHERE n.publicId = :publicId")
     List<NodeConnection> findAllByParentPublicIdIncludingChildAndChildTranslations(URI publicId);
 
-    @Query(
-            """
+    @Query("""
             SELECT DISTINCT nc
             FROM NodeConnection nc
             JOIN FETCH nc.parent n
@@ -99,8 +92,7 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
 
     Optional<NodeConnection> findFirstByPublicId(URI publicId);
 
-    @Query(
-            """
+    @Query("""
             SELECT DISTINCT nc
             FROM NodeConnection nc
             JOIN FETCH nc.parent n

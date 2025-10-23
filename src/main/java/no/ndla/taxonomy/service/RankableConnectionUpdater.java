@@ -42,7 +42,7 @@ public class RankableConnectionUpdater {
             int currentRank = currentItem.getRank();
             if (currentRank <= lastUpdatedConnectionRank) {
                 currentItem.setRank(lastUpdatedConnectionRank + 1);
-                lastUpdatedConnectionRank = lastUpdatedConnectionRank + 1;
+                lastUpdatedConnectionRank += 1;
             } else return;
         }
     }

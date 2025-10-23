@@ -215,7 +215,7 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
     private Optional<Node> getEntityFromPublicId(URI publicId) {
         final var publicIdUrnPart = publicId.getSchemeSpecificPart();
-        if (!publicId.getScheme().equals("urn") || publicIdUrnPart == null) {
+        if (!"urn".equals(publicId.getScheme()) || publicIdUrnPart == null) {
             throw new InvalidArgumentServiceException("No valid URN provided");
         }
 

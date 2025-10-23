@@ -31,7 +31,7 @@ public class ResourceTypesTest extends RestTest {
         assertTrue(resourceTypes.length >= 2);
         assertAnyTrue(
                 resourceTypes,
-                s -> "video".equals(s.name) && s.subtypes.get().getFirst().name.equals("lecture"));
+                s -> "video".equals(s.name) && "lecture".equals(s.subtypes.get().getFirst().name));
         assertAnyTrue(resourceTypes, s -> "audio".equals(s.name));
         assertAllTrue(resourceTypes, s -> isValidId(s.id));
     }

@@ -102,7 +102,7 @@ public class DraftApiClient {
             var template = "Taksonomi: lagt til i %s med id '%s'%s";
             var noteString =
                     String.format(template, nodeTypeName(parent.getNodeType()), parentId.id, relevanceNotePart);
-            if (parentId.type.equals("frontpage")) {
+            if ("frontpage".equals(parentId.type)) {
                 noteString = String.format(
                         template, nodeTypeName(parent.getNodeType()), parent.getPublicId(), relevanceNotePart);
             }
@@ -184,14 +184,14 @@ public class DraftApiClient {
         var relevanceChanged =
                 nodeConnection.getRelevance().map(r -> !r.equals(newRelevance)).orElse(true);
         if (relevanceChanged) {
-            if (childId.type.equals("article")) {
+            if ("article".equals(childId.type)) {
                 notes.add(DraftNotesDTO.fromNote(
                         childId.id,
                         String.format(
                                 "Taksonomi: satt som %s for %s med id '%s'",
                                 newRelevance.getTranslatedName(), nodeTypeName(parent.getNodeType()), parentId.id)));
             }
-            if (parentId.type.equals("article")) {
+            if ("article".equals(parentId.type)) {
                 var note = String.format(
                         "Taksonomi: %s med id '%s' satt som %s",
                         nodeTypeName(child.getNodeType()), childId.id, newRelevance.getTranslatedName());
@@ -224,7 +224,7 @@ public class DraftApiClient {
 
         var oldPrimary = nodeConnection.isPrimary().orElse(false);
         var newPrimary = newIsPrimary.orElse(false);
-        if (oldPrimary != newPrimary && parentId.type.equals("article")) {
+        if (oldPrimary != newPrimary && "article".equals(parentId.type)) {
             var action = newPrimary ? "satt" : "fjernet";
             var note = String.format(
                     "Taksonomi: %s som primærkobling på %s med id '%s'",
