@@ -13,6 +13,7 @@ import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeConnectionType;
 
 /** */
 @Schema(name = "Connection")
@@ -33,7 +34,7 @@ public class ConnectionDTO {
     private Set<String> paths = new HashSet<>();
 
     @JsonProperty
-    @Schema(description = "The type of connection (parent subject, parent topic or subtopic")
+    @Schema(description = "The type of connection (parent, child, referrer or target")
     private String type;
 
     @JsonProperty
@@ -46,7 +47,7 @@ public class ConnectionDTO {
 
     private ConnectionDTO(NodeConnection connection, boolean isParentConnection) {
         this.connectionId = connection.getPublicId();
-        this.isPrimary = true;
+        this.isPrimary = connection.isPrimary().orElse(false);
 
         final var connectedObject = isParentConnection ? connection.getParent() : connection.getChild();
 
@@ -54,11 +55,10 @@ public class ConnectionDTO {
             this.targetId = connected.getPublicId();
             this.paths = Set.copyOf(connected.getAllPaths());
         });
-
-        if (isParentConnection) {
-            this.type = "parent";
+        if (NodeConnectionType.LINK.equals(connection.getConnectionType())) {
+            this.type = isParentConnection ? "referrer" : "target";
         } else {
-            this.type = "child";
+            this.type = isParentConnection ? "parent" : "child";
         }
     }
 

@@ -53,7 +53,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
 
         // Get all parent connections, append all contexts from the parent to the list and return.
         node.getParentConnections().stream()
-                .filter(pc -> pc.getConnectionType().equals(NodeConnectionType.BRANCH))
+                .filter(pc -> NodeConnectionType.BRANCH.equals(pc.getConnectionType()))
                 .forEach(parentConnection -> parentConnection
                         .getParent()
                         .ifPresent(parent -> createContexts(parent).stream()
