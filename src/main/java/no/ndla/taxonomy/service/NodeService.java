@@ -238,7 +238,7 @@ public class NodeService {
         if (relevanceId.isPresent()) {
             final var isRequestingCore = "urn:relevance:core".equals(relevanceId.toString());
             nodeResourcesStream = nodeResourcesStream.filter(nodeResource -> {
-                if (!NodeConnectionType.BRANCH.equals(nodeResource.getConnectionType())) return false;
+                if (nodeResource.getConnectionType() != NodeConnectionType.BRANCH) return false;
 
                 final var resource = nodeResource.getChild().orElse(null);
                 if (resource == null) {
