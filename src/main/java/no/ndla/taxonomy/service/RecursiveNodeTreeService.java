@@ -47,7 +47,7 @@ public class RecursiveNodeTreeService {
                     var parent = nodeConnection.getParent();
                     if (child.isEmpty() || parent.isEmpty()) return;
 
-                    if (!NodeConnectionType.BRANCH.equals(nodeConnection.getConnectionType())) return;
+                    if (nodeConnection.getConnectionType() != NodeConnectionType.BRANCH) return;
 
                     var childId = child.get().getPublicId();
                     var parentId = parent.get().getPublicId();
