@@ -102,12 +102,14 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
             Optional<Boolean> isPrimary,
             NodeConnectionType connectionType) {
         if (!child.getParentConnections().isEmpty()) {
-            if (child.getNodeType() == NodeType.TOPIC) throw new DuplicateConnectionException();
+            if (NodeConnectionType.BRANCH.equals(connectionType) && child.getNodeType() == NodeType.TOPIC)
+                throw new DuplicateConnectionException();
 
-            var alreadyConnectedResource = parent.getResourceChildren().stream()
-                    .anyMatch(connection -> connection.getChild().orElse(null) == child);
+            var alreadyConnected = parent.getResourceChildren().stream()
+                    .anyMatch(connection -> connection.getChild().orElse(null) == child
+                            && connection.getConnectionType() == connectionType);
 
-            if (alreadyConnectedResource) {
+            if (alreadyConnected) {
                 throw new DuplicateConnectionException();
             }
         }
