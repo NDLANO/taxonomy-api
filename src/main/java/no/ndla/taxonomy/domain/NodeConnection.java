@@ -179,12 +179,6 @@ public class NodeConnection extends DomainEntity
     }
 
     public void setPrimary(boolean isPrimary) {
-        var childType = this.child.getNodeType();
-        if (childType == NodeType.TOPIC && !isPrimary) {
-            throw new IllegalArgumentException(
-                    "NodeConnection with child of type '" + childType + "' cannot be non-primary");
-        }
-
         this.isPrimary = isPrimary;
     }
 

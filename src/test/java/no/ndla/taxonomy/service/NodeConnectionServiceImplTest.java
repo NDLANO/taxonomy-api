@@ -473,4 +473,38 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertFalse(topic1resource1.isPrimary().orElseThrow());
         assertTrue(topic2resource1.isPrimary().orElseThrow());
     }
+
+    @Test
+    public void add_both_child_and_link_to_same_topic() throws Exception {
+        final var subject = builder.node(NodeType.SUBJECT);
+        final var topic = builder.node(NodeType.TOPIC);
+        {
+            var c1 = service.connectParentChild(
+                    subject, topic, Relevance.CORE, 1, Optional.of(true), NodeConnectionType.BRANCH);
+            assertTrue(c1.isPrimary().orElseThrow());
+            var c2 = service.connectParentChild(
+                    subject, topic, Relevance.CORE, 2, Optional.of(true), NodeConnectionType.LINK);
+            assertTrue(c2.isPrimary().orElseThrow());
+        }
+        final var subject2 = builder.node(NodeType.SUBJECT);
+        {
+            // Two connections to the same topic with same type should fail
+            try {
+                service.connectParentChild(
+                        subject2, topic, Relevance.CORE, 2, Optional.of(true), NodeConnectionType.BRANCH);
+                fail("Expected DuplicateConnectionException");
+            } catch (DuplicateConnectionException ignored) {
+            }
+            var c1 = service.connectParentChild(
+                    subject2, topic, Relevance.CORE, 1, Optional.of(true), NodeConnectionType.LINK);
+            assertTrue(c1.isPrimary().orElseThrow());
+        }
+        final var subject3 = builder.node(NodeType.SUBJECT);
+        {
+            // A topic can have more than one link connection
+            var c1 = service.connectParentChild(
+                    subject3, topic, Relevance.CORE, 1, Optional.of(true), NodeConnectionType.LINK);
+            assertTrue(c1.isPrimary().orElseThrow());
+        }
+    }
 }

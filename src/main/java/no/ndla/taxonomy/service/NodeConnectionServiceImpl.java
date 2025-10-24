@@ -204,7 +204,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         final var foundNewPrimary = new AtomicBoolean(false);
         connectable.getChild().ifPresent(node -> {
             var theOthers = node.getParentConnections().stream()
-                    .filter(c -> c != connectable)
+                    .filter(c -> c != connectable && c.getConnectionType() == connectable.getConnectionType())
                     .toList();
             var hasPrimary = !theOthers.stream()
                     .filter(c -> c.isPrimary().orElse(false))
