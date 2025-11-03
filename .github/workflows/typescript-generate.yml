@@ -47,7 +47,11 @@ jobs:
           echo $DOCKER_HUB_PASSWORD | docker login --username $DOCKER_HUB_USERNAME
           --password-stdin
       - name: Generate typescript types
-        run: mvn compile typescript-generator:generate
+        run: |
+          mvn -P integration verify -Dtest=VersionServiceIntegrationTest
+          cd typescript/
+          yarn
+          yarn generate-typescript
       - name: Commit typescript changes
         continue-on-error: true
         run: |
