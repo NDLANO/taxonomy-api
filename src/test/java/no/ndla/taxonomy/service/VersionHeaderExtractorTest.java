@@ -78,7 +78,7 @@ public class VersionHeaderExtractorTest extends AbstractIntegrationTest {
         Version saved = versionRepository.save(version);
         {
             HttpServletRequest request = mock(HttpServletRequest.class);
-            when(request.getRequestURI()).thenReturn("/v1/subjects");
+            when(request.getRequestURI()).thenReturn("/v1/nodes");
             when(request.getHeader(anyString())).thenReturn(saved.getHash());
             when(request.getMethod()).thenReturn("POST");
             String versionSchemaFromHeader = versionHeaderExtractor.getVersionSchemaFromHeader(request);
@@ -86,7 +86,7 @@ public class VersionHeaderExtractorTest extends AbstractIntegrationTest {
         }
         {
             HttpServletRequest request = mock(HttpServletRequest.class);
-            when(request.getRequestURI()).thenReturn("/v1/subjects");
+            when(request.getRequestURI()).thenReturn("/v1/nodes");
             when(request.getHeader(anyString())).thenReturn(saved.getHash());
             when(request.getMethod()).thenReturn("GET");
             String versionSchemaFromHeader = versionHeaderExtractor.getVersionSchemaFromHeader(request);
@@ -101,7 +101,7 @@ public class VersionHeaderExtractorTest extends AbstractIntegrationTest {
         Version saved = versionRepository.save(version);
         {
             HttpServletRequest request = mock(HttpServletRequest.class);
-            when(request.getRequestURI()).thenReturn("/v1/subjects");
+            when(request.getRequestURI()).thenReturn("/v1/nodes");
             when(request.getHeader(anyString())).thenReturn(null);
             when(request.getMethod()).thenReturn("GET");
             String versionSchemaFromHeader = versionHeaderExtractor.getVersionSchemaFromHeader(request);
@@ -109,7 +109,7 @@ public class VersionHeaderExtractorTest extends AbstractIntegrationTest {
         }
         {
             HttpServletRequest request = mock(HttpServletRequest.class);
-            when(request.getRequestURI()).thenReturn("/v1/subjects");
+            when(request.getRequestURI()).thenReturn("/v1/nodes");
             when(request.getHeader(anyString())).thenReturn(null);
             when(request.getMethod()).thenReturn("POST");
             String versionSchemaFromHeader = versionHeaderExtractor.getVersionSchemaFromHeader(request);

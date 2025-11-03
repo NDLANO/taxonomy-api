@@ -15,20 +15,15 @@ import java.util.Optional;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.NodeService;
-import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(path = {"/v1/queries"})
 public class Queries {
-    private final Topics topicController;
-    private final Resources resourceController;
     private final NodeService nodeService;
 
-    public Queries(Topics topicController, Resources resourceController, NodeService nodeService) {
-        this.topicController = topicController;
-        this.resourceController = resourceController;
+    public Queries(NodeService nodeService) {
         this.nodeService = nodeService;
     }
 
@@ -68,45 +63,5 @@ public class Queries {
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
                     String language) {
         return nodeService.getContextByPath(path, language);
-    }
-
-    @GetMapping("/resources")
-    @Operation(
-            summary =
-                    "Gets a list of resources matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/resources?contentURI= instead")
-    @Transactional(readOnly = true)
-    @Deprecated
-    public List<NodeDTO> queryResources(
-            @RequestParam("contentURI") Optional<URI> contentURI,
-            @Parameter(description = "ISO-639-1 language code", example = "nb")
-                    @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
-                    String language,
-            @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false)
-                    Optional<String> key,
-            @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false)
-                    Optional<String> value,
-            @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false)
-                    Optional<Boolean> isVisible) {
-        return resourceController.getAllResources(language, contentURI, key, value, isVisible);
-    }
-
-    @GetMapping("/topics")
-    @Operation(
-            summary =
-                    "Gets a list of topics matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/topics?contentURI= instead")
-    @Transactional(readOnly = true)
-    @Deprecated
-    public List<NodeDTO> queryTopics(
-            @RequestParam("contentURI") URI contentURI,
-            @Parameter(description = "ISO-639-1 language code", example = "nb")
-                    @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
-                    String language,
-            @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false)
-                    Optional<String> key,
-            @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false)
-                    Optional<String> value,
-            @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false)
-                    Optional<Boolean> isVisible) {
-        return topicController.getAllTopics(language, Optional.of(contentURI), key, value, isVisible);
     }
 }
