@@ -11,7 +11,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 
-@Schema(name = "TaxonomyCrumb")
+@Schema(
+        name = "TaxonomyCrumb",
+        requiredProperties = {"id", "contextId", "name", "path", "url"})
 public record TaxonomyCrumbDTO(
         @JsonProperty @Schema(description = "The publicId of the node")
         URI id,

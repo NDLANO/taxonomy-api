@@ -14,6 +14,7 @@ import java.util.Optional;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.service.UpdatableDto;
 
+@Schema(requiredProperties = {"name", "id", "parentId"})
 public class ResourceTypePUT implements UpdatableDto<ResourceType> {
     @JsonProperty
     @Schema(description = "If specified, the new resource type will be a child of the mentioned resource type.")

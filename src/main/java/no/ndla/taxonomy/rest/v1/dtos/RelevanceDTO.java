@@ -17,7 +17,9 @@ import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
 
-@Schema(name = "Relevance")
+@Schema(
+        name = "Relevance",
+        requiredProperties = {"id", "name", "translations", "supportedLanguages"})
 public class RelevanceDTO {
     @JsonProperty
     @Schema(description = "Specifies if node is core or supplementary", example = "urn:relevance:core")

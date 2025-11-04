@@ -12,7 +12,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 
-@Schema(name = "ResourceResourceType")
+@Schema(
+        name = "ResourceResourceType",
+        requiredProperties = {"id", "resourceId", "resourceTypeId"})
 public class ResourceResourceTypeDTO {
     @JsonProperty
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource type id", example = "urn:resource:123")

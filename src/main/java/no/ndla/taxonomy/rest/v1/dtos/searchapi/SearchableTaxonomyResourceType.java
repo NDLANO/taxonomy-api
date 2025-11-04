@@ -10,10 +10,12 @@ package no.ndla.taxonomy.rest.v1.dtos.searchapi;
 import static no.ndla.taxonomy.config.Constants.DefaultLanguage;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.HashMap;
 import java.util.Optional;
 import no.ndla.taxonomy.domain.ResourceType;
 
+@Schema(requiredProperties = {"id", "name"})
 public class SearchableTaxonomyResourceType {
     @JsonProperty
     private String id;

@@ -17,7 +17,9 @@ import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Metadata;
 
-@Schema(name = "Metadata")
+@Schema(
+        name = "Metadata",
+        requiredProperties = {"grepCodes", "visible", "customFields"})
 public class MetadataDTO {
     @JsonIgnore
     public String publicId;

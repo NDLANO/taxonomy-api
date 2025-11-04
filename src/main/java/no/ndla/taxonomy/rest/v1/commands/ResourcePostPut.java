@@ -14,6 +14,7 @@ import java.util.Optional;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.service.UpdatableDto;
 
+@Schema(requiredProperties = {"contentUri", "name"})
 public class ResourcePostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(
