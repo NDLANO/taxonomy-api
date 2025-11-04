@@ -23,23 +23,25 @@ async function generate_types(appName: string) {
   const jsonFile = `./openapi.json`;
   console.log(`Parsing ${jsonFile} to generate typescript files...`);
   const schema = await fs.promises.readFile(jsonFile, "utf8");
+  const schemaContent = JSON.parse(schema);
 
-  const ast = await openapiTS(JSON.parse(schema), {
+  const ast = await openapiTS(schemaContent, {
     exportType: true,
-    // https://openapi-ts.dev/migration-guide#defaultnonnullable-true-by-default
-    defaultNonNullable: false,
-    transform(schemaObject, _options): TypeNode | undefined {
-      if (schemaObject.format === "binary") {
-        if (schemaObject.nullable) {
-          return ts.factory.createUnionTypeNode([BLOB, NULL]);
-        } else {
-          return BLOB;
-        }
+    generatePathParams: true,
+    transform(schemaObject, meta) {
+      if (
+        schemaObject.type === "object" &&
+        schemaObject.additionalProperties &&
+        schemaObject.properties?.empty
+      ) {
+        // Records generated from HashMaps have additional boolean property empty
+        delete schemaObject.properties;
       }
+      return undefined;
     },
   });
 
-  const outputPath = `./taxonomy-api.ts`;
+  const outputPath = `./taxonomy-api-openapi.ts`;
   const output = astToString(ast);
 
   console.log(`Outputting to ${outputPath}`);

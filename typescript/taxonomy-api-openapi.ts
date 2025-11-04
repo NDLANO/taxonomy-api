@@ -20,7 +20,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         get?: never;
@@ -96,7 +98,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         get?: never;
@@ -169,7 +173,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets a single connection between a node and a child */
@@ -191,7 +197,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets metadata for entity */
@@ -262,7 +270,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets a specific connection between a node and a resource */
@@ -284,7 +294,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets metadata for entity */
@@ -373,7 +385,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets a single node */
@@ -392,7 +406,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         get?: never;
@@ -409,7 +425,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets all parents and children this node is connected to */
@@ -426,7 +444,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -446,7 +466,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         get?: never;
@@ -463,7 +485,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets metadata for entity */
@@ -481,7 +505,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets all children for this node */
@@ -498,7 +524,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         get?: never;
@@ -518,7 +546,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets all resources for the given node */
@@ -535,7 +565,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets all translations for a single node */
@@ -552,7 +584,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets all translations for a single node */
@@ -569,7 +603,10 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+                language: string;
+            };
             cookie?: never;
         };
         /** Gets a single translation for a single node */
@@ -662,7 +699,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                contentURI: string;
+            };
             cookie?: never;
         };
         /** Gets a list of contexts matching given contentURI, empty list if no matches are found. */
@@ -713,7 +752,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -733,7 +774,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets all relevanceTranslations for a single relevance */
@@ -750,7 +793,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets all relevanceTranslations for a single relevance */
@@ -767,7 +812,10 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+                language: string;
+            };
             cookie?: never;
         };
         /** Gets a single translation for a single relevance */
@@ -820,7 +868,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets a single connection between resource and resource type */
@@ -874,7 +924,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets a single resource type */
@@ -893,7 +945,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets subtypes of one resource type */
@@ -910,7 +964,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets all relevanceTranslations for a single resource type */
@@ -927,7 +983,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets all relevanceTranslations for a single resource type */
@@ -944,7 +1002,10 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+                language: string;
+            };
             cookie?: never;
         };
         /** Gets a single translation for a single resource type */
@@ -1051,7 +1112,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1079,7 +1142,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         get?: never;
@@ -1099,7 +1164,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1119,7 +1186,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets metadata for entity */
@@ -1137,7 +1206,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1157,7 +1228,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1177,7 +1250,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1197,7 +1272,10 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+                language: string;
+            };
             cookie?: never;
         };
         /**
@@ -1293,7 +1371,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1410,7 +1490,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1439,7 +1521,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets metadata for entity */
@@ -1457,7 +1541,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1478,7 +1564,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1498,7 +1586,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1518,7 +1608,10 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+                language: string;
+            };
             cookie?: never;
         };
         /**
@@ -1546,7 +1639,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                subjectId: string;
+            };
             cookie?: never;
         };
         /**
@@ -1634,7 +1729,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1731,7 +1828,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1848,7 +1947,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1876,7 +1977,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1896,7 +1999,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         get?: never;
@@ -1916,7 +2021,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets metadata for entity */
@@ -1934,7 +2041,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1954,7 +2063,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1974,7 +2085,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -1994,7 +2107,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /**
@@ -2014,7 +2129,10 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+                language: string;
+            };
             cookie?: never;
         };
         /**
@@ -2112,7 +2230,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         /** Gets a single version */
@@ -2131,7 +2251,9 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         get?: never;
@@ -2154,59 +2276,68 @@ export type components = {
              * @description The id of the subject-topic or topic-subtopic connection
              * @example urn:subject-topic:1
              */
-            connectionId?: string;
+            connectionId: string;
             /**
              * @deprecated
              * @description True if owned by this topic, false if it has its primary connection elsewhere
              * @example true
              */
-            isPrimary?: boolean;
+            isPrimary: boolean;
             /**
              * @description The path part of the url for the subject or subtopic connected to this topic
              * @example /subject:1/topic:1
              */
-            paths?: string[];
+            paths: string[];
             /**
              * Format: uri
              * @description The id of the connected subject or topic
              * @example urn:subject:1
              */
-            targetId?: string;
+            targetId: string;
             /** @description The type of connection (parent, child, referrer or target */
-            type?: string;
+            type: string;
         };
         Context: {
             /** Format: uri */
-            id?: string;
-            name?: string;
-            path?: string;
+            id: string;
+            name: string;
+            path: string;
         };
         /** @description object containing public id of the node to be registered as context */
         ContextPOST: {
             /** Format: uri */
-            id?: string;
+            id: string;
         };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        Grade: 1 | 2 | 3 | 4 | 5;
         GradeAverageDTO: {
             /** Format: double */
-            averageValue?: number;
+            averageValue: number;
             /** Format: int32 */
-            count?: number;
+            count: number;
+        };
+        /** @description The name of the root parent of the context */
+        LanguageFieldString: {
+            [key: string]: string;
         };
         Metadata: {
-            customFields?: {
+            customFields: {
                 [key: string]: string;
             };
-            grepCodes?: string[];
-            visible?: boolean;
+            grepCodes: string[];
+            visible: boolean;
         };
         Node: {
             /**
              * @description The stored name of the node
              * @example Trigonometry
              */
-            baseName?: string;
+            baseName: string;
             /** @description List of names in the path */
-            breadcrumbs?: string[];
+            breadcrumbs: string[];
             /**
              * Format: uri
              * @description ID of content introducing this node. Must be a valid URI, but preferably not a URL.
@@ -2218,9 +2349,9 @@ export type components = {
             /** @description An id unique for this context. */
             contextId?: string;
             /** @description A list of all contextids this node has ever had */
-            contextids?: string[];
+            contextids: string[];
             /** @description A list of all contexts this node is part of */
-            contexts?: components["schemas"]["TaxonomyContext"][];
+            contexts: components["schemas"]["TaxonomyContext"][];
             /** @description A number representing the average grade of all children nodes recursively. */
             gradeAverage?: components["schemas"]["GradeAverageDTO"];
             /**
@@ -2228,32 +2359,31 @@ export type components = {
              * @description Node id
              * @example urn:topic:234
              */
-            id?: string;
+            id: string;
             /**
              * @description The language code for which name is returned
              * @example nb
              */
-            language?: string;
+            language: string;
             /** @description Metadata for entity. Read only. */
-            metadata?: components["schemas"]["Metadata"];
+            metadata: components["schemas"]["Metadata"];
             /**
              * @description The possibly translated name of the node
              * @example Trigonometry
              */
-            name?: string;
+            name: string;
             /**
              * @description The type of node
              * @example resource
-             * @enum {string}
              */
-            nodeType?: "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME";
+            nodeType: components["schemas"]["NodeType"];
             /**
              * @description The primary path for this node. Can be empty if no context
              * @example /subject:1/topic:1
              */
             path?: string;
             /** @description List of all paths to this node */
-            paths?: string[];
+            paths: string[];
             /** @description Quality evaluation of the article */
             qualityEvaluation?: components["schemas"]["QualityEvaluationDTO"];
             /**
@@ -2271,11 +2401,11 @@ export type components = {
              *       }
              *     ]
              */
-            resourceTypes?: components["schemas"]["ResourceTypeWithConnection"][];
+            resourceTypes: components["schemas"]["ResourceTypeWithConnection"][];
             /** @description List of language codes supported by translations */
-            supportedLanguages?: string[];
+            supportedLanguages: string[];
             /** @description All translations of this node */
-            translations?: components["schemas"]["Translation"][];
+            translations: components["schemas"]["Translation"][];
             /** @description A pretty url based on name and context. Empty if no context. */
             url?: string;
         };
@@ -2284,15 +2414,15 @@ export type components = {
              * @description The stored name of the node
              * @example Trigonometry
              */
-            baseName?: string;
+            baseName: string;
             /** @description List of names in the path */
-            breadcrumbs?: string[];
+            breadcrumbs: string[];
             /**
              * Format: uri
              * @description The id of the node connection which causes this node to be included in the result set.
              * @example urn:node-connection:1
              */
-            connectionId?: string;
+            connectionId: string;
             /**
              * Format: uri
              * @description ID of content introducing this node. Must be a valid URI, but preferably not a URL.
@@ -2304,9 +2434,9 @@ export type components = {
             /** @description An id unique for this context. */
             contextId?: string;
             /** @description A list of all contextids this node has ever had */
-            contextids?: string[];
+            contextids: string[];
             /** @description A list of all contexts this node is part of */
-            contexts?: components["schemas"]["TaxonomyContext"][];
+            contexts: components["schemas"]["TaxonomyContext"][];
             /** @description A number representing the average grade of all children nodes recursively. */
             gradeAverage?: components["schemas"]["GradeAverageDTO"];
             /**
@@ -2314,38 +2444,37 @@ export type components = {
              * @description Node id
              * @example urn:topic:234
              */
-            id?: string;
-            isPrimary?: boolean;
+            id: string;
+            isPrimary: boolean;
             /**
              * @description The language code for which name is returned
              * @example nb
              */
-            language?: string;
+            language: string;
             /** @description Metadata for entity. Read only. */
-            metadata?: components["schemas"]["Metadata"];
+            metadata: components["schemas"]["Metadata"];
             /**
              * @description The possibly translated name of the node
              * @example Trigonometry
              */
-            name?: string;
+            name: string;
             /**
              * @description The type of node
              * @example resource
-             * @enum {string}
              */
-            nodeType?: "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME";
+            nodeType: components["schemas"]["NodeType"];
             /**
              * Format: uri
              * @description Parent id in the current context, null if none exists
              */
-            parentId?: string;
+            parentId: string;
             /**
              * @description The primary path for this node. Can be empty if no context
              * @example /subject:1/topic:1
              */
             path?: string;
             /** @description List of all paths to this node */
-            paths?: string[];
+            paths: string[];
             /** @description Quality evaluation of the article */
             qualityEvaluation?: components["schemas"]["QualityEvaluationDTO"];
             /**
@@ -2353,7 +2482,7 @@ export type components = {
              * @description The order in which to sort the node within it's level.
              * @example 1
              */
-            rank?: number;
+            rank: number;
             /**
              * Format: uri
              * @description Relevance id
@@ -2369,11 +2498,11 @@ export type components = {
              *       }
              *     ]
              */
-            resourceTypes?: components["schemas"]["ResourceTypeWithConnection"][];
+            resourceTypes: components["schemas"]["ResourceTypeWithConnection"][];
             /** @description List of language codes supported by translations */
-            supportedLanguages?: string[];
+            supportedLanguages: string[];
             /** @description All translations of this node */
-            translations?: components["schemas"]["Translation"][];
+            translations: components["schemas"]["Translation"][];
             /** @description A pretty url based on name and context. Empty if no context. */
             url?: string;
         };
@@ -2383,37 +2512,34 @@ export type components = {
              * @description Child id
              * @example urn:topic:234
              */
-            childId?: string;
-            /**
-             * @description Connection type
-             * @enum {string}
-             */
-            connectionType?: "BRANCH" | "LINK";
+            childId: string;
+            /** @description Connection type */
+            connectionType: components["schemas"]["NodeConnectionType"];
             /**
              * Format: uri
              * @description Connection id
              * @example urn:topic-has-subtopics:345
              */
-            id?: string;
+            id: string;
             /** @description Metadata for entity. Read only. */
-            metadata?: components["schemas"]["Metadata"];
+            metadata: components["schemas"]["Metadata"];
             /**
              * Format: uri
              * @description Parent id
              * @example urn:topic:234
              */
-            parentId?: string;
+            parentId: string;
             /**
              * @description Is this connection primary
              * @example true
              */
-            primary?: boolean;
+            primary: boolean;
             /**
              * Format: int32
              * @description Order in which subtopic is sorted for the topic
              * @example 1
              */
-            rank?: number;
+            rank: number;
             /**
              * Format: uri
              * @description Relevance id
@@ -2433,9 +2559,8 @@ export type components = {
              * @description Connection type
              * @default BRANCH
              * @example BRANCH
-             * @enum {string}
              */
-            connectionType?: "BRANCH" | "LINK";
+            connectionType: components["schemas"]["NodeConnectionType"];
             /**
              * Parent id
              * Format: uri
@@ -2480,6 +2605,8 @@ export type components = {
              */
             relevanceId?: string;
         };
+        /** @enum {string} */
+        NodeConnectionType: "BRANCH" | "LINK";
         /** @description The new node */
         NodePOST: {
             /**
@@ -2494,7 +2621,7 @@ export type components = {
              * @description The language used at create time. Used to set default translation.
              * @example nb
              */
-            language?: string;
+            language: string;
             /**
              * @description The name of the node. Required on create.
              * @example Trigonometry
@@ -2505,9 +2632,8 @@ export type components = {
             /**
              * @description Type of node.
              * @example topic
-             * @enum {string}
              */
-            nodeType?: "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME";
+            nodeType: components["schemas"]["NodeType"];
             /** @description The quality evaluation of the node. Consist of a score from 1 to 5 and a comment. */
             qualityEvaluation?: components["schemas"]["UpdateOrDeleteQualityEvaluationDTO"];
             /**
@@ -2532,7 +2658,7 @@ export type components = {
              * @description The language used at create time. Used to set default translation.
              * @example nb
              */
-            language?: string;
+            language: string;
             /**
              * @description The name of the node. Required on create.
              * @example Trigonometry
@@ -2543,9 +2669,8 @@ export type components = {
             /**
              * @description Type of node.
              * @example topic
-             * @enum {string}
              */
-            nodeType?: "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME";
+            nodeType: components["schemas"]["NodeType"];
             /** @description The quality evaluation of the node. Consist of a score from 1 to 5 and a comment. */
             qualityEvaluation?: components["schemas"]["UpdateOrDeleteQualityEvaluationDTO"];
             /**
@@ -2562,26 +2687,26 @@ export type components = {
              * @description Node resource connection id
              * @example urn:node-resource:123
              */
-            id?: string;
+            id: string;
             /** @description Metadata for entity. Read only. */
-            metadata?: components["schemas"]["Metadata"];
+            metadata: components["schemas"]["Metadata"];
             /**
              * Format: uri
              * @description Node id
              * @example urn:node:345
              */
-            nodeId?: string;
+            nodeId: string;
             /**
              * @description Primary connection
              * @example true
              */
-            primary?: boolean;
+            primary: boolean;
             /**
              * Format: int32
              * @description Order in which the resource is sorted for the node
              * @example 1
              */
-            rank?: number;
+            rank: number;
             /**
              * Format: uri
              * @description Relevance id
@@ -2593,7 +2718,7 @@ export type components = {
              * @description Resource id
              * @example urn:resource:345
              */
-            resourceId?: string;
+            resourceId: string;
         };
         /** @description new node/resource connection */
         NodeResourcePOST: {
@@ -2655,28 +2780,28 @@ export type components = {
                 [key: string]: string;
             };
             /** @description Filter out programme contexts */
-            filterProgrammes?: boolean;
+            filterProgrammes: boolean;
             /** @description Ids to fetch for query */
             ids?: string[];
             /** @description Include all contexts */
-            includeContexts?: boolean;
+            includeContexts: boolean;
             /**
              * @description ISO-639-1 language code
              * @example nb
              */
-            language?: string;
+            language: string;
             /** @description Filter by nodeType */
-            nodeType?: ("NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME")[];
+            nodeType?: components["schemas"]["NodeType"][];
             /**
              * Format: int32
              * @description Which page to fetch
              */
-            page?: number;
+            page: number;
             /**
              * Format: int32
              * @description How many results to return per page
              */
-            pageSize?: number;
+            pageSize: number;
             /**
              * Format: uri
              * @description Id to parent id in context.
@@ -2690,6 +2815,8 @@ export type components = {
              */
             rootId?: string;
         };
+        /** @enum {string} */
+        NodeType: "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME";
         NodeWithParents: {
             /**
              * @description The stored name of the node
@@ -2735,9 +2862,8 @@ export type components = {
             /**
              * @description The type of node
              * @example resource
-             * @enum {string}
              */
-            nodeType?: "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME";
+            nodeType?: components["schemas"]["NodeType"];
             /**
              * @description Parent topology nodes and whether or not connection type is primary
              * @example [
@@ -2750,7 +2876,7 @@ export type components = {
              *       }
              *     ]
              */
-            parents?: components["schemas"]["NodeChild"][];
+            parents: components["schemas"]["NodeChild"][];
             /**
              * @description The primary path for this node. Can be empty if no context
              * @example /subject:1/topic:1
@@ -2784,12 +2910,8 @@ export type components = {
             url?: string;
         };
         QualityEvaluationDTO: {
-            /**
-             * Format: int32
-             * @description The grade (1-5) of the article
-             * @enum {integer}
-             */
-            grade?: 1 | 2 | 3 | 4 | 5;
+            /** @description The grade (1-5) of the article */
+            grade: components["schemas"]["Grade"];
             /** @description Note explaining the score */
             note?: string;
         };
@@ -2799,23 +2921,23 @@ export type components = {
              * @description Specifies if node is core or supplementary
              * @example urn:relevance:core
              */
-            id?: string;
+            id: string;
             /**
              * @description The name of the relevance
              * @example Core
              */
-            name?: string;
+            name: string;
             /** @description List of language codes supported by translations */
-            supportedLanguages?: string[];
+            supportedLanguages: string[];
             /** @description All translations of this relevance */
-            translations?: components["schemas"]["Translation"][];
+            translations: components["schemas"]["Translation"][];
         };
         ResolvedOldUrl: {
             /**
              * @description URL path for resource
              * @example '/subject:1/topic:12/resource:12'
              */
-            path?: string;
+            path: string;
         };
         ResolvedUrl: {
             /**
@@ -2823,32 +2945,32 @@ export type components = {
              * @description The ID of this element in the system where the content is stored. This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier for the system, and <id> is the id of this content in that system.
              * @example urn:article:1
              */
-            contentUri?: string;
+            contentUri: string;
             /** @description Is this an exact match for the provided path? False if this is another path to the same resource. */
-            exactMatch?: boolean;
+            exactMatch: boolean;
             /**
              * Format: uri
              * @description ID of the element referred to by the given path
              * @example urn:resource:1
              */
-            id?: string;
+            id: string;
             /**
              * @description Element name. For performance reasons, this name is for informational purposes only. To get a translated name, please fetch the resolved resource using its rest resource.
              * @example Basic physics
              */
-            name?: string;
+            name: string;
             /** @description Parent elements of the resolved element. The first element is the parent, the second is the grandparent, etc. */
-            parents?: string[];
+            parents: string[];
             /**
              * @description URL path for resource
              * @example '/subject:1/topic:12/resource:12'
              */
-            path?: string;
+            path: string;
             /**
              * @description Pretty url resource
              * @example '/r/subject-name/resource-name/hash'
              */
-            url?: string;
+            url: string;
         };
         /** @description Object containing contentUri. Other values are ignored. */
         ResourcePOST: {
@@ -2857,7 +2979,7 @@ export type components = {
              * @description The ID of this resource in the system where the content is stored. This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier for the system, and <id> is the id of this content in that system.
              * @example urn:article:1
              */
-            contentUri?: string;
+            contentUri: string;
             /**
              * Format: uri
              * @description If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.
@@ -2877,7 +2999,7 @@ export type components = {
              * @description The ID of this resource in the system where the content is stored. This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier for the system, and <id> is the id of this content in that system.
              * @example urn:article:1
              */
-            contentUri?: string;
+            contentUri: string;
             /**
              * Format: uri
              * @description If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.
@@ -2930,18 +3052,18 @@ export type components = {
              * Format: uri
              * @example urn:resourcetype:1
              */
-            id?: string;
+            id: string;
             /**
              * @description The name of the resource type
              * @example Lecture
              */
-            name?: string;
+            name: string;
             /** @description Sub resource types */
             subtypes?: components["schemas"]["ResourceType"][];
             /** @description List of language codes supported by translations */
-            supportedLanguages?: string[];
+            supportedLanguages: string[];
             /** @description All translations of this resource type */
-            translations?: components["schemas"]["Translation"][];
+            translations: components["schemas"]["Translation"][];
         };
         /** @description The new resource type */
         ResourceTypePUT: {
@@ -2950,7 +3072,7 @@ export type components = {
              * @description If specified, set the id to this value. Must start with urn:resourcetype: and be a valid URI. If omitted, an id will be assigned automatically.
              * @example urn:resourcetype:1
              */
-            id?: string;
+            id: string;
             /**
              * @description The name of the resource type
              * @example Lecture
@@ -2960,7 +3082,7 @@ export type components = {
              * Format: uri
              * @description If specified, the new resource type will be a child of the mentioned resource type.
              */
-            parentId?: string;
+            parentId: string;
         };
         ResourceTypeWithConnection: {
             /**
@@ -2968,49 +3090,49 @@ export type components = {
              * @description The id of the resource resource type connection
              * @example urn:resource-resourcetype:1
              */
-            connectionId?: string;
+            connectionId: string;
             /**
              * Format: uri
              * @example urn:resourcetype:2
              */
-            id?: string;
+            id: string;
             /**
              * @description The name of the resource type
              * @example Lecture
              */
-            name?: string;
+            name: string;
             /**
              * Format: uri
              * @example urn:resourcetype:1
              */
             parentId?: string;
             /** @description List of language codes supported by translations */
-            supportedLanguages?: string[];
+            supportedLanguages: string[];
             /** @description All translations of this resource type */
-            translations?: components["schemas"]["Translation"][];
+            translations: components["schemas"]["Translation"][];
         };
         SearchResult: {
             /**
              * Format: int32
              * @example The page number
              */
-            page?: number;
+            page: number;
             /**
              * Format: int32
              * @example The page size
              */
-            pageSize?: number;
+            pageSize: number;
             /** @example List of search results */
-            results?: components["schemas"]["Node"][];
+            results: components["schemas"]["Node"][];
             /**
              * Format: int64
              * @example Total search result count, useful for fetching multiple pages
              */
-            totalCount?: number;
+            totalCount: number;
         };
         SearchableTaxonomyResourceType: {
-            id?: string;
-            name?: {
+            id: string;
+            name: {
                 [key: string]: string;
             };
             parentId?: string;
@@ -3061,18 +3183,18 @@ export type components = {
              * @description Connection id
              * @example urn:subject-has-topics:34
              */
-            id?: string;
+            id: string;
             /**
              * @description primary
              * @example true
              */
-            primary?: boolean;
+            primary: boolean;
             /**
              * Format: int32
              * @description Order in which the topic is sorted under the subject
              * @example 1
              */
-            rank?: number;
+            rank: number;
             /**
              * Format: uri
              * @description Relevance id
@@ -3084,13 +3206,13 @@ export type components = {
              * @description Subject id
              * @example urn:subject:123
              */
-            subjectid?: string;
+            subjectid: string;
             /**
              * Format: uri
              * @description Topic id
              * @example urn:topic:345
              */
-            topicid?: string;
+            topicid: string;
         };
         /** @description The subject and topic getting connected. */
         SubjectTopicPOST: {
@@ -3146,92 +3268,80 @@ export type components = {
         };
         TaxonomyContext: {
             /** @description A breadcrumb of the names of the context's parents */
-            breadcrumbs?: {
-                empty?: boolean;
-            } & {
+            breadcrumbs: {
                 [key: string]: string[];
             };
             /** @description The id of the parent connection object */
-            connectionId?: string;
+            connectionId: string;
             /** @description Unique id of context based on root + parent connection */
-            contextId?: string;
+            contextId: string;
             /** @description Whether a 'standard'-article, 'topic-article'-article or a 'learningpath' */
             contextType?: string;
             /**
              * Format: uri
              * @description The publicId of the node connected via content-uri
              */
-            id?: string;
+            id: string;
             /** @description Whether the parent connection is marked as active */
-            isActive?: boolean;
+            isActive: boolean;
             /** @description Whether the parent connection is primary or not */
-            isPrimary?: boolean;
+            isPrimary: boolean;
             /** @description Whether the parent connection is visible or not */
-            isVisible?: boolean;
+            isVisible: boolean;
             /** @description List of all parent contextIds */
-            parentContextIds?: string[];
+            parentContextIds: string[];
             /** @description List of all parent ids */
-            parentIds?: string[];
+            parentIds: string[];
             /** @description List of all parents to this context. Empty if node is fetched as child */
-            parents?: components["schemas"]["TaxonomyCrumb"][];
+            parents: components["schemas"]["TaxonomyCrumb"][];
             /** @description The context path */
-            path?: string;
+            path: string;
             /**
              * Format: uri
              * @deprecated
              * @description The publicId of the node connected via content-uri
              */
-            publicId?: string;
+            publicId: string;
             /**
              * Format: int32
              * @description The rank of the parent connection object
              */
-            rank?: number;
+            rank: number;
             /** @description Name of the relevance of the parent connection */
-            relevance?: {
-                empty?: boolean;
-            } & {
-                [key: string]: string;
-            };
+            relevance: components["schemas"]["LanguageFieldString"];
             /**
              * Format: uri
              * @description Id of the relevance of the parent connection
              */
-            relevanceId?: string;
+            relevanceId: string;
             /** @description Resource-types of the node */
-            resourceTypes?: components["schemas"]["SearchableTaxonomyResourceType"][];
+            resourceTypes: components["schemas"]["SearchableTaxonomyResourceType"][];
             /** @description The name of the root parent of the context */
-            root?: {
-                empty?: boolean;
-            } & {
+            root: {
                 [key: string]: string;
             };
             /**
              * Format: uri
              * @description The publicId of the root parent of the context
              */
-            rootId?: string;
+            rootId: string;
             /** @description Pretty-url of this particular context */
-            url?: string;
+            url: string;
         };
         TaxonomyCrumb: {
             /** @description Unique id of context based on root + parent connection */
-            contextId?: string;
+            contextId: string;
             /**
              * Format: uri
              * @description The publicId of the node
              */
-            id?: string;
+            id: string;
             /** @description The name of the node */
-            name?: {
-                empty?: boolean;
-            } & {
-                [key: string]: string;
-            };
+            name: components["schemas"]["LanguageFieldString"];
             /** @description The context path */
-            path?: string;
+            path: string;
             /** @description The context url */
-            url?: string;
+            url: string;
         };
         /** @description The new topic */
         TopicPOST: {
@@ -3240,7 +3350,7 @@ export type components = {
              * @description ID of article introducing this topic. Must be a valid URI, but preferably not a URL.
              * @example urn:article:1
              */
-            contentUri?: string;
+            contentUri: string;
             /**
              * Format: uri
              * @description If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.
@@ -3259,18 +3369,18 @@ export type components = {
              * @description Topic resource connection id
              * @example urn:topic-has-resources:123
              */
-            id?: string;
+            id: string;
             /**
              * @description Primary connection
              * @example true
              */
-            primary?: boolean;
+            primary: boolean;
             /**
              * Format: int32
              * @description Order in which the resource is sorted for the topic
              * @example 1
              */
-            rank?: number;
+            rank: number;
             /**
              * Format: uri
              * @description Relevance id
@@ -3282,13 +3392,13 @@ export type components = {
              * @description Resource id
              * @example urn:resource:345
              */
-            resourceId?: string;
+            resourceId: string;
             /**
              * Format: uri
              * @description Topic id
              * @example urn:topic:345
              */
-            topicid?: string;
+            topicid: string;
         };
         /** @description new topic/resource connection */
         TopicResourcePOST: {
@@ -3348,18 +3458,18 @@ export type components = {
              * @description Connection id
              * @example urn:topic-has-subtopics:345
              */
-            id?: string;
+            id: string;
             /**
              * @description Backwards compatibility: Always true. Ignored on insert/update
              * @example true
              */
-            primary?: boolean;
+            primary: boolean;
             /**
              * Format: int32
              * @description Order in which subtopic is sorted for the topic
              * @example 1
              */
-            rank?: number;
+            rank: number;
             /**
              * Format: uri
              * @description Relevance id
@@ -3371,13 +3481,13 @@ export type components = {
              * @description Subtopic id
              * @example urn:topic:234
              */
-            subtopicid?: string;
+            subtopicid: string;
             /**
              * Format: uri
              * @description Topic id
              * @example urn:topic:234
              */
-            topicid?: string;
+            topicid: string;
         };
         /** @description The new connection */
         TopicSubtopicPOST: {
@@ -3436,12 +3546,12 @@ export type components = {
              * @description ISO 639-1 language code
              * @example en
              */
-            language?: string;
+            language: string;
             /**
              * @description The translated name of the node
              * @example Trigonometry
              */
-            name?: string;
+            name: string;
         };
         /** @description The new or updated translation */
         TranslationPUT: {
@@ -3449,7 +3559,7 @@ export type components = {
              * @description The translated name of the element. Used wherever translated texts are used.
              * @example Trigonometry
              */
-            name?: string;
+            name: string;
         };
         UpdateOrDeleteQualityEvaluationDTO: {
             changed?: boolean;
@@ -3461,17 +3571,17 @@ export type components = {
              * @description Node URN for resource in new system
              * @example urn:topic:1:183926
              */
-            nodeId?: string;
+            nodeId: string;
             /**
              * @description Subject URN for resource in new system (optional)
              * @example urn:subject:5
              */
-            subjectId?: string;
+            subjectId: string;
             /**
              * @description URL for resource in old system
              * @example ndla.no/nb/node/183926?fag=127013
              */
-            url?: string;
+            url: string;
         };
         Version: {
             /**
@@ -3483,28 +3593,25 @@ export type components = {
              * Format: date-time
              * @description Timestamp for when version was created
              */
-            created?: string;
+            created: string;
             /** @description Unique hash for the version */
-            hash?: string;
+            hash: string;
             /**
              * Format: uri
              * @example urn:version:1
              */
-            id?: string;
+            id: string;
             /** @description Is the version locked */
-            locked?: boolean;
+            locked: boolean;
             /** @description Name for the version */
-            name?: string;
+            name: string;
             /**
              * Format: date-time
              * @description Timestamp for when version was published
              */
             published?: string;
-            /**
-             * @example BETA
-             * @enum {string}
-             */
-            versionType?: "BETA" | "PUBLISHED" | "ARCHIVED";
+            /** @example BETA */
+            versionType: components["schemas"]["VersionType"];
         };
         /** @description The new version */
         VersionPOST: {
@@ -3520,7 +3627,7 @@ export type components = {
              * @description If specified, set the name to this value.
              * @example Beta 2022
              */
-            name?: string;
+            name: string;
         };
         /** @description The updated topic. Fields not included will be set to null. */
         VersionPUT: {
@@ -3536,8 +3643,10 @@ export type components = {
              * @description If specified, set the name to this value.
              * @example Beta 2022
              */
-            name?: string;
+            name: string;
         };
+        /** @enum {string} */
+        VersionType: "BETA" | "PUBLISHED" | "ARCHIVED";
     };
     responses: never;
     parameters: {
@@ -4230,7 +4339,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Filter by nodeType, could be a comma separated list, defaults to Topics and Subjects (Resources are quite slow). :^) */
-                nodeType?: ("NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME")[];
+                nodeType?: components["schemas"]["NodeType"][];
                 /**
                  * @description ISO-639-1 language code
                  * @example nb
@@ -4311,7 +4420,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Filter by nodeType, could be a comma separated list, defaults to Topics and Subjects (Resources are quite slow). :^) */
-                nodeType?: ("NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME")[];
+                nodeType?: components["schemas"]["NodeType"][];
                 /**
                  * @description ISO-639-1 language code
                  * @example nb
@@ -4401,7 +4510,7 @@ export interface operations {
                 /** @description Size of page to fetch */
                 pageSize?: number;
                 /** @description Filter by nodeType */
-                nodeType?: "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME";
+                nodeType?: components["schemas"]["NodeType"];
                 /** @description Include all contexts */
                 includeContexts?: boolean;
                 /** @description Filter out programme contexts */
@@ -4447,7 +4556,7 @@ export interface operations {
                 /** @description ContentURIs to fetch for query */
                 contentUris?: string[];
                 /** @description Filter by nodeType */
-                nodeType?: ("NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME")[];
+                nodeType?: components["schemas"]["NodeType"][];
                 /** @description Include all contexts */
                 includeContexts?: boolean;
                 /** @description Filter out programme contexts */
@@ -4759,9 +4868,9 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Filter by nodeType, could be a comma separated list, defaults to Topics and Subjects (Resources are quite slow). :^) */
-                nodeType?: ("NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME")[];
+                nodeType?: components["schemas"]["NodeType"][];
                 /** @description Only connections of given type are returned */
-                connectionTypes?: ("BRANCH" | "LINK")[];
+                connectionTypes?: components["schemas"]["NodeConnectionType"][];
                 /** @description If true, children are fetched recursively */
                 recursive?: boolean;
                 /**
@@ -8112,7 +8221,7 @@ export interface operations {
                  * @description Version type
                  * @example PUBLISHED
                  */
-                type?: "BETA" | "PUBLISHED" | "ARCHIVED";
+                type?: components["schemas"]["VersionType"];
                 /**
                  * @description Version hash
                  * @example ndla
@@ -8172,7 +8281,7 @@ export interface operations {
                  * @description Version type
                  * @example PUBLISHED
                  */
-                type?: "BETA" | "PUBLISHED" | "ARCHIVED";
+                type?: components["schemas"]["VersionType"];
                 /**
                  * @description Version hash
                  * @example ndla
