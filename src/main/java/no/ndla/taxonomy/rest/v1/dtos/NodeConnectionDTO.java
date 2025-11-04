@@ -18,7 +18,9 @@ import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
 
-@Schema(name = "NodeConnection")
+@Schema(
+        name = "NodeConnection",
+        requiredProperties = {"parentId", "childId", "id", "primary", "rank", "connectionType", "metadata"})
 public class NodeConnectionDTO {
     @JsonProperty
     @Schema(description = "Parent id", example = "urn:topic:234")

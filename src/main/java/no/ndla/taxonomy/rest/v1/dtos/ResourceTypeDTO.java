@@ -18,7 +18,9 @@ import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
 
-@Schema(name = "ResourceType")
+@Schema(
+        name = "ResourceType",
+        requiredProperties = {"id", "name", "translations", "supportedLanguages"})
 public class ResourceTypeDTO {
     @JsonProperty
     @Schema(example = "urn:resourcetype:1")

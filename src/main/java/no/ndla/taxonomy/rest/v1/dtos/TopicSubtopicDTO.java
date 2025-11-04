@@ -14,7 +14,9 @@ import java.util.Optional;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
 
-@Schema(name = "TopicSubtopic")
+@Schema(
+        name = "TopicSubtopic",
+        requiredProperties = {"topicid", "subtopicid", "id", "primary", "rank"})
 public class TopicSubtopicDTO {
     @JsonProperty
     @Schema(description = "Topic id", example = "urn:topic:234")

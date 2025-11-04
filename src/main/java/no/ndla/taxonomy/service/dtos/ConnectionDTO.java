@@ -16,7 +16,9 @@ import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeConnectionType;
 
 /** */
-@Schema(name = "Connection")
+@Schema(
+        name = "Connection",
+        requiredProperties = {"connectionId", "targetId", "paths", "type", "isPrimary"})
 public class ConnectionDTO {
 
     @JsonProperty

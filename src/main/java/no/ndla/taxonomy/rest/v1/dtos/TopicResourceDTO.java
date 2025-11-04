@@ -14,7 +14,9 @@ import java.util.Optional;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
 
-@Schema(name = "TopicResource")
+@Schema(
+        name = "TopicResource",
+        requiredProperties = {"topicid", "resourceId", "id", "primary", "rank"})
 public class TopicResourceDTO {
 
     @JsonProperty
