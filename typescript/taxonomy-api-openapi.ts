@@ -2313,7 +2313,7 @@ export type components = {
          * @enum {integer}
          */
         Grade: 1 | 2 | 3 | 4 | 5;
-        GradeAverageDTO: {
+        GradeAverage: {
             /** Format: double */
             averageValue: number;
             /** Format: int32 */
@@ -2353,7 +2353,7 @@ export type components = {
             /** @description A list of all contexts this node is part of */
             contexts: components["schemas"]["TaxonomyContext"][];
             /** @description A number representing the average grade of all children nodes recursively. */
-            gradeAverage?: components["schemas"]["GradeAverageDTO"];
+            gradeAverage?: components["schemas"]["GradeAverage"];
             /**
              * Format: uri
              * @description Node id
@@ -2438,7 +2438,7 @@ export type components = {
             /** @description A list of all contexts this node is part of */
             contexts: components["schemas"]["TaxonomyContext"][];
             /** @description A number representing the average grade of all children nodes recursively. */
-            gradeAverage?: components["schemas"]["GradeAverageDTO"];
+            gradeAverage?: components["schemas"]["GradeAverage"];
             /**
              * Format: uri
              * @description Node id
@@ -2560,7 +2560,7 @@ export type components = {
              * @default BRANCH
              * @example BRANCH
              */
-            connectionType: components["schemas"]["NodeConnectionType"];
+            connectionType?: components["schemas"]["NodeConnectionType"];
             /**
              * Parent id
              * Format: uri
@@ -2608,7 +2608,7 @@ export type components = {
         /** @enum {string} */
         NodeConnectionType: "BRANCH" | "LINK";
         /** @description The new node */
-        NodePOST: {
+        NodePostPut: {
             /**
              * Format: uri
              * @description ID of content introducing this node. Must be a valid URI, but preferably not a URL.
@@ -2635,44 +2635,7 @@ export type components = {
              */
             nodeType: components["schemas"]["NodeType"];
             /** @description The quality evaluation of the node. Consist of a score from 1 to 5 and a comment. */
-            qualityEvaluation?: components["schemas"]["UpdateOrDeleteQualityEvaluationDTO"];
-            /**
-             * @deprecated
-             * @description The node is a root node. Default is false. Only used if present.
-             */
-            root?: boolean;
-            /** @description The node is visible. Default is true. */
-            visible?: boolean;
-        };
-        /** @description The updated node. Fields not included will be set to null. */
-        NodePUT: {
-            /**
-             * Format: uri
-             * @description ID of content introducing this node. Must be a valid URI, but preferably not a URL.
-             * @example urn:article:1
-             */
-            contentUri?: string;
-            /** @description The node is the root in a context. Default is false. Only used if present. */
-            context?: boolean;
-            /**
-             * @description The language used at create time. Used to set default translation.
-             * @example nb
-             */
-            language: string;
-            /**
-             * @description The name of the node. Required on create.
-             * @example Trigonometry
-             */
-            name?: string;
-            /** @description If specified, set the node_id to this value. If omitted, an uuid will be assigned automatically. */
-            nodeId?: string;
-            /**
-             * @description Type of node.
-             * @example topic
-             */
-            nodeType: components["schemas"]["NodeType"];
-            /** @description The quality evaluation of the node. Consist of a score from 1 to 5 and a comment. */
-            qualityEvaluation?: components["schemas"]["UpdateOrDeleteQualityEvaluationDTO"];
+            qualityEvaluation?: components["schemas"]["QualityEvaluationDTO"] | null;
             /**
              * @deprecated
              * @description The node is a root node. Default is false. Only used if present.
@@ -2840,7 +2803,7 @@ export type components = {
             /** @description A list of all contexts this node is part of */
             contexts?: components["schemas"]["TaxonomyContext"][];
             /** @description A number representing the average grade of all children nodes recursively. */
-            gradeAverage?: components["schemas"]["GradeAverageDTO"];
+            gradeAverage?: components["schemas"]["GradeAverage"];
             /**
              * Format: uri
              * @description Node id
@@ -3363,6 +3326,26 @@ export type components = {
              */
             name: string;
         };
+        /** @description The updated topic. Fields not included will be set to null. */
+        TopicPostPut: {
+            /**
+             * Format: uri
+             * @description ID of article introducing this topic. Must be a valid URI, but preferably not a URL.
+             * @example urn:article:1
+             */
+            contentUri: string;
+            /**
+             * Format: uri
+             * @description If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.
+             * @example urn:topic:1
+             */
+            id?: string;
+            /**
+             * @description The name of the topic
+             * @example Trigonometry
+             */
+            name: string;
+        };
         TopicResource: {
             /**
              * Format: uri
@@ -3561,11 +3544,6 @@ export type components = {
              */
             name: string;
         };
-        UpdateOrDeleteQualityEvaluationDTO: {
-            changed?: boolean;
-            delete?: boolean;
-            value?: components["schemas"]["QualityEvaluationDTO"];
-        };
         UrlMapping: {
             /**
              * @description Node URN for resource in new system
@@ -3614,23 +3592,7 @@ export type components = {
             versionType: components["schemas"]["VersionType"];
         };
         /** @description The new version */
-        VersionPOST: {
-            /**
-             * Format: uri
-             * @description If specified, set the id to this value. Must start with urn:version: and be a valid URI. If ommitted, an id will be assigned automatically.
-             * @example urn:version:1
-             */
-            id?: string;
-            /** @description If specified, set the locked property to this value. */
-            locked?: boolean;
-            /**
-             * @description If specified, set the name to this value.
-             * @example Beta 2022
-             */
-            name: string;
-        };
-        /** @description The updated topic. Fields not included will be set to null. */
-        VersionPUT: {
+        VersionPostPut: {
             /**
              * Format: uri
              * @description If specified, set the id to this value. Must start with urn:version: and be a valid URI. If ommitted, an id will be assigned automatically.
@@ -4403,7 +4365,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NodePOST"];
+                "application/json": components["schemas"]["NodePostPut"];
             };
         };
         responses: {
@@ -4484,7 +4446,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NodePOST"];
+                "application/json": components["schemas"]["NodePostPut"];
             };
         };
         responses: {
@@ -4664,7 +4626,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NodePUT"];
+                "application/json": components["schemas"]["NodePostPut"];
             };
         };
         responses: {
@@ -4716,7 +4678,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NodePOST"];
+                "application/json": components["schemas"]["NodePostPut"];
             };
         };
         responses: {
@@ -7796,7 +7758,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["VersionPUT"];
+                "application/json": components["schemas"]["TopicPostPut"];
             };
         };
         responses: {
@@ -8261,7 +8223,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["VersionPOST"];
+                "application/json": components["schemas"]["VersionPostPut"];
             };
         };
         responses: {
@@ -8321,7 +8283,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["VersionPOST"];
+                "application/json": components["schemas"]["VersionPostPut"];
             };
         };
         responses: {
@@ -8371,7 +8333,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["VersionPUT"];
+                "application/json": components["schemas"]["VersionPostPut"];
             };
         };
         responses: {
