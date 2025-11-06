@@ -59,7 +59,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         NodeConnection connection;
 
         if (parent != null) {
-            connection = NodeConnection.create(parent, child, relevance, connectionType);
+            connection = NodeConnection.create(parent, child, relevance, connectionType, requestedPrimary);
         } else {
             throw new IllegalArgumentException("Unknown parent-child connection");
         }
@@ -102,7 +102,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
             Optional<Boolean> isPrimary,
             NodeConnectionType connectionType) {
         if (!child.getParentConnections().isEmpty()) {
-            if (NodeConnectionType.BRANCH.equals(connectionType) && child.getNodeType() == NodeType.TOPIC)
+            if (connectionType == NodeConnectionType.BRANCH && child.getNodeType() == NodeType.TOPIC)
                 throw new DuplicateConnectionException();
 
             var alreadyConnected = parent.getResourceChildren().stream()
@@ -204,9 +204,11 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         final var foundNewPrimary = new AtomicBoolean(false);
         connectable.getChild().ifPresent(node -> {
             var theOthers = node.getParentConnections().stream()
-                    .filter(c -> c != connectable && c.getConnectionType() == connectable.getConnectionType())
+                    .filter(c -> connectable.getConnectionType() == c.getConnectionType())
+                    .filter(c -> c != connectable)
                     .toList();
             var hasPrimary = !theOthers.stream()
+                    .filter(c -> connectable.getConnectionType() == c.getConnectionType())
                     .filter(c -> c.isPrimary().orElse(false))
                     .toList()
                     .isEmpty();
@@ -217,7 +219,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
                     connectable1.setPrimary(true);
                     foundNewPrimary.set(true);
                     updatedConnectables.add(connectable1);
-                } else if (setPrimaryTo) {
+                } else if (setPrimaryTo && connectable.getConnectionType() == NodeConnectionType.BRANCH) {
                     draftApiClient.updatePrimaryNotesWithUpdatedConnection(connectable1, Optional.of(false));
                     connectable1.setPrimary(false);
                     updatedConnectables.add(connectable1);
