@@ -61,11 +61,15 @@ public class NodePostPut implements UpdatableDto<Node> {
     public String language = Constants.DefaultLanguage;
 
     @JsonProperty
-    @Schema(description = "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.")
+    @Schema(
+            ref = "#/components/schemas/QualityEvaluationDTO",
+            description = "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.",
+            oneOf = {
+                QualityEvaluationDTO.class,
+            })
     @JsonDeserialize(using = QualityEvaluationDTODeserializer.class)
     @JsonSerialize(using = QualityEvaluationDTOSerializer.class)
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @NullOrUndefined
     public UpdateOrDelete<QualityEvaluationDTO> qualityEvaluation = UpdateOrDelete.Default();
 
     public Optional<String> getNodeId() {

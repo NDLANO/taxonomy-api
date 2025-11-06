@@ -12,7 +12,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Optional;
 import no.ndla.taxonomy.domain.Node;
 
-@Schema(requiredProperties = {"averageValue", "count"})
+@Schema(
+        name = "GradeAverage",
+        requiredProperties = {"averageValue", "count"})
 public class GradeAverageDTO {
     public GradeAverageDTO(double averageValue, int count) {
         this.averageValue = averageValue;

@@ -96,6 +96,4 @@ public record TaxonomyContextDTO(
         String url,
 
         @JsonProperty @Schema(description = "List of all parents to this context. Empty if node is fetched as child")
-        List<TaxonomyCrumbDTO> parents) {
-    // spotless:on
-}
+        List<TaxonomyCrumbDTO> parents) {}
