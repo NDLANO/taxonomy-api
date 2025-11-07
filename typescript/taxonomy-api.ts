@@ -1,6 +1,7 @@
 // This file is generated automatically. Do not edit.
-import { components } from "./taxonomy-api-openapi";
-export type schemas = components["schemas"];
+import * as openapi from "./taxonomy-api-openapi";
+type schemas = openapi.components["schemas"];
+export { openapi };
 
 export type Connection = schemas["Connection"];
 export type Context = schemas["Context"];
