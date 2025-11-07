@@ -66,8 +66,9 @@ async function generate_types(appName: string) {
 
   const header = `// This file is generated automatically. Do not edit.
 `;
-  let newFileContent = `${header}import { components } from "./taxonomy-api-openapi";
-export type schemas = components["schemas"];
+  let newFileContent = `${header}import * as openapi from "./taxonomy-api-openapi";
+type schemas = openapi.components["schemas"];
+export { openapi };
 
 `;
 
