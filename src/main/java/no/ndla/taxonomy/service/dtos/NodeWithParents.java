@@ -16,7 +16,9 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 
-@Schema(name = "NodeWithParents")
+@Schema(
+        name = "NodeWithParents",
+        requiredProperties = {"parents"})
 public class NodeWithParents extends NodeDTO {
     @JsonProperty
     @Schema(

@@ -8,7 +8,9 @@
 package no.ndla.taxonomy.domain;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(enumAsRef = true)
 public enum Grade {
     One(1),
     Two(2),

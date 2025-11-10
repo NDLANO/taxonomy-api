@@ -15,6 +15,7 @@ import java.net.URI;
 import java.util.Optional;
 import no.ndla.taxonomy.domain.NodeConnectionType;
 
+@Schema(requiredProperties = {"parentId", "childId"})
 public class NodeConnectionPOST {
     @JsonProperty
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED, title = "Parent id", example = "urn:topic:234")

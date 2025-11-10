@@ -14,7 +14,7 @@ import java.util.Set;
 import no.ndla.taxonomy.domain.LanguageField;
 import org.springframework.data.util.Pair;
 
-@Schema(name = "LanguageField")
+@Schema(name = "LanguageField", type = "object")
 public class LanguageFieldDTO<V> extends HashMap<String, V> {
 
     public LanguageFieldDTO() {}

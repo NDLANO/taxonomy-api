@@ -13,6 +13,7 @@ import java.util.Optional;
 import no.ndla.taxonomy.domain.Grade;
 import no.ndla.taxonomy.domain.Node;
 
+@Schema(requiredProperties = {"grade"})
 public class QualityEvaluationDTO {
     @JsonProperty
     @Schema(description = "The grade (1-5) of the article")

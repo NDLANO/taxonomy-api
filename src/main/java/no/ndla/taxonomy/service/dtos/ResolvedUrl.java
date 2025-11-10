@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.List;
 
+@Schema(requiredProperties = {"id", "contentUri", "name", "parents", "path", "url", "exactMatch"})
 public class ResolvedUrl {
     @Schema(description = "ID of the element referred to by the given path", example = "urn:resource:1")
     private URI id;

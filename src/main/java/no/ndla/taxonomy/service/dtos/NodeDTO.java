@@ -21,7 +21,23 @@ import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyCrumbDTO;
 import no.ndla.taxonomy.util.PrettyUrlUtil;
 
-@Schema(name = "Node")
+@Schema(
+        name = "Node",
+        requiredProperties = {
+            "id",
+            "baseName",
+            "name",
+            "nodeType",
+            "metadata",
+            "translations",
+            "supportedLanguages",
+            "breadcrumbs",
+            "resourceTypes",
+            "contexts",
+            "contextids",
+            "language",
+            "paths"
+        })
 public class NodeDTO {
     @Schema(description = "Node id", example = "urn:topic:234")
     private URI id;

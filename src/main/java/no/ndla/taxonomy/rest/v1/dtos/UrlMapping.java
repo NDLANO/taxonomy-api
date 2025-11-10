@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 
+@Schema(requiredProperties = {"url", "nodeId", "subjectId"})
 public class UrlMapping {
     @Schema(description = "URL for resource in old system", example = "ndla.no/nb/node/183926?fag=127013")
     @JsonProperty

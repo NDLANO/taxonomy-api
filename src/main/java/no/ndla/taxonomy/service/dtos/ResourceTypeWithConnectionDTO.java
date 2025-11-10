@@ -19,7 +19,9 @@ import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Translation;
 
-@Schema(name = "ResourceTypeWithConnection")
+@Schema(
+        name = "ResourceTypeWithConnection",
+        requiredProperties = {"id", "name", "connectionId", "translations", "supportedLanguages"})
 public class ResourceTypeWithConnectionDTO implements Comparable<ResourceTypeWithConnectionDTO> {
     @JsonProperty
     @Schema(example = "urn:resourcetype:2")

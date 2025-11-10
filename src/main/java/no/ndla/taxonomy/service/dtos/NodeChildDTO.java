@@ -21,7 +21,27 @@ import no.ndla.taxonomy.service.TreeSorter;
 /**
  * Represents Node or Resource in child context
  */
-@Schema(name = "NodeChild")
+@Schema(
+        name = "NodeChild",
+        requiredProperties = {
+            "id",
+            "baseName",
+            "name",
+            "nodeType",
+            "metadata",
+            "translations",
+            "supportedLanguages",
+            "breadcrumbs",
+            "resourceTypes",
+            "contexts",
+            "contextids",
+            "language",
+            "paths",
+            "parentId",
+            "connectionId",
+            "isPrimary",
+            "rank"
+        })
 public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
 
     @Schema(description = "Parent id in the current context, null if none exists")
