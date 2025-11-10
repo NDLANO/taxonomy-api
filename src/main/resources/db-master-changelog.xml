@@ -794,4 +794,18 @@
                              constraintName="node_connection_unique"/>
     </changeSet>
 
+    <changeSet id="20251110 Promote some resourcetypes and delete others" author="Gunnar Velle">
+        <sql>
+            UPDATE resource_type
+            SET parent_id = null
+            WHERE parent_id IN (
+                SELECT id FROM resource_type WHERE public_id = 'urn:resourcetype:SourceMaterial'
+            );
+        </sql>
+        <sql>
+            DELETE from resource_type
+            where parent_id is not null;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
