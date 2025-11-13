@@ -77,6 +77,9 @@ public class ResourceTypes extends CrudController<ResourceType> {
             ResourceType parent = resourceTypeRepository.getByPublicId(command.parentId);
             resourceType.setParent(parent);
         }
+        if (command.order > -1) {
+            resourceType.setOrder(command.order);
+        }
         return createEntity(resourceType, command);
     }
 
@@ -104,6 +107,9 @@ public class ResourceTypes extends CrudController<ResourceType> {
         resourceType.setParent(parent);
         if (command.id != null) {
             resourceType.setPublicId(command.id);
+        }
+        if (command.order > -1) {
+            resourceType.setOrder(command.order);
         }
     }
 

@@ -18,6 +18,7 @@ import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.QualityEvaluationService;
+import no.ndla.taxonomy.service.ResourceTypeService;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,8 +32,9 @@ public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends
             TaxonomyRepository<T> repository,
             ContextUpdaterService contextUpdaterService,
             NodeService nodeService,
-            QualityEvaluationService qualityEvaluationService) {
-        super(repository, contextUpdaterService, nodeService, qualityEvaluationService);
+            QualityEvaluationService qualityEvaluationService,
+            ResourceTypeService resourceTypeService) {
+        super(repository, contextUpdaterService, nodeService, qualityEvaluationService, resourceTypeService);
     }
 
     @GetMapping("/{id}/metadata")

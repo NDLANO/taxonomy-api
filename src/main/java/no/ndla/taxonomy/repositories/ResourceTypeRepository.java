@@ -18,13 +18,16 @@ public interface ResourceTypeRepository extends TaxonomyRepository<ResourceType>
             SELECT DISTINCT rt
             FROM ResourceType rt
             LEFT JOIN FETCH rt.subtypes
-            WHERE (:parent IS NULL AND rt.parent IS NULL) OR rt.parent = :parent""")
+            WHERE (:parent IS NULL AND rt.parent IS NULL) OR rt.parent = :parent
+            ORDER BY rt.order ASC""")
     List<ResourceType> findAllByParentIncludingTranslationsAndFirstLevelSubtypes(ResourceType parent);
 
     @Query("SELECT DISTINCT rt FROM ResourceType rt WHERE rt.publicId = :publicId")
     Optional<ResourceType> findFirstByPublicIdIncludingTranslations(URI publicId);
 
     @Query(
-            "SELECT DISTINCT rt FROM ResourceType rt JOIN rt.parent prt LEFT JOIN FETCH rt.subtypes WHERE prt.publicId = :publicId")
+            "SELECT DISTINCT rt FROM ResourceType rt JOIN rt.parent prt LEFT JOIN FETCH rt.subtypes WHERE prt.publicId = :publicId ORDER BY rt.order ASC")
     List<ResourceType> findAllByParentPublicIdIncludingTranslationsAndFirstLevelSubtypes(URI publicId);
+
+    List<ResourceType> findAllByOrderByOrderAsc();
 }

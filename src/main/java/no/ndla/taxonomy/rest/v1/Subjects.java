@@ -23,6 +23,7 @@ import no.ndla.taxonomy.rest.v1.commands.SubjectPostPut;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.QualityEvaluationService;
+import no.ndla.taxonomy.service.ResourceTypeService;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
@@ -42,8 +43,9 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             ContextUpdaterService contextUpdaterService,
             NodeService nodeService,
             NodeRepository nodeRepository,
-            QualityEvaluationService qualityEvaluationService) {
-        super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService);
+            QualityEvaluationService qualityEvaluationService,
+            ResourceTypeService resourceTypeService) {
+        super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService, resourceTypeService);
 
         this.nodes = nodes;
     }

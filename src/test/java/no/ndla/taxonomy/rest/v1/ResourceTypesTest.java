@@ -220,4 +220,22 @@ public class ResourceTypesTest extends RestTest {
         assertEquals("video", subResourceTypes[0].name);
         assertEquals("youtube", subResourceTypes[0].subtypes.get().getFirst().name);
     }
+
+    @Test
+    void can_update_order_of_resourcetypes() throws Exception {
+        URI id = builder.resourceType(rt -> rt.name("video")).getPublicId();
+
+        testUtils.updateResource("/v1/resource-types/" + id, new ResourceTypePUT() {
+            {
+                order = 0;
+            }
+        });
+
+        ResourceType result = resourceTypeRepository.getByPublicId(id);
+        assertEquals(0, result.getOrder());
+
+        var all = resourceTypeRepository.findAllByOrderByOrderAsc();
+        var first = all.stream().findFirst();
+        assertEquals(result, first.get());
+    }
 }
