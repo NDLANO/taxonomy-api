@@ -30,4 +30,7 @@ public interface ResourceTypeRepository extends TaxonomyRepository<ResourceType>
     List<ResourceType> findAllByParentPublicIdIncludingTranslationsAndFirstLevelSubtypes(URI publicId);
 
     List<ResourceType> findAllByOrderByOrderAsc();
+
+    @Query("SELECT COALESCE(MAX(rt.order), -1) + 1 FROM ResourceType rt")
+    int nextOrderValue();
 }
