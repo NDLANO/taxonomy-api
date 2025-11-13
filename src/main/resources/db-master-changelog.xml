@@ -816,4 +816,31 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20251112 Add order column for resource types" author="Gunnar Velle">
+        <addColumn tableName="resource_type">
+            <column name="order" type="int" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <sql>
+            UPDATE resource_type
+            SET "order" = CASE
+                WHEN public_id = 'urn:resourcetype:learningPath' THEN 0
+                WHEN public_id = 'urn:resourcetype:subjectMaterial' THEN 1
+                WHEN public_id = 'urn:resourcetype:tasksAndActivities' THEN 2
+                WHEN public_id = 'urn:resourcetype:reviewResource' THEN 3
+                WHEN public_id = 'urn:resourcetype:SourceMaterial' THEN 4
+                WHEN public_id = 'urn:resourcetype:concept' THEN 5
+                WHEN public_id = 'urn:resourcetype:documentary' THEN 6
+                WHEN public_id = 'urn:resourcetype:shortFilm' THEN 7
+                WHEN public_id = 'urn:resourcetype:featureFilm' THEN 8
+                WHEN public_id = 'urn:resourcetype:series' THEN 9
+                WHEN public_id = 'urn:resourcetype:filmClip' THEN 10
+                WHEN public_id = 'urn:resourcetype:historicalMaterial' THEN 11
+                WHEN public_id = 'urn:resourcetype:literaryText' THEN 12
+                ELSE 99
+            END;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

@@ -251,6 +251,11 @@ public class Builder {
             resourceType.setPublicId(URI.create(id));
             return this;
         }
+
+        public ResourceTypeBuilder order(int order) {
+            resourceType.setOrder(order);
+            return this;
+        }
     }
 
     public UrlMapping urlMapping(Consumer<UrlMappingBuilder> consumer) {

@@ -20,10 +20,7 @@ import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePOST;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePUT;
-import no.ndla.taxonomy.service.ContextUpdaterService;
-import no.ndla.taxonomy.service.NodeConnectionService;
-import no.ndla.taxonomy.service.NodeService;
-import no.ndla.taxonomy.service.QualityEvaluationService;
+import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -46,8 +43,14 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
             NodeConnectionRepository nodeConnectionRepository,
             ContextUpdaterService contextUpdaterService,
             NodeService nodeService,
-            QualityEvaluationService qualityEvaluationService) {
-        super(nodeConnectionRepository, contextUpdaterService, nodeService, qualityEvaluationService);
+            QualityEvaluationService qualityEvaluationService,
+            ResourceTypeService resourceTypeService) {
+        super(
+                nodeConnectionRepository,
+                contextUpdaterService,
+                nodeService,
+                qualityEvaluationService,
+                resourceTypeService);
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.nodeRepository = nodeRepository;
         this.connectionService = connectionService;

@@ -13,21 +13,13 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.hibernate.annotations.Type;
+import org.jetbrains.annotations.NotNull;
 
 @Entity
 public class ResourceType extends DomainObject implements Comparable<ResourceType> {
 
     public ResourceType() {
         setPublicId(URI.create("urn:resourcetype:" + UUID.randomUUID()));
-    }
-
-    public ResourceType(ResourceType resourceType, ResourceType parent) {
-        setName(resourceType.getName());
-        setParent(parent);
-        setPublicId(resourceType.getPublicId());
-        this.translations = resourceType.getTranslations().stream()
-                .map(JsonTranslation::new)
-                .toList();
     }
 
     @ManyToOne
@@ -42,6 +34,9 @@ public class ResourceType extends DomainObject implements Comparable<ResourceTyp
     @Type(JsonBinaryType.class)
     @Column(name = "translations", columnDefinition = "jsonb")
     private List<JsonTranslation> translations = new ArrayList<>();
+
+    @Column
+    private int order = -1;
 
     public ResourceType name(String name) {
         setName(name);
@@ -93,8 +88,11 @@ public class ResourceType extends DomainObject implements Comparable<ResourceTyp
     }
 
     @Override
-    public int compareTo(ResourceType o) {
-        return this.getPublicId().compareTo(o.getPublicId());
+    public int compareTo(@NotNull ResourceType o) {
+        if (this.order == -1 || o.order == -1) {
+            return this.getPublicId().compareTo(o.getPublicId());
+        }
+        return this.order - o.order;
     }
 
     @Override
@@ -105,5 +103,21 @@ public class ResourceType extends DomainObject implements Comparable<ResourceTyp
     @Override
     public void setTranslations(List<JsonTranslation> translations) {
         this.translations = translations;
+    }
+
+    public void setOrder(int order) {
+        this.order = order;
+    }
+
+    public int getOrder() {
+        return order;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ResourceType that = (ResourceType) o;
+        return this.getPublicId().equals(that.getPublicId());
     }
 }

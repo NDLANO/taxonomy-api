@@ -23,6 +23,7 @@ import no.ndla.taxonomy.rest.v1.commands.ResourcePostPut;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.QualityEvaluationService;
+import no.ndla.taxonomy.service.ResourceTypeService;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.NodeWithParents;
 import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
@@ -46,8 +47,9 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             ResourceResourceTypeRepository resourceResourceTypeRepository,
             ContextUpdaterService contextUpdaterService,
             NodeService nodeService,
-            QualityEvaluationService qualityEvaluationService) {
-        super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService);
+            QualityEvaluationService qualityEvaluationService,
+            ResourceTypeService resourceTypeService) {
+        super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService, resourceTypeService);
 
         this.nodes = nodes;
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;

@@ -14,9 +14,11 @@ import java.util.*;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Grade;
 import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +35,9 @@ public abstract class CrudController<T extends DomainEntity> {
     protected NodeService nodeService;
     protected QualityEvaluationService qualityEvaluationService;
 
+    @Autowired
+    protected ResourceTypeService resourceTypeService;
+
     private static final Map<Class<?>, String> locations = new HashMap<>();
     private final URNValidator validator = new URNValidator();
 
@@ -40,11 +45,13 @@ public abstract class CrudController<T extends DomainEntity> {
             TaxonomyRepository<T> repository,
             ContextUpdaterService contextUpdaterService,
             NodeService nodeService,
-            QualityEvaluationService qualityEvaluationService) {
+            QualityEvaluationService qualityEvaluationService,
+            ResourceTypeService resourceTypeService) {
         this.repository = repository;
         this.contextUpdaterService = contextUpdaterService;
         this.nodeService = nodeService;
         this.qualityEvaluationService = qualityEvaluationService;
+        this.resourceTypeService = resourceTypeService;
     }
 
     protected CrudController(TaxonomyRepository<T> repository) {
@@ -71,12 +78,17 @@ public abstract class CrudController<T extends DomainEntity> {
             parents = Optional.of(existingNode.map(Node::getParentNodes).orElse(List.of()));
         }
 
-        repository.delete(repository.getByPublicId(id));
+        var entity = repository.getByPublicId(id);
+        repository.delete(entity);
         repository.flush();
 
         if (parents.isPresent()) {
             var p = parents.get();
             qualityEvaluationService.updateQualityEvaluationOfRecursive(p, oldGrade, Optional.empty());
+        }
+
+        if (entity instanceof ResourceType && resourceTypeService != null) {
+            resourceTypeService.updateOrderAfterDelete();
         }
     }
 
@@ -105,6 +117,10 @@ public abstract class CrudController<T extends DomainEntity> {
                 qualityEvaluationService.updateQualityEvaluationOfParents(node, oldGrade, command);
         }
 
+        if (entity instanceof ResourceType resourceType && resourceTypeService != null) {
+            resourceTypeService.shiftOrderAfterInsert(resourceType);
+        }
+
         return entity;
     }
 
@@ -129,6 +145,10 @@ public abstract class CrudController<T extends DomainEntity> {
                 if (contextUpdaterService != null) contextUpdaterService.updateContexts(node);
                 if (qualityEvaluationService != null)
                     qualityEvaluationService.updateQualityEvaluationOfParents(node, oldGrade, command);
+            }
+
+            if (entity instanceof ResourceType resourceType && resourceTypeService != null) {
+                resourceTypeService.shiftOrderAfterInsert(resourceType);
             }
 
             return ResponseEntity.created(location).build();
