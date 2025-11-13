@@ -124,7 +124,7 @@ public class ContextsTest extends RestTest {
 
         contextUpdaterService.updateContexts(topic);
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1");
         final var topicIndexDocument = testUtils.getObject(NodeDTO.class, response);
         assertAnyTrue(topicIndexDocument.getPaths(), p -> "/topic:1".equals(p));
     }
