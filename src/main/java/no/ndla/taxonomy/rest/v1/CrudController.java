@@ -118,7 +118,7 @@ public abstract class CrudController<T extends DomainEntity> {
         }
 
         if (entity instanceof ResourceType resourceType && resourceTypeService != null) {
-            resourceTypeService.shiftOrderAfterInsert(resourceType);
+            resourceTypeService.shiftOrderAfterInsertUpdate(resourceType);
         }
 
         return entity;
@@ -148,7 +148,7 @@ public abstract class CrudController<T extends DomainEntity> {
             }
 
             if (entity instanceof ResourceType resourceType && resourceTypeService != null) {
-                resourceTypeService.shiftOrderAfterInsert(resourceType);
+                resourceTypeService.shiftOrderAfterInsertUpdate(resourceType);
             }
 
             return ResponseEntity.created(location).build();

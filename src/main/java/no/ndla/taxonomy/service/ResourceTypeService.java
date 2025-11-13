@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.service;
 
 import jakarta.persistence.EntityManager;
+import java.util.concurrent.atomic.AtomicBoolean;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import org.springframework.stereotype.Service;
@@ -25,15 +26,22 @@ public class ResourceTypeService {
     }
 
     @Transactional
-    public void shiftOrderAfterInsert(ResourceType resourceType) {
-        var allResourceTypes = resourceTypeRepository.findAllByOrderByOrderAsc();
+    public void shiftOrderAfterInsertUpdate(ResourceType resourceType) {
         if (resourceType.getOrder() == -1) {
-            resourceType.setOrder(allResourceTypes.size());
+            resourceType.setOrder(resourceTypeRepository.nextOrderValue());
             entityManager.merge(resourceType);
         }
-        for (var rt : allResourceTypes) {
-            if (rt.getOrder() >= resourceType.getOrder() && !rt.getPublicId().equals(resourceType.getPublicId())) {
-                rt.setOrder(rt.getOrder() + 1);
+        var allResourceTypes = resourceTypeRepository.findAllByOrderByOrderAsc();
+        var duplicate = new AtomicBoolean(false);
+        for (var i = 0; i < allResourceTypes.size(); i++) {
+            var rt = allResourceTypes.get(i);
+            if (!rt.getPublicId().equals(resourceType.getPublicId())) {
+                if (rt.getOrder() == resourceType.getOrder()) {
+                    duplicate.set(true);
+                    rt.setOrder(i + 1);
+                } else {
+                    rt.setOrder(i + (duplicate.get() ? 1 : 0));
+                }
                 entityManager.merge(rt);
             }
         }
