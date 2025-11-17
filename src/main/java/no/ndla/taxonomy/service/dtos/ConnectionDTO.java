@@ -13,7 +13,6 @@ import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.NodeConnectionType;
 
 /** */
 @Schema(
@@ -32,7 +31,8 @@ public class ConnectionDTO {
     @JsonProperty
     @Schema(
             description = "The path part of the url for the subject or subtopic connected to this topic",
-            example = "/subject:1/topic:1")
+            example = "/subject:1/topic:1",
+            deprecated = true)
     private Set<String> paths = new HashSet<>();
 
     @JsonProperty
@@ -55,13 +55,11 @@ public class ConnectionDTO {
 
         connectedObject.ifPresent(connected -> {
             this.targetId = connected.getPublicId();
-            this.paths = Set.copyOf(connected.getAllPaths());
+            this.paths = Set.of();
         });
-        if (NodeConnectionType.LINK.equals(connection.getConnectionType())) {
-            this.type = isParentConnection ? "referrer" : "target";
-        } else {
-            this.type = isParentConnection ? "parent" : "child";
-        }
+        this.type = isParentConnection
+                ? connection.getConnectionType().sourceString()
+                : connection.getConnectionType().targetString();
     }
 
     public static ConnectionDTO parentConnection(NodeConnection connection) {
