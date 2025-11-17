@@ -238,4 +238,112 @@ public class ResourceTypesTest extends RestTest {
         var first = all.stream().findFirst();
         assertEquals(result, first.get());
     }
+
+    @Test
+    void updating_resource_types_keeps_order() throws Exception {
+        var allBefore = resourceTypeRepository.findAllByOrderByOrderAsc();
+
+        var oldOrders = allBefore.stream().map(ResourceType::getOrder).toList();
+        var newOrder = oldOrders.getLast() + 1;
+
+        // add new resource type at the end
+        URI id = builder.resourceType(rt -> rt.name("video").order(newOrder)).getPublicId();
+
+        var all = resourceTypeRepository.findAllByOrderByOrderAsc();
+        assertEquals(allBefore.size() + 1, all.size());
+
+        var resourceTypeBefore = resourceTypeRepository.getByPublicId(id);
+        assertEquals("video", resourceTypeBefore.getName());
+        assertEquals(newOrder, resourceTypeBefore.getOrder());
+
+        // update name only, order should stay the same
+        testUtils.updateResource("/v1/resource-types/" + id, new ResourceTypePUT() {
+            {
+                name = "video-updated";
+            }
+        });
+        resourceTypeBefore = resourceTypeRepository.getByPublicId(id);
+        assertEquals("video-updated", resourceTypeBefore.getName());
+        assertEquals(newOrder, resourceTypeBefore.getOrder());
+
+        all = resourceTypeRepository.findAllByOrderByOrderAsc();
+
+        // verify order unchanged for all resource types
+        for (int i = 0; i < allBefore.size(); i++) {
+            assertEquals(allBefore.get(i), all.get(i));
+        }
+    }
+
+    @Test
+    void updating_resource_types_order_shifts_other_resource_types() throws Exception {
+        var allBefore = resourceTypeRepository.findAllByOrderByOrderAsc();
+        var oldOrders = allBefore.stream().map(ResourceType::getOrder).toList();
+        var newOrder = oldOrders.getLast() + 1;
+
+        // add new resource type at the end
+        URI id = builder.resourceType(rt -> rt.name("video").order(newOrder)).getPublicId();
+
+        var all = resourceTypeRepository.findAllByOrderByOrderAsc();
+        assertEquals(allBefore.size() + 1, all.size());
+
+        var resourceType = resourceTypeRepository.getByPublicId(id);
+        assertEquals("video", resourceType.getName());
+        assertEquals(newOrder, resourceType.getOrder());
+
+        // update name and order, other resource types should be shifted
+        testUtils.updateResource("/v1/resource-types/" + id, new ResourceTypePUT() {
+            {
+                name = "video-updated";
+                order = 5;
+            }
+        });
+        resourceType = resourceTypeRepository.getByPublicId(id);
+        assertEquals("video-updated", resourceType.getName());
+        assertEquals(5, resourceType.getOrder());
+
+        // verify no duplicate orders
+        all = resourceTypeRepository.findAllByOrderByOrderAsc();
+        for (int i = 0; i < allBefore.size(); i++) {
+            if (i < 5) {
+                // orders before new order unchanged
+                assertEquals(allBefore.get(i), all.get(i));
+            } else if (i == 5) {
+                // new resource type is at index 5
+                assertEquals(resourceType, all.get(i));
+            } else {
+                // orders after new order shifted by one
+                assertEquals(allBefore.get(i), all.get(i + 1));
+            }
+        }
+    }
+
+    @Test
+    void deleting_resource_types_order_shifts_for_rest() throws Exception {
+        var allBefore = resourceTypeRepository.findAllByOrderByOrderAsc();
+        var oldOrders = allBefore.stream().map(ResourceType::getOrder).toList();
+        var newOrder = oldOrders.getLast() + 1;
+
+        // add new resource type at the end
+        URI id = builder.resourceType(rt -> rt.name("video").order(newOrder)).getPublicId();
+
+        var all = resourceTypeRepository.findAllByOrderByOrderAsc();
+        assertEquals(allBefore.size() + 1, all.size());
+
+        var resourceType = resourceTypeRepository.getByPublicId(id);
+        assertEquals("video", resourceType.getName());
+        assertEquals(newOrder, resourceType.getOrder());
+
+        // delete and verify rest are shifted
+        testUtils.deleteResource("/v1/resource-types/" + id);
+
+        // verify resource type is deleted
+        all = resourceTypeRepository.findAllByOrderByOrderAsc();
+        assertTrue(
+                all.stream().filter(rt -> "video".equals(rt.getName())).toList().isEmpty());
+
+        // verify order unchanged for all resource types
+        for (int i = 0; i < allBefore.size(); i++) {
+            assertEquals(allBefore.get(i), all.get(i));
+        }
+    }
 }
