@@ -12,16 +12,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @Testcontainers
 @DirtiesContext
 public class AbstractIntegrationTest {
 
     @Container
-    private static final PostgreSQLContainer<?> postgresDB = new PostgreSQLContainer<>("postgres:17.5");
+    private static final PostgreSQLContainer postgresDB = new PostgreSQLContainer("postgres:17.5");
 
     @Autowired
     EntityManager entityManager;
