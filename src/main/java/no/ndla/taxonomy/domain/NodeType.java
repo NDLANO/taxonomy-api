@@ -14,6 +14,7 @@ public enum NodeType {
     NODE("node"),
     SUBJECT("subject"),
     TOPIC("topic"),
+    CASE("case"),
     RESOURCE("resource"),
     PROGRAMME("programme");
 

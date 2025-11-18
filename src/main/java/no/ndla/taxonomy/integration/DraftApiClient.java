@@ -264,6 +264,7 @@ public class DraftApiClient {
         return switch (nodeType) {
             case NODE -> "node";
             case TOPIC -> "emne";
+            case CASE -> "case";
             case RESOURCE -> "ressurs";
             case SUBJECT -> "fag";
             case PROGRAMME -> "utdanningsprogram";

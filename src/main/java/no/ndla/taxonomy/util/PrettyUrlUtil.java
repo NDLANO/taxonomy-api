@@ -45,7 +45,7 @@ public class PrettyUrlUtil {
     private static String nodeTypeMapping(NodeType nodeType) {
         return switch (nodeType) {
             case SUBJECT -> "/f";
-            case TOPIC -> "/e";
+            case TOPIC, CASE -> "/e";
             case RESOURCE -> "/r";
             default -> "";
         };
