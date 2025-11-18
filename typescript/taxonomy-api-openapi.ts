@@ -20,9 +20,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         get?: never;
@@ -98,9 +96,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         get?: never;
@@ -173,9 +169,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets a single connection between a node and a child */
@@ -197,9 +191,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets metadata for entity */
@@ -270,9 +262,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets a specific connection between a node and a resource */
@@ -294,9 +284,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets metadata for entity */
@@ -385,9 +373,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets a single node */
@@ -406,9 +392,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         get?: never;
@@ -425,9 +409,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets all parents and children this node is connected to */
@@ -444,9 +426,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -466,9 +446,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         get?: never;
@@ -485,9 +463,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets metadata for entity */
@@ -505,9 +481,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets all children for this node */
@@ -524,9 +498,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         get?: never;
@@ -546,9 +518,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets all resources for the given node */
@@ -565,9 +535,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets all translations for a single node */
@@ -584,9 +552,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets all translations for a single node */
@@ -603,10 +569,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-                language: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets a single translation for a single node */
@@ -699,9 +662,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                contentURI: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets a list of contexts matching given contentURI, empty list if no matches are found. */
@@ -752,9 +713,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -774,9 +733,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets all relevanceTranslations for a single relevance */
@@ -793,9 +750,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets all relevanceTranslations for a single relevance */
@@ -812,10 +767,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-                language: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets a single translation for a single relevance */
@@ -868,9 +820,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets a single connection between resource and resource type */
@@ -924,9 +874,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets a single resource type */
@@ -945,9 +893,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets subtypes of one resource type */
@@ -964,9 +910,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets all relevanceTranslations for a single resource type */
@@ -983,9 +927,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets all relevanceTranslations for a single resource type */
@@ -1002,10 +944,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-                language: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets a single translation for a single resource type */
@@ -1112,9 +1051,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1142,9 +1079,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         get?: never;
@@ -1164,9 +1099,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1186,9 +1119,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets metadata for entity */
@@ -1206,9 +1137,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1228,9 +1157,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1250,9 +1177,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1272,10 +1197,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-                language: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1371,9 +1293,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1490,9 +1410,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1521,9 +1439,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets metadata for entity */
@@ -1541,9 +1457,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1564,9 +1478,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1586,9 +1498,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1608,10 +1518,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-                language: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1639,9 +1546,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                subjectId: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1729,9 +1634,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1828,9 +1731,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1947,9 +1848,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1977,9 +1876,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -1999,9 +1896,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         get?: never;
@@ -2021,9 +1916,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets metadata for entity */
@@ -2041,9 +1934,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -2063,9 +1954,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -2085,9 +1974,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -2107,9 +1994,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -2129,10 +2014,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-                language: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /**
@@ -2230,9 +2112,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Gets a single version */
@@ -2251,9 +2131,7 @@ export type paths = {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         get?: never;
@@ -2635,7 +2513,7 @@ export type components = {
              */
             nodeType: components["schemas"]["NodeType"];
             /** @description The quality evaluation of the node. Consist of a score from 1 to 5 and a comment. */
-            qualityEvaluation?: components["schemas"]["QualityEvaluationDTO"] | null;
+            qualityEvaluation?: components["schemas"]["QualityEvaluationDTO"];
             /**
              * @deprecated
              * @description The node is a root node. Default is false. Only used if present.
@@ -2872,12 +2750,13 @@ export type components = {
             /** @description A pretty url based on name and context. Empty if no context. */
             url?: string;
         };
+        /** @description The quality evaluation of the node. Consist of a score from 1 to 5 and a comment. */
         QualityEvaluationDTO: {
             /** @description The grade (1-5) of the article */
             grade: components["schemas"]["Grade"];
             /** @description Note explaining the score */
             note?: string;
-        };
+        } | null;
         Relevance: {
             /**
              * Format: uri

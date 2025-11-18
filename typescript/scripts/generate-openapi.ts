@@ -28,7 +28,6 @@ async function generate_types(appName: string) {
   const ast = await openapiTS(schemaContent, {
     defaultNonNullable: false,
     exportType: true,
-    generatePathParams: true,
     transform(schemaObject, meta) {
       if (
         schemaObject.type === "object" &&
@@ -37,20 +36,6 @@ async function generate_types(appName: string) {
       ) {
         // Records generated from LanguageFieldDTO have additional boolean property empty
         delete schemaObject.properties;
-      }
-      if (
-        schemaObject.type === "object" &&
-        "properties" in schemaObject &&
-        schemaObject.properties &&
-        "qualityEvaluation" in schemaObject.properties &&
-        "oneOf" in schemaObject.properties.qualityEvaluation &&
-        "$ref" in schemaObject.properties.qualityEvaluation
-      ) {
-        // Remove ref and add null type to make qualityEvaluation nullable
-        (schemaObject.properties.qualityEvaluation.oneOf?.push({
-          type: "null",
-        }),
-          delete schemaObject.properties.qualityEvaluation.$ref);
       }
       return undefined;
     },

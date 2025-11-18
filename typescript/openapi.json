@@ -6126,9 +6126,9 @@
             "example": "topic"
           },
           "qualityEvaluation": {
+            "type": ["object", "null"],
             "$ref": "#/components/schemas/QualityEvaluationDTO",
-            "description": "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.",
-            "oneOf": [{ "$ref": "#/components/schemas/QualityEvaluationDTO" }]
+            "description": "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment."
           },
           "root": {
             "type": "boolean",
@@ -6454,7 +6454,8 @@
         "required": ["parents"]
       },
       "QualityEvaluationDTO": {
-        "type": "object",
+        "type": ["object", "null"],
+        "description": "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.",
         "properties": {
           "grade": {
             "$ref": "#/components/schemas/Grade",
