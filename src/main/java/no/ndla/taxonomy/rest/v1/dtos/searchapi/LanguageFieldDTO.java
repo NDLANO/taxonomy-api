@@ -40,4 +40,11 @@ public class LanguageFieldDTO<V> extends HashMap<String, V> {
         });
         return dto;
     }
+
+    // Hide inherited method from documentation
+    @Override
+    @Schema(hidden = true)
+    public boolean isEmpty() {
+        return super.isEmpty();
+    }
 }

@@ -28,17 +28,6 @@ async function generate_types(appName: string) {
   const ast = await openapiTS(schemaContent, {
     defaultNonNullable: false,
     exportType: true,
-    transform(schemaObject, meta) {
-      if (
-        schemaObject.type === "object" &&
-        schemaObject.additionalProperties &&
-        schemaObject.properties?.empty
-      ) {
-        // Records generated from LanguageFieldDTO have additional boolean property empty
-        delete schemaObject.properties;
-      }
-      return undefined;
-    },
   });
 
   const outputPath = `./taxonomy-api-openapi.ts`;
