@@ -15,7 +15,9 @@ import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
 
-@Schema(name = "NodeResource")
+@Schema(
+        name = "NodeResource",
+        requiredProperties = {"nodeId", "resourceId", "id", "primary", "rank", "metadata"})
 public class NodeResourceDTO {
 
     @JsonProperty

@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.Optional;
 
+@Schema(requiredProperties = {"nodeId", "resourceId"})
 public class NodeResourcePOST {
     @JsonProperty
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Node id", example = "urn:node:345")

@@ -9,7 +9,6 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.net.URI;
 import java.util.List;
@@ -76,8 +75,7 @@ public class Versions extends CrudController<Version> {
     public ResponseEntity<Void> createVersion(
             @Parameter(description = "Base new version on version with this id") @RequestParam(value = "sourceId")
                     Optional<URI> sourceId,
-            @Parameter(name = "version", description = "The new version") @RequestBody @Schema(name = "VersionPOST")
-                    VersionPostPut command) {
+            @Parameter(name = "version", description = "The new version") @RequestBody VersionPostPut command) {
         // Don't call doPost because we need to create new schema
         Version version = versionService.createNewVersion(sourceId, command);
         URI location = URI.create(getLocation() + "/" + version.getPublicId());
@@ -93,8 +91,7 @@ public class Versions extends CrudController<Version> {
     @Transactional
     public void updateVersion(
             @PathVariable("id") URI id,
-            @Parameter(name = "version", description = "The updated version.") @RequestBody @Schema(name = "VersionPUT")
-                    VersionPostPut command) {
+            @Parameter(name = "version", description = "The updated version.") @RequestBody VersionPostPut command) {
         updateEntity(id, command);
     }
 

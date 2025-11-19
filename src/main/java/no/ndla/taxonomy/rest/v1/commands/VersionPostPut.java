@@ -14,6 +14,7 @@ import java.util.Optional;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.service.UpdatableDto;
 
+@Schema(requiredProperties = {"name"})
 public class VersionPostPut implements UpdatableDto<Version> {
     @JsonProperty
     @Schema(

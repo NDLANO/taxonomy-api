@@ -16,6 +16,7 @@ import java.util.Optional;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.NodeType;
 
+@Schema(requiredProperties = {"page", "pageSize", "language", "includeContexts", "filterProgrammes"})
 public class NodeSearchBody {
     @JsonProperty
     @Schema(

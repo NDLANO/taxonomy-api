@@ -17,7 +17,7 @@
   "main": "taxonomy-api.js",
   "devDependencies": {
     "@types/node": "^22.13.16",
-    "openapi-typescript": "^7.6.1",
+    "openapi-typescript": "^7.10.1",
     "tsx": "^4.19.3",
     "typescript": "^5.3.3"
   },

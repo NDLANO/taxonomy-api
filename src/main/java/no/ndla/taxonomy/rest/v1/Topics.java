@@ -168,7 +168,6 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             @PathVariable("id") URI id,
             @Parameter(name = "topic", description = "The updated topic. Fields not included will be set to null.")
                     @RequestBody
-                    @Schema(name = "VersionPUT")
                     TopicPostPut command) {
         nodes.updateEntity(id, command);
     }

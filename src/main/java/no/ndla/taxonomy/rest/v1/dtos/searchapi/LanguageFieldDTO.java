@@ -14,7 +14,7 @@ import java.util.Set;
 import no.ndla.taxonomy.domain.LanguageField;
 import org.springframework.data.util.Pair;
 
-@Schema(name = "LanguageField")
+@Schema(name = "LanguageField", type = "object")
 public class LanguageFieldDTO<V> extends HashMap<String, V> {
 
     public LanguageFieldDTO() {}
@@ -39,5 +39,12 @@ public class LanguageFieldDTO<V> extends HashMap<String, V> {
             dto.put(key, languageField.get(key));
         });
         return dto;
+    }
+
+    // Hide inherited method from documentation
+    @Override
+    @Schema(hidden = true)
+    public boolean isEmpty() {
+        return super.isEmpty();
     }
 }

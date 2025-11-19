@@ -15,7 +15,9 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
 
-@Schema(name = "SubjectTopic")
+@Schema(
+        name = "SubjectTopic",
+        requiredProperties = {"subjectid", "topicid", "id", "primary", "rank"})
 public class SubjectTopicDTO {
     @JsonProperty
     @Schema(description = "Subject id", example = "urn:subject:123")

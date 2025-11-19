@@ -21,6 +21,7 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.UpdatableDto;
 import no.ndla.taxonomy.service.dtos.QualityEvaluationDTO;
 
+@Schema(requiredProperties = {"nodeType", "language"})
 public class NodePostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(
@@ -60,11 +61,13 @@ public class NodePostPut implements UpdatableDto<Node> {
     public String language = Constants.DefaultLanguage;
 
     @JsonProperty
-    @Schema(description = "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.")
+    @Schema(
+            implementation = QualityEvaluationDTO.class,
+            description = "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.",
+            types = {"object", "null"})
     @JsonDeserialize(using = QualityEvaluationDTODeserializer.class)
     @JsonSerialize(using = QualityEvaluationDTOSerializer.class)
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @NullOrUndefined
     public UpdateOrDelete<QualityEvaluationDTO> qualityEvaluation = UpdateOrDelete.Default();
 
     public Optional<String> getNodeId() {

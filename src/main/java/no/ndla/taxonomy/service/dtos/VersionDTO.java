@@ -17,7 +17,9 @@ import java.util.Optional;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 
-@Schema(name = "Version")
+@Schema(
+        name = "Version",
+        requiredProperties = {"id", "versionType", "name", "hash", "locked", "created"})
 public class VersionDTO {
     @JsonProperty
     @Schema(example = "urn:version:1")

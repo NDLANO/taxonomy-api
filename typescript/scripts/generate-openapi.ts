@@ -23,27 +23,40 @@ async function generate_types(appName: string) {
   const jsonFile = `./openapi.json`;
   console.log(`Parsing ${jsonFile} to generate typescript files...`);
   const schema = await fs.promises.readFile(jsonFile, "utf8");
+  const schemaContent = JSON.parse(schema);
 
-  const ast = await openapiTS(JSON.parse(schema), {
-    exportType: true,
-    // https://openapi-ts.dev/migration-guide#defaultnonnullable-true-by-default
+  const ast = await openapiTS(schemaContent, {
     defaultNonNullable: false,
-    transform(schemaObject, _options): TypeNode | undefined {
-      if (schemaObject.format === "binary") {
-        if (schemaObject.nullable) {
-          return ts.factory.createUnionTypeNode([BLOB, NULL]);
-        } else {
-          return BLOB;
-        }
-      }
-    },
+    exportType: true,
   });
 
-  const outputPath = `./taxonomy-api.ts`;
+  const outputPath = `./taxonomy-api-openapi.ts`;
+
   const output = astToString(ast);
 
   console.log(`Outputting to ${outputPath}`);
+
   fs.writeFileSync(outputPath, output);
+
+  const header = `// This file is generated automatically. Do not edit.
+`;
+  let newFileContent = `${header}import * as openapi from "./taxonomy-api-openapi";
+type schemas = openapi.components["schemas"];
+export { openapi };
+
+`;
+
+  const schemas = schemaContent.components.schemas;
+  const schemaNames = Object.keys(schemas);
+  for (const schemaName of schemaNames) {
+    newFileContent += `export type ${schemaName} = schemas["${schemaName}"];\n`;
+  }
+
+  const newFilePath = `./taxonomy-api.ts`;
+
+  console.log(`Outputting to ${newFilePath}`);
+
+  fs.writeFileSync(newFilePath, newFileContent);
 }
 
 generate_types(process.argv[2]);

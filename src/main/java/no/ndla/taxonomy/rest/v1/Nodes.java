@@ -9,7 +9,6 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.net.URI;
 import java.util.*;
@@ -275,8 +274,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createNode(
-            @Parameter(name = "connection", description = "The new node") @RequestBody @Schema(name = "NodePOST")
-                    NodePostPut command) {
+            @Parameter(name = "connection", description = "The new node") @RequestBody NodePostPut command) {
         return createEntity(new Node(command.nodeType), command);
     }
 
@@ -291,7 +289,6 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @PathVariable("id") URI id,
             @Parameter(name = "node", description = "The updated node. Fields not included will be set to null.")
                     @RequestBody
-                    @Schema(name = "NodePUT")
                     NodePostPut command) {
         updateEntity(id, command);
     }
@@ -491,7 +488,6 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     URI publicId,
             @Parameter(name = "node", description = "Object containing contentUri. Other values are ignored.")
                     @RequestBody
-                    @Schema(name = "NodePOST")
                     NodePostPut command) {
         var entity = nodeService.cloneNode(publicId, command.contentUri);
         URI location = URI.create(getLocation() + "/" + entity.getPublicId());

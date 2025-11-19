@@ -11,7 +11,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.Translation;
 
-@Schema(name = "Translation")
+@Schema(
+        name = "Translation",
+        requiredProperties = {"language", "name"})
 public class TranslationDTO implements Comparable<TranslationDTO> {
     public TranslationDTO() {}
 

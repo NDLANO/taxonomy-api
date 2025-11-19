@@ -10,7 +10,9 @@ package no.ndla.taxonomy.rest.v1.dtos;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 
-@Schema(name = "Context")
+@Schema(
+        name = "Context",
+        requiredProperties = {"id", "name", "path"})
 public class ContextDTO {
     public URI id;
     public String path;
