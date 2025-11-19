@@ -808,4 +808,12 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20251118 Rename top level resourcetypes again" author="Gunnar Velle">
+        <sql>
+            UPDATE resource_type
+            SET name = 'Forklaringsartikkel', translations = '[{"name":"Forklaringsartikkel","languageCode":"nb"},{"name":"Forklaringsartikkel","languageCode":"nn"},{"name":"Concept article","languageCode":"en"},{"name":"Čielggadanartihkkal","languageCode":"se"}]'
+            WHERE public_id = 'urn:resourcetype:concept';
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
