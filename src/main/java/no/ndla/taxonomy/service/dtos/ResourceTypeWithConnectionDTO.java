@@ -27,6 +27,8 @@ public class ResourceTypeWithConnectionDTO implements Comparable<ResourceTypeWit
     @Schema(example = "urn:resourcetype:2")
     private URI id;
 
+    private int order;
+
     @JsonProperty
     @Schema(example = "urn:resourcetype:1")
     private Optional<URI> parentId = Optional.empty();
@@ -53,6 +55,7 @@ public class ResourceTypeWithConnectionDTO implements Comparable<ResourceTypeWit
         var resourceType = resourceResourceType.getResourceType();
 
         this.id = resourceType.getPublicId();
+        this.order = resourceType.getOrder();
 
         var translations = resourceType.getTranslations();
         this.translations =
@@ -93,8 +96,6 @@ public class ResourceTypeWithConnectionDTO implements Comparable<ResourceTypeWit
 
     @Override
     public int compareTo(ResourceTypeWithConnectionDTO o) {
-        // We want to sort resourceTypes without parents first when sorting
-        if (this.parentId.isEmpty() && o.parentId.isPresent()) return 1;
-        return -1;
+        return this.order - o.order;
     }
 }
