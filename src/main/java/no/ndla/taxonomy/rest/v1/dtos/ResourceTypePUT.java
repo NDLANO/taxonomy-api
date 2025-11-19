@@ -34,6 +34,10 @@ public class ResourceTypePUT implements UpdatableDto<ResourceType> {
             example = "Lecture")
     public String name;
 
+    @JsonProperty
+    @Schema(description = "Order in which the resource type should be sorted among its siblings")
+    public int order = -1;
+
     @Override
     public Optional<URI> getId() {
         return Optional.ofNullable(id);
@@ -42,5 +46,8 @@ public class ResourceTypePUT implements UpdatableDto<ResourceType> {
     @Override
     public void apply(ResourceType entity) {
         entity.setName(name);
+        if (order > -1) {
+            entity.setOrder(order);
+        }
     }
 }
