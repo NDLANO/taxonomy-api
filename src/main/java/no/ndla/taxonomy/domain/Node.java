@@ -392,7 +392,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     public Collection<ResourceType> getResourceTypes() {
         return getResourceResourceTypes().stream()
                 .map(ResourceResourceType::getResourceType)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(TreeSet::new));
     }
 
     public Collection<ResourceResourceType> getResourceResourceTypes() {

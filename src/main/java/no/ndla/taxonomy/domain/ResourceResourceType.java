@@ -72,11 +72,11 @@ public class ResourceResourceType extends DomainEntity implements Comparable<Res
     }
 
     @Override
-    public int compareTo(ResourceResourceType o) {
-        if (this.resourceType == null || o.resourceType == null) {
+    public int compareTo(ResourceResourceType other) {
+        if (this.resourceType == null || other.resourceType == null) {
             return 0;
         }
-        return this.getResourceType().compareTo(o.getResourceType());
+        return this.getResourceType().compareTo(other.getResourceType());
     }
 
     @Override

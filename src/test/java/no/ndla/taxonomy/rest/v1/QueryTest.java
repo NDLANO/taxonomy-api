@@ -69,8 +69,8 @@ public class QueryTest extends RestTest {
     public void can_get_all_resource_types_for_a_resource() throws Exception {
         builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1")
                 .contentUri("urn:article:345")
-                .resourceType(rt -> rt.name("Subject material"))
-                .resourceType(rt -> rt.name("Learning path")));
+                .resourceType(rt -> rt.name("Subject material").order(1))
+                .resourceType(rt -> rt.name("Learning path").order(2)));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/resources?contentURI=urn:article:345");
         var resources = testUtils.getObject(NodeDTO[].class, response);

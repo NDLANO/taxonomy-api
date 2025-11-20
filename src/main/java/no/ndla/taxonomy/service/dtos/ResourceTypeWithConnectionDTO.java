@@ -27,6 +27,8 @@ public class ResourceTypeWithConnectionDTO implements Comparable<ResourceTypeWit
     @Schema(example = "urn:resourcetype:2")
     private URI id;
 
+    @JsonProperty
+    @Schema(description = "Internal order of the resource types")
     private int order;
 
     @JsonProperty
@@ -95,7 +97,10 @@ public class ResourceTypeWithConnectionDTO implements Comparable<ResourceTypeWit
     }
 
     @Override
-    public int compareTo(ResourceTypeWithConnectionDTO o) {
-        return this.order - o.order;
+    public int compareTo(ResourceTypeWithConnectionDTO other) {
+        if (this.order == -1 || other.order == -1) {
+            return this.id.compareTo(other.id);
+        }
+        return this.order - other.order;
     }
 }
