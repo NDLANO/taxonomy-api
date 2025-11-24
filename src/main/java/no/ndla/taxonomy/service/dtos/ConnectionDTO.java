@@ -58,8 +58,8 @@ public class ConnectionDTO {
             this.paths = Set.of();
         });
         this.type = isParentConnection
-                ? connection.getConnectionType().sourceString()
-                : connection.getConnectionType().targetString();
+                ? connection.getConnectionType().getFrom()
+                : connection.getConnectionType().getTo();
     }
 
     public static ConnectionDTO parentConnection(NodeConnection connection) {

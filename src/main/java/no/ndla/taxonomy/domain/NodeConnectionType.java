@@ -14,19 +14,19 @@ public enum NodeConnectionType {
     BRANCH("parent", "child"),
     LINK("referrer", "target");
 
-    private final String source;
-    private final String target;
+    private final String from;
+    private final String to;
 
-    NodeConnectionType(String source, String target) {
-        this.source = source;
-        this.target = target;
+    NodeConnectionType(String from, String to) {
+        this.from = from;
+        this.to = to;
     }
 
-    public String sourceString() {
-        return source;
+    public String getFrom() {
+        return from;
     }
 
-    public String targetString() {
-        return target;
+    public String getTo() {
+        return to;
     }
 }
