@@ -2657,7 +2657,7 @@ export type components = {
             rootId?: string;
         };
         /** @enum {string} */
-        NodeType: "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME";
+        NodeType: "NODE" | "SUBJECT" | "TOPIC" | "CASE" | "RESOURCE" | "PROGRAMME";
         NodeWithParents: {
             /**
              * @description The stored name of the node
@@ -2921,6 +2921,11 @@ export type components = {
              */
             name: string;
             /**
+             * Format: int32
+             * @description Order in which the resource type should be sorted among its siblings
+             */
+            order?: number;
+            /**
              * Format: uri
              * @description If specified, the new resource type will be a child of the mentioned resource type.
              */
@@ -2943,6 +2948,11 @@ export type components = {
              * @example Lecture
              */
             name: string;
+            /**
+             * Format: int32
+             * @description Internal order of the resource types
+             */
+            order?: number;
             /**
              * Format: uri
              * @example urn:resourcetype:1
@@ -2977,6 +2987,8 @@ export type components = {
             name: {
                 [key: string]: string;
             };
+            /** Format: int32 */
+            order?: number;
             parentId?: string;
         };
         /** @description The updated subject. Fields not included will be set to null. */
