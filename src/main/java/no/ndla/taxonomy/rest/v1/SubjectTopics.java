@@ -123,7 +123,7 @@ public class SubjectTopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void deleteSubjectTopic(@PathVariable("id") URI id) {
-        connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id));
+        connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id), true);
     }
 
     @Deprecated

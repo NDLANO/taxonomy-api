@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(propagation = Propagation.MANDATORY)
 @Service
 public class NodeConnectionServiceImpl implements NodeConnectionService {
-
     private final NodeConnectionRepository nodeConnectionRepository;
     private final ContextUpdaterService contextUpdaterService;
     private final NodeRepository nodeRepository;
@@ -158,15 +157,18 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         new HashSet<>(parent.getChildConnections())
                 .stream()
                         .filter(connection -> connection.getChild().orElse(null) == child)
-                        .forEach(this::disconnectParentChildConnection); // (It will never be more than one record)
+                        .forEach(nodeConnection -> disconnectParentChildConnection(
+                                nodeConnection, true)); // (It will never be more than one record)
     }
 
     @Override
-    public void disconnectParentChildConnection(NodeConnection nodeConnection) {
+    public void disconnectParentChildConnection(NodeConnection nodeConnection, boolean shouldUpdateDraftApi) {
         final var child = nodeConnection.getChild();
 
         qualityEvaluationService.removeQualityEvaluationOfDeletedConnection(nodeConnection);
-        draftApiClient.updateNotesWithDeletedConnection(nodeConnection);
+        if (shouldUpdateDraftApi) {
+            draftApiClient.updateNotesWithDeletedConnection(nodeConnection);
+        }
 
         nodeConnection.disassociate();
         nodeConnectionRepository.delete(nodeConnection);
@@ -306,12 +308,13 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         var node = nodeRepository
                 .findFirstByPublicId(nodeId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
-        node.getParentConnections().forEach(this::disconnectParentChildConnection);
+        node.getParentConnections().forEach(nodeConnection -> disconnectParentChildConnection(nodeConnection, true));
     }
 
     @Override
     public void disconnectAllChildren(Node entity) {
-        Set.copyOf(entity.getChildConnections()).forEach(this::disconnectParentChildConnection);
+        Set.copyOf(entity.getChildConnections())
+                .forEach(nodeConnection -> disconnectParentChildConnection(nodeConnection, true));
     }
 
     @Transactional
@@ -326,7 +329,8 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
     private void disconnectInvisibleConnections(Node node) {
         if (!node.isVisible()) {
-            node.getParentConnections().forEach(this::disconnectParentChildConnection);
+            node.getParentConnections()
+                    .forEach(nodeConnection -> disconnectParentChildConnection(nodeConnection, false));
         } else {
             node.getChildConnections()
                     .forEach(nodeConnection ->
