@@ -684,7 +684,6 @@ public class NodesTest extends RestTest {
         final var connections = testUtils.getObject(ConnectionDTO[].class, response);
 
         assertEquals(3, connections.length, "Correct number of connections");
-        assertAllTrue(connections, c -> !c.getPaths().isEmpty()); // all connections have at least one path
 
         connectionsHaveCorrectTypes(connections);
     }

@@ -72,8 +72,11 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         final var childTopicSubtopic = mock(NodeConnection.class);
 
         when(subjectTopic.getPublicId()).thenReturn(URI.create("urn:subject-topic"));
+        when(subjectTopic.getConnectionType()).thenReturn(NodeConnectionType.BRANCH);
         when(parentTopicSubtopic.getPublicId()).thenReturn(URI.create("urn:parent-topic"));
+        when(parentTopicSubtopic.getConnectionType()).thenReturn(NodeConnectionType.BRANCH);
         when(childTopicSubtopic.getPublicId()).thenReturn(URI.create("urn:child-topic"));
+        when(childTopicSubtopic.getConnectionType()).thenReturn(NodeConnectionType.BRANCH);
 
         final var parentConnectionsToReturn = Set.of(subjectTopic);
         final var childConnectionsToReturn = Set.of(childTopicSubtopic);
