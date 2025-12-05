@@ -126,7 +126,7 @@ public class TopicSubtopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void deleteTopicSubtopic(@PathVariable("id") URI id) {
-        connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id));
+        connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id), true);
     }
 
     @Deprecated

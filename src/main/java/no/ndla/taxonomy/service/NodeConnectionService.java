@@ -23,7 +23,7 @@ public interface NodeConnectionService {
 
     void disconnectParentChild(Node parent, Node child);
 
-    void disconnectParentChildConnection(NodeConnection nodeConnection);
+    void disconnectParentChildConnection(NodeConnection nodeConnection, boolean shouldUpdateDraftApi);
 
     void disconnectAllParents(URI nodeId);
 
