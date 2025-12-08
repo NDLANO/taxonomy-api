@@ -843,4 +843,11 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20251205 Add new game resourcetype" author="Gunnar Velle">
+        <sql>
+            INSERT INTO resource_type (id, parent_id, public_id, name, translations, "order") VALUES (37, null, 'urn:resourcetype:game', 'Spill', '[{"name":"Spill","languageCode":"nb"},{"name":"Spel","languageCode":"nn"},{"name":"Game","languageCode":"en"},{"name":"Speala","languageCode":"se"}]', 13);
+            ALTER SEQUENCE resource_type_id_seq RESTART WITH 38;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
