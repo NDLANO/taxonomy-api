@@ -2162,6 +2162,7 @@ export type components = {
              */
             isPrimary: boolean;
             /**
+             * @deprecated
              * @description The path part of the url for the subject or subtopic connected to this topic
              * @example /subject:1/topic:1
              */
@@ -3138,6 +3139,8 @@ export type components = {
             id: string;
             /** @description Whether the parent connection is marked as active */
             isActive: boolean;
+            /** @description Whether the root is marked as archived */
+            isArchived: boolean;
             /** @description Whether the parent connection is primary or not */
             isPrimary: boolean;
             /** @description Whether the parent connection is visible or not */
