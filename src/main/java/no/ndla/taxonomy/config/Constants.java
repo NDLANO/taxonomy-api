@@ -13,4 +13,6 @@ public final class Constants {
     public static final String Active = "active";
     public static final String Beta = "beta";
     public static final String OtherResources = "otherResources";
+    public static final String SubjectType = "subjectType";
+    public static final String ArchiveSubject = "archiveSubject";
 }

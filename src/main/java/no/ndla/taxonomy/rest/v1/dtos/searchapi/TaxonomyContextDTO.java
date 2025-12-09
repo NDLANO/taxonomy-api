@@ -28,6 +28,7 @@ import java.util.Optional;
             "isPrimary",
             "isActive",
             "isVisible",
+            "isArchived",
             "contextId",
             "rank",
             "connectionId",
@@ -82,6 +83,9 @@ public record TaxonomyContextDTO(
 
         @JsonProperty @Schema(description = "Whether the parent connection is visible or not")
         boolean isVisible,
+
+        @JsonProperty @Schema(description = "Whether the root is marked as archived")
+        boolean isArchived,
 
         @JsonProperty @Schema(description = "Unique id of context based on root + parent connection")
         String contextId,

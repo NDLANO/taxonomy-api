@@ -27,6 +27,8 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
         boolean activeContext = node.getCustomFields()
                 .getOrDefault(Constants.SubjectCategory, Constants.Active)
                 .matches(String.format("%s|%s|%s", Constants.Active, Constants.Beta, Constants.OtherResources));
+        boolean isArchived =
+                node.getCustomFields().getOrDefault(Constants.SubjectType, "").equals(Constants.ArchiveSubject);
         // This entity can be root path
         if (node.isContext()) {
             var contextId = HashUtil.semiHash(node.getPublicId());
@@ -44,6 +46,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                     node.isVisible(),
                     activeContext,
                     true,
+                    isArchived,
                     Relevance.CORE.getPublicId().toString(),
                     contextId,
                     0,
@@ -80,6 +83,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                             parentContext.isVisible() && node.isVisible(),
                                             parentContext.isActive() && activeContext,
                                             parentConnection.isPrimary().orElse(false),
+                                            parentContext.isArchived(),
                                             parentConnection
                                                     .getRelevance()
                                                     .flatMap(relevance -> Optional.of(relevance

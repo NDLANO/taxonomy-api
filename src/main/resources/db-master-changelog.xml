@@ -850,4 +850,15 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20251209 Add isArchived to taxonomy context" author="Gunnar Velle">
+        <sql>
+            UPDATE node n
+            SET contexts = (
+            SELECT jsonb_agg(jsonb_set(obj, '{isArchived}', to_jsonb(false), true))
+            FROM jsonb_array_elements(contexts) AS obj
+            )
+            WHERE contexts != '[]'
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
