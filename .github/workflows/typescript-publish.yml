@@ -22,6 +22,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22.15.0"
+      - name: Enable yarn v4
+        run: |
+          corepack enable
+          yarn set version 4.10.3
       - name: Setup git
         run: |
           git config user.email "$KNOWIT_EMAIL"
