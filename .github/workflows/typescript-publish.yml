@@ -38,6 +38,6 @@ jobs:
           cd typescript/
           yarn
           yarn build
-          yarn npm publish --provenance --access public --patch
+          yarn npm publish --provenance --access public
           git push
           git push --tags
