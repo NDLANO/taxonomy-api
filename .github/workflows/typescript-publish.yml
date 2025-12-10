@@ -8,6 +8,9 @@ on:
     paths:
       - "typescript/**"
       - "!typescript/package.json"
+permissions:
+  id-token: write
+  contents: read
 env:
   CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
   KNOWIT_EMAIL: ${{ secrets.KNOWIT_EMAIL }}
@@ -35,8 +38,6 @@ jobs:
           cd typescript/
           yarn
           yarn build
-          yarn publish --non-interactive --access public --patch
+          yarn npm publish --provenance --access public --patch
           git push
           git push --tags
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
