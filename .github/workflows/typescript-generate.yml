@@ -35,6 +35,13 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.15.0"
+      - name: Enable yarn v4
+        run: |
+          corepack enable
+          yarn set version 4.10.3
       - name: Login to ECR repo
         run:
           RES=$(aws sts assume-role --role-arn $CI_RELEASE_ROLE --role-session-name

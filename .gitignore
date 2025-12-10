@@ -5,6 +5,7 @@
 target
 *.backup
 .env
+.yarn/
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
