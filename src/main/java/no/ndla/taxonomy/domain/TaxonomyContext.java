@@ -28,6 +28,7 @@ import java.util.Optional;
  * @param isVisible        Metadata from node.
  * @param isActive         Metadata from node. True if subjectCategory is active or otherResources.
  * @param isPrimary        Is this context marked as primary. From nodeConnection.
+ * @param isArchived       Metadata from node. True if subjectType is 'archiveSubject'.
  * @param relevanceId      ID of relevance. From nodeConnection.
  * @param contextId        Hash of root publicId + nodeConnection publicId. Unique for this context.
  * @param rank             The rank of the context. From nodeConnection.
@@ -49,6 +50,7 @@ public record TaxonomyContext(
         boolean isVisible,
         boolean isActive,
         boolean isPrimary,
+        boolean isArchived,
         String relevanceId,
         String contextId,
         int rank,

@@ -373,6 +373,7 @@ public class NodeService {
                                 context.isPrimary(),
                                 context.isActive(),
                                 context.isVisible(),
+                                context.isArchived(),
                                 context.contextId(),
                                 context.rank(),
                                 context.connectionId(),

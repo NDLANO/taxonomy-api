@@ -245,6 +245,7 @@ public class NodeDTO {
                 ctx.isPrimary(),
                 ctx.isActive(),
                 ctx.isVisible(),
+                ctx.isArchived(),
                 ctx.contextId(),
                 ctx.rank(),
                 ctx.connectionId(),
