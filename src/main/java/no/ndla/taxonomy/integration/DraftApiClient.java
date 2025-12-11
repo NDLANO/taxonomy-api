@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.integration.dtos.DraftNotesDTO;
 import no.ndla.taxonomy.integration.dtos.UpdateNotesDTO;
+import no.ndla.taxonomy.service.VersionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,9 @@ public class DraftApiClient {
     private static final Logger logger = LoggerFactory.getLogger(DraftApiClient.class);
     private final RestClient restClient;
 
+    @Value("${spring.datasource.hikari.schema:taxonomy_api}")
+    private String defaultSchema;
+
     public DraftApiClient(@Value("${DRAFT_API_HOST:draft-api}") String draftApiHost) {
         var baseUrl = String.format("http://%s/draft-api", draftApiHost);
         restClient = RestClient.builder()
@@ -36,7 +40,16 @@ public class DraftApiClient {
                 .build();
     }
 
+    // Only update notes in the base schema
+    private boolean notBaseSchema() {
+        return !VersionContext.getCurrentVersion().equals(defaultSchema);
+    }
+
     public void updateNotesWithNewConnection(NodeConnection newConnection) {
+        if (notBaseSchema()) {
+            return;
+        }
+
         var maybeParent = newConnection.getParent();
         var maybeChild = newConnection.getChild();
         var maybeParentId = maybeParent.flatMap(p -> getId(p.getContentUri()));
@@ -114,6 +127,10 @@ public class DraftApiClient {
     }
 
     public void updateNotesWithDeletedConnection(NodeConnection deletedConnection) {
+        if (notBaseSchema()) {
+            return;
+        }
+
         var maybeParent = deletedConnection.getParent();
         var maybeChild = deletedConnection.getChild();
         var maybeParentId = maybeParent.flatMap(p -> getId(p.getContentUri()));
@@ -163,6 +180,10 @@ public class DraftApiClient {
     }
 
     public void updateRelevanceNotesWithUpdatedConnection(NodeConnection nodeConnection, Relevance newRelevance) {
+        if (notBaseSchema()) {
+            return;
+        }
+
         var maybeParent = nodeConnection.getParent();
         var maybeChild = nodeConnection.getChild();
         var maybeParentId = maybeParent.flatMap(p -> getId(p.getContentUri()));
@@ -205,6 +226,10 @@ public class DraftApiClient {
     }
 
     public void updatePrimaryNotesWithUpdatedConnection(NodeConnection nodeConnection, Optional<Boolean> newIsPrimary) {
+        if (notBaseSchema()) {
+            return;
+        }
+
         var maybeParent = nodeConnection.getParent();
         var maybeChild = nodeConnection.getChild();
         var maybeParentId = maybeParent.flatMap(p -> getId(p.getContentUri()));
