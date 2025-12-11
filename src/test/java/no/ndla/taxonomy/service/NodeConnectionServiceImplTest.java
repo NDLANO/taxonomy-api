@@ -288,7 +288,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
 
         reset(contextUpdaterService);
 
-        service.disconnectParentChildConnection(topic1subtopic1, true);
+        service.disconnectParentChildConnection(topic1subtopic1);
 
         verify(contextUpdaterService).updateContexts(subtopic1);
 
@@ -357,14 +357,14 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertFalse(topic1.getResourceChildren().contains(topic1resource1));
         assertFalse(resource1.getParentConnections().contains(topic1resource1));
 
-        service.disconnectParentChildConnection(topic2resource1, true);
+        service.disconnectParentChildConnection(topic2resource1);
         assertTrue(topic3resource1.isPrimary().orElseThrow());
 
         assertTrue(resource2.getParentConnections().contains(topic1resource2));
         assertTrue(resource3.getParentConnections().contains(topic1resource3));
 
-        service.disconnectParentChildConnection(topic1resource2, true);
-        service.disconnectParentChildConnection(topic1resource3, true);
+        service.disconnectParentChildConnection(topic1resource2);
+        service.disconnectParentChildConnection(topic1resource3);
 
         assertFalse(resource2.getParentConnections().contains(topic1resource2));
         assertFalse(resource3.getParentConnections().contains(topic1resource3));

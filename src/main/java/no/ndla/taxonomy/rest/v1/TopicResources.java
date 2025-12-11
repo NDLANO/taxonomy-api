@@ -121,7 +121,7 @@ public class TopicResources {
     @Transactional
     public void deleteTopicResource(@PathVariable("id") URI id) {
         var connection = nodeConnectionRepository.getByPublicId(id);
-        connectionService.disconnectParentChildConnection(connection, true);
+        connectionService.disconnectParentChildConnection(connection);
     }
 
     @Deprecated

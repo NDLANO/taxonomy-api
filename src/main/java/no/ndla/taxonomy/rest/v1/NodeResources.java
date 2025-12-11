@@ -124,7 +124,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @Transactional
     public void deleteEntity(@PathVariable("id") URI id) {
         var connection = nodeConnectionRepository.getByPublicId(id);
-        connectionService.disconnectParentChildConnection(connection, true);
+        connectionService.disconnectParentChildConnection(connection);
     }
 
     @PutMapping("/{id}")

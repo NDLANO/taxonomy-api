@@ -157,18 +157,15 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         new HashSet<>(parent.getChildConnections())
                 .stream()
                         .filter(connection -> connection.getChild().orElse(null) == child)
-                        .forEach(nodeConnection -> disconnectParentChildConnection(
-                                nodeConnection, true)); // (It will never be more than one record)
+                        .forEach(this::disconnectParentChildConnection); // (It will never be more than one record)
     }
 
     @Override
-    public void disconnectParentChildConnection(NodeConnection nodeConnection, boolean shouldUpdateDraftApi) {
+    public void disconnectParentChildConnection(NodeConnection nodeConnection) {
         final var child = nodeConnection.getChild();
 
         qualityEvaluationService.removeQualityEvaluationOfDeletedConnection(nodeConnection);
-        if (shouldUpdateDraftApi) {
-            draftApiClient.updateNotesWithDeletedConnection(nodeConnection);
-        }
+        draftApiClient.updateNotesWithDeletedConnection(nodeConnection);
 
         nodeConnection.disassociate();
         nodeConnectionRepository.delete(nodeConnection);
@@ -308,13 +305,12 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         var node = nodeRepository
                 .findFirstByPublicId(nodeId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
-        node.getParentConnections().forEach(nodeConnection -> disconnectParentChildConnection(nodeConnection, true));
+        node.getParentConnections().forEach(this::disconnectParentChildConnection);
     }
 
     @Override
     public void disconnectAllChildren(Node entity) {
-        Set.copyOf(entity.getChildConnections())
-                .forEach(nodeConnection -> disconnectParentChildConnection(nodeConnection, true));
+        Set.copyOf(entity.getChildConnections()).forEach(this::disconnectParentChildConnection);
     }
 
     @Transactional
@@ -329,8 +325,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
     private void disconnectInvisibleConnections(Node node) {
         if (!node.isVisible()) {
-            node.getParentConnections()
-                    .forEach(nodeConnection -> disconnectParentChildConnection(nodeConnection, false));
+            node.getParentConnections().forEach(this::disconnectParentChildConnection);
         } else {
             node.getChildConnections()
                     .forEach(nodeConnection ->

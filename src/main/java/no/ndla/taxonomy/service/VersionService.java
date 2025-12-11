@@ -105,8 +105,7 @@ public class VersionService {
             Deleter deleter = new Deleter();
             deleter.setNodeConnectionService(nodeConnectionService);
             deleter.setVersion(schemaFromHash(hash));
-            var future = executor.submit(deleter);
-            future.get();
+            executor.submit(deleter).get();
         } catch (Exception e) {
             logger.info(e.getMessage(), e);
         }
