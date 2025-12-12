@@ -861,4 +861,22 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20251212 Convert topic on level 4 in specified subject to case" author="Gunnar Velle">
+        <sql>
+            UPDATE node n
+            SET node_type = 'CASE', public_id = 'urn:case:' || n.ident
+            WHERE n.id IN (
+                SELECT nc.child_id
+                FROM node_connection nc
+                JOIN node n1 ON nc.parent_id = n1.id
+                JOIN node_connection nc2 ON n1.id = nc2.child_id
+                JOIN node n2 ON nc2.parent_id = n2.id
+                JOIN node_connection nc3 ON n2.id = nc3.child_id
+                JOIN node n3 ON nc3.parent_id = n3.id
+                WHERE n3.public_id = 'urn:subject:d1fe9d0a-a54d-49db-a4c2-fd5463a7c9e7' AND n2.node_type = 'TOPIC' AND n1.node_type = 'TOPIC'
+                AND nc.connection_type = 'BRANCH' AND nc2.connection_type = 'BRANCH' AND nc3.connection_type = 'BRANCH'
+            );
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
