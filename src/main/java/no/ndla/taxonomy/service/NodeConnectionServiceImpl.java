@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(propagation = Propagation.MANDATORY)
 @Service
 public class NodeConnectionServiceImpl implements NodeConnectionService {
-
     private final NodeConnectionRepository nodeConnectionRepository;
     private final ContextUpdaterService contextUpdaterService;
     private final NodeRepository nodeRepository;
