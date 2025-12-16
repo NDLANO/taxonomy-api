@@ -5,7 +5,11 @@
 target
 *.backup
 .env
+.env.*
 .yarn/
+
+# Mill
+out/
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
