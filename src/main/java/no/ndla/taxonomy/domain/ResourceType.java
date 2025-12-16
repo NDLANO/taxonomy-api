@@ -13,7 +13,6 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.hibernate.annotations.Type;
-import org.jetbrains.annotations.NotNull;
 
 @Entity
 public class ResourceType extends DomainObject implements Comparable<ResourceType> {
@@ -88,7 +87,7 @@ public class ResourceType extends DomainObject implements Comparable<ResourceTyp
     }
 
     @Override
-    public int compareTo(@NotNull ResourceType o) {
+    public int compareTo(ResourceType o) {
         if (this.order == -1 || o.order == -1) {
             return this.getPublicId().compareTo(o.getPublicId());
         }
