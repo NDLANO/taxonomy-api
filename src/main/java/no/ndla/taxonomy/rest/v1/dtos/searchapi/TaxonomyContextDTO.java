@@ -48,13 +48,13 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "The publicId of the root parent of the context")
         URI rootId,
 
-        @JsonProperty @Schema(description = "The name of the root parent of the context", type = "object")
+        @JsonProperty @Schema(description = "The name of the root parent of the context", types = "object")
         LanguageFieldDTO<String> root,
 
         @JsonProperty @Schema(description = "The context path")
         String path,
 
-        @JsonProperty @Schema(description = "A breadcrumb of the names of the context's parents", type = "object")
+        @JsonProperty @Schema(description = "A breadcrumb of the names of the context's parents", types = "object")
         LanguageFieldDTO<List<String>> breadcrumbs,
 
         @JsonProperty @Schema(description = "Whether a 'standard'-article, 'topic-article'-article or a 'learningpath'")
@@ -63,7 +63,7 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "Id of the relevance of the parent connection")
         URI relevanceId,
 
-        @JsonProperty @Schema(description = "Name of the relevance of the parent connection", type = "object")
+        @JsonProperty @Schema(description = "Name of the relevance of the parent connection", types = "object")
         LanguageFieldDTO<String> relevance,
 
         @JsonProperty @Schema(description = "Resource-types of the node")

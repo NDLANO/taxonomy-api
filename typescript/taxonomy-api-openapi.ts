@@ -2198,10 +2198,6 @@ export type components = {
             /** Format: int32 */
             count: number;
         };
-        /** @description The name of the root parent of the context */
-        LanguageFieldString: {
-            [key: string]: string;
-        };
         Metadata: {
             customFields: {
                 [key: string]: string;
@@ -2513,7 +2509,7 @@ export type components = {
              * @example topic
              */
             nodeType: components["schemas"]["NodeType"];
-            /** @description The quality evaluation of the node. Consist of a score from 1 to 5 and a comment. */
+            /** @description The quality evaluation of the node. Consist of a score from 1 to 5 and a comment. Can be null to remove existing evaluation. */
             qualityEvaluation?: components["schemas"]["QualityEvaluationDTO"];
             /**
              * @deprecated
@@ -2751,13 +2747,12 @@ export type components = {
             /** @description A pretty url based on name and context. Empty if no context. */
             url?: string;
         };
-        /** @description The quality evaluation of the node. Consist of a score from 1 to 5 and a comment. */
         QualityEvaluationDTO: {
             /** @description The grade (1-5) of the article */
             grade: components["schemas"]["Grade"];
             /** @description Note explaining the score */
             note?: string;
-        } | null;
+        };
         Relevance: {
             /**
              * Format: uri
@@ -3165,7 +3160,9 @@ export type components = {
              */
             rank: number;
             /** @description Name of the relevance of the parent connection */
-            relevance: components["schemas"]["LanguageFieldString"];
+            relevance: {
+                [key: string]: string;
+            };
             /**
              * Format: uri
              * @description Id of the relevance of the parent connection
@@ -3194,7 +3191,9 @@ export type components = {
              */
             id: string;
             /** @description The name of the node */
-            name: components["schemas"]["LanguageFieldString"];
+            name: {
+                [key: string]: string;
+            };
             /** @description The context path */
             path: string;
             /** @description The context url */

@@ -63,7 +63,8 @@ public class NodePostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(
             implementation = QualityEvaluationDTO.class,
-            description = "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.",
+            description =
+                    "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment. Can be null to remove existing evaluation.",
             types = {"object", "null"})
     @JsonDeserialize(using = QualityEvaluationDTODeserializer.class)
     @JsonSerialize(using = QualityEvaluationDTOSerializer.class)
