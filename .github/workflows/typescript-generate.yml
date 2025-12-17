@@ -65,6 +65,7 @@ jobs:
           git config user.email "$KNOWIT_EMAIL"
           git config user.name "github-actions"
 
-          git add typescript/*
+          git add typescript/openapi.json 
+          git add typescript/*.ts
           git commit -m "AUTOMATION: Generated new typescript files"
           git push
