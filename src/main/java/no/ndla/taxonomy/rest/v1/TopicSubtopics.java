@@ -25,6 +25,7 @@ import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicDTO;
 import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicPOST;
 import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicPUT;
+import no.ndla.taxonomy.rest.v1.responses.Created201ApiResponse;
 import no.ndla.taxonomy.service.NodeConnectionService;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
@@ -100,6 +101,7 @@ public class TopicSubtopics {
     @Operation(
             summary = "Adds a subtopic to a topic",
             security = {@SecurityRequirement(name = "oauth")})
+    @Created201ApiResponse
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createTopicSubtopic(

@@ -19,6 +19,7 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.ContextDTO;
 import no.ndla.taxonomy.rest.v1.dtos.ContextPOST;
+import no.ndla.taxonomy.rest.v1.responses.Created201ApiResponse;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,6 +66,7 @@ public class Contexts {
             description =
                     "All subjects are already contexts and may not be added again. The node to register as context must exist already.",
             security = {@SecurityRequirement(name = "oauth")})
+    @Created201ApiResponse
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createContext(

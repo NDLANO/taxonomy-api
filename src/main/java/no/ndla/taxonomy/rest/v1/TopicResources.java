@@ -20,6 +20,7 @@ import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.TopicResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.TopicResourcePOST;
 import no.ndla.taxonomy.rest.v1.dtos.TopicResourcePUT;
+import no.ndla.taxonomy.rest.v1.responses.Created201ApiResponse;
 import no.ndla.taxonomy.service.NodeConnectionService;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
@@ -91,6 +92,7 @@ public class TopicResources {
     @Operation(
             summary = "Adds a resource to a topic",
             security = {@SecurityRequirement(name = "oauth")})
+    @Created201ApiResponse
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createTopicResource(

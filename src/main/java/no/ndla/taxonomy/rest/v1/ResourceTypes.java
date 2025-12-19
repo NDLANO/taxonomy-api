@@ -18,6 +18,7 @@ import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.ResourceTypeDTO;
 import no.ndla.taxonomy.rest.v1.dtos.ResourceTypePUT;
+import no.ndla.taxonomy.rest.v1.responses.Created201ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -67,6 +68,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @Operation(
             summary = "Adds a new resource type",
             security = {@SecurityRequirement(name = "oauth")})
+    @Created201ApiResponse
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createResourceType(

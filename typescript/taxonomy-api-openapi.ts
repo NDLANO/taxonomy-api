@@ -3621,9 +3621,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -3673,9 +3674,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -3741,9 +3743,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -3787,9 +3790,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -3984,9 +3988,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -4030,9 +4035,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -4262,9 +4268,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -4343,9 +4350,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -5331,9 +5339,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -5377,9 +5386,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -5475,9 +5485,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -5527,9 +5538,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -5832,9 +5844,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -5892,9 +5905,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -6070,9 +6084,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -6363,9 +6378,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -6409,9 +6425,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -6566,9 +6583,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -6624,9 +6642,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -7073,9 +7092,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -7119,9 +7139,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -7264,9 +7285,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -7310,9 +7332,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -7469,9 +7492,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -7529,9 +7553,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -8120,9 +8145,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -8180,9 +8206,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;

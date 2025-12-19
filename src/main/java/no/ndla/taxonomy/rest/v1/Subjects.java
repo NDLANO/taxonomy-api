@@ -20,6 +20,7 @@ import no.ndla.taxonomy.domain.NodeConnectionType;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.commands.SubjectPostPut;
+import no.ndla.taxonomy.rest.v1.responses.Created201ApiResponse;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.QualityEvaluationService;
@@ -165,6 +166,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Operation(
             summary = "Creates a new subject",
             security = {@SecurityRequirement(name = "oauth")})
+    @Created201ApiResponse
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createSubject(

@@ -23,6 +23,7 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
 import no.ndla.taxonomy.rest.v1.commands.NodeSearchBody;
+import no.ndla.taxonomy.rest.v1.responses.Created201ApiResponse;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.data.domain.PageRequest;
@@ -272,6 +273,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @Operation(
             summary = "Creates a new node",
             security = {@SecurityRequirement(name = "oauth")})
+    @Created201ApiResponse
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createNode(

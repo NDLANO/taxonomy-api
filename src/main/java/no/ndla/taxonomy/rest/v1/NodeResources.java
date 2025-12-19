@@ -20,6 +20,7 @@ import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePOST;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePUT;
+import no.ndla.taxonomy.rest.v1.responses.Created201ApiResponse;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
@@ -99,6 +100,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
             summary = "Adds a resource to a node",
             security = {@SecurityRequirement(name = "oauth")})
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Created201ApiResponse
     @Transactional
     public ResponseEntity<Void> createNodeResource(
             @Parameter(name = "connection", description = "new node/resource connection ") @RequestBody
