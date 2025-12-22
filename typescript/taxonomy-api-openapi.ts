@@ -2628,28 +2628,28 @@ export type components = {
                 [key: string]: string;
             };
             /** @description Filter out programme contexts */
-            filterProgrammes: boolean;
+            filterProgrammes?: boolean;
             /** @description Ids to fetch for query */
             ids?: string[];
             /** @description Include all contexts */
-            includeContexts: boolean;
+            includeContexts?: boolean;
             /**
              * @description ISO-639-1 language code
              * @example nb
              */
-            language: string;
+            language?: string;
             /** @description Filter by nodeType */
             nodeType?: components["schemas"]["NodeType"][];
             /**
              * Format: int32
              * @description Which page to fetch
              */
-            page: number;
+            page?: number;
             /**
              * Format: int32
              * @description How many results to return per page
              */
-            pageSize: number;
+            pageSize?: number;
             /**
              * Format: uri
              * @description Id to parent id in context.
