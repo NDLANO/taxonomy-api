@@ -2506,7 +2506,7 @@ export type components = {
              * @description The language used at create time. Used to set default translation.
              * @example nb
              */
-            language: string;
+            language?: string;
             /**
              * @description The name of the node. Required on create.
              * @example Trigonometry
@@ -2518,7 +2518,7 @@ export type components = {
              * @description Type of node.
              * @example topic
              */
-            nodeType: components["schemas"]["NodeType"];
+            nodeType?: components["schemas"]["NodeType"];
             /** @description The quality evaluation of the node. Consist of a score from 1 to 5 and a comment. Can be null to remove existing evaluation. */
             qualityEvaluation?: components["schemas"]["QualityEvaluationDTO"];
             /**
