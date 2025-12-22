@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
-import no.ndla.taxonomy.service.dtos.MetadataDTO;
+import no.ndla.taxonomy.rest.v1.dtos.MetadataPUT;
 
 public class Metadata implements Serializable {
     private Instant updatedAt;
@@ -46,18 +46,12 @@ public class Metadata implements Serializable {
         this.visible = metadata.isVisible();
     }
 
-    public Metadata mergeWith(MetadataDTO toMerge) {
-        if (toMerge.visible != null) {
-            setVisible(toMerge.visible);
-        }
+    public Metadata mergeWith(MetadataPUT toMerge) {
+        toMerge.visible.ifPresent(this::setVisible);
 
-        if (toMerge.grepCodes != null) {
-            setGrepCodes(toMerge.grepCodes);
-        }
+        toMerge.grepCodes.ifPresent(this::setGrepCodes);
 
-        if (toMerge.customFields != null) {
-            setCustomFields(toMerge.customFields);
-        }
+        toMerge.customFields.ifPresent(this::setCustomFields);
 
         return this;
     }

@@ -2205,6 +2205,16 @@ export type components = {
             grepCodes: string[];
             visible: boolean;
         };
+        MetadataPUT: {
+            /** @description Custom fields, Only updated if present */
+            customFields?: {
+                [key: string]: string;
+            };
+            /** @description Set of grep codes, Only updated if present */
+            grepCodes?: string[];
+            /** @description Visibility of the node, Only updated if present */
+            visible?: boolean;
+        };
         Node: {
             /**
              * @description The stored name of the node
@@ -3936,7 +3946,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Metadata"];
+                "application/json": components["schemas"]["MetadataPUT"];
             };
         };
         responses: {
@@ -4181,7 +4191,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Metadata"];
+                "application/json": components["schemas"]["MetadataPUT"];
             };
         };
         responses: {
@@ -4712,7 +4722,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Metadata"];
+                "application/json": components["schemas"]["MetadataPUT"];
             };
         };
         responses: {
@@ -6161,7 +6171,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Metadata"];
+                "application/json": components["schemas"]["MetadataPUT"];
             };
         };
         responses: {
@@ -6837,7 +6847,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Metadata"];
+                "application/json": components["schemas"]["MetadataPUT"];
             };
         };
         responses: {
@@ -7799,7 +7809,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Metadata"];
+                "application/json": components["schemas"]["MetadataPUT"];
             };
         };
         responses: {
