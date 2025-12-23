@@ -10,9 +10,10 @@ import millbuild.*
 object `package` extends SpringBootModule, MavenModule, PublishModule {
   def jvmId = "temurin:21"
   def javacOptions = super.javacOptions() ++ Seq("-parameters")
-  override def springBootPlatformVersion = "3.5.8"
+  override def springBootPlatformVersion = "3.5.9"
 
   def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.testcontainersPostgresql,
     Deps.springBootStarter,
     Deps.springBootStarterWeb,
     Deps.springBootStarterValidation,
@@ -47,16 +48,14 @@ object `package` extends SpringBootModule, MavenModule, PublishModule {
 
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.springBootStarterTest,
-      Deps.testcontainersJunitJupiter,
-      Deps.testcontainersPostgresql
+      Deps.testcontainersJunitJupiter
     )
   }
-
 
   def artifactName = "taxonomy-api"
 
   def pomParentProject = Some(
-    Artifact("org.springframework.boot", "spring-boot-starter-parent", "3.5.8")
+    Artifact("org.springframework.boot", "spring-boot-starter-parent", "3.5.9")
   )
 
   def pomSettings = PomSettings(

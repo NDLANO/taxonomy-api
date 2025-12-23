@@ -33,23 +33,23 @@ object Deps {
   val preliquibaseSpringBootStarter =
     mvn"net.lbruun.springboot:preliquibase-spring-boot-starter:1.6.1"
   val springBootConfigurationProcessor =
-    mvn"org.springframework.boot:spring-boot-configuration-processor:3.5.8"
+    mvn"org.springframework.boot:spring-boot-configuration-processor"
   val springBootDevtools =
-    mvn"org.springframework.boot:spring-boot-devtools:3.5.8"
+    mvn"org.springframework.boot:spring-boot-devtools"
   val springBootStarter =
-    mvn"org.springframework.boot:spring-boot-starter:3.5.8"
+    mvn"org.springframework.boot:spring-boot-starter"
   val springBootStarterActuator =
-    mvn"org.springframework.boot:spring-boot-starter-actuator:3.5.8"
+    mvn"org.springframework.boot:spring-boot-starter-actuator"
   val springBootStarterDataJpa =
-    mvn"org.springframework.boot:spring-boot-starter-data-jpa:3.5.8"
+    mvn"org.springframework.boot:spring-boot-starter-data-jpa"
   val springBootStarterSecurity =
-    mvn"org.springframework.boot:spring-boot-starter-security:3.5.8"
+    mvn"org.springframework.boot:spring-boot-starter-security"
   val springBootStarterValidation =
-    mvn"org.springframework.boot:spring-boot-starter-validation:3.5.8"
+    mvn"org.springframework.boot:spring-boot-starter-validation"
   val springBootStarterTest =
-    mvn"org.springframework.boot:spring-boot-starter-test:3.5.8"
+    mvn"org.springframework.boot:spring-boot-starter-test"
   val springBootStarterWeb =
-    mvn"org.springframework.boot:spring-boot-starter-web:3.5.8"
+    mvn"org.springframework.boot:spring-boot-starter-web"
   val springSecurityWeb =
     mvn"org.springframework.security:spring-security-web:6.5.7"
   val springdocOpenapiStarterWebmvcApi =
