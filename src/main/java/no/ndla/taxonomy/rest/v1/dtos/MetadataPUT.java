@@ -17,15 +17,15 @@ import java.util.Set;
 public class MetadataPUT {
     @JsonProperty
     @Schema(description = "Set of grep codes, Only updated if present")
-    public Optional<Set<String>> grepCodes;
+    public Optional<Set<String>> grepCodes = Optional.empty();
 
     @JsonProperty
     @Schema(description = "Visibility of the node, Only updated if present")
-    public Optional<Boolean> visible;
+    public Optional<Boolean> visible = Optional.empty();
 
     @JsonProperty
     @Schema(description = "Custom fields, Only updated if present")
-    public Optional<Map<String, String>> customFields;
+    public Optional<Map<String, String>> customFields = Optional.empty();
 
     public MetadataPUT() {}
 }
