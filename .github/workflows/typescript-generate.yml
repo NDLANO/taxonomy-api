@@ -55,7 +55,7 @@ jobs:
           --password-stdin
       - name: Generate typescript types
         run: |
-          mvn -P integration verify -Dtest=VersionServiceIntegrationTest
+          ./mill generateTypescript
           cd typescript/
           yarn
           yarn generate-typescript
@@ -65,7 +65,7 @@ jobs:
           git config user.email "$KNOWIT_EMAIL"
           git config user.name "github-actions"
 
-          git add typescript/openapi.json 
+          git add typescript/openapi.json
           git add typescript/*.ts
           git commit -m "AUTOMATION: Generated new typescript files"
           git push
