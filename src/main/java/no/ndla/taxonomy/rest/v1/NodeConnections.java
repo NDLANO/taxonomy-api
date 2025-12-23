@@ -25,6 +25,7 @@ import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionDTO;
 import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPOST;
 import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPUT;
+import no.ndla.taxonomy.rest.v1.responses.Created201ApiResponse;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
@@ -106,6 +107,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @Operation(
             summary = "Adds a node to a parent",
             security = {@SecurityRequirement(name = "oauth")})
+    @Created201ApiResponse
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createNodeConnection(

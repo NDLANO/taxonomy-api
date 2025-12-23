@@ -16,7 +16,7 @@ import java.util.Optional;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.NodeType;
 
-@Schema(requiredProperties = {"page", "pageSize", "language", "includeContexts", "filterProgrammes"})
+@Schema(name = "NodeSearchBody")
 public class NodeSearchBody {
     @JsonProperty
     @Schema(
@@ -58,7 +58,7 @@ public class NodeSearchBody {
 
     @Schema(description = "Filter out programme contexts")
     @JsonProperty
-    public boolean filterProgrammes;
+    public boolean filterProgrammes = false;
 
     @Schema(description = "Id to root id in context.")
     @JsonProperty

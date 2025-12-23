@@ -24,6 +24,7 @@ import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.SubjectTopicDTO;
 import no.ndla.taxonomy.rest.v1.dtos.SubjectTopicPOST;
 import no.ndla.taxonomy.rest.v1.dtos.SubjectTopicPUT;
+import no.ndla.taxonomy.rest.v1.responses.Created201ApiResponse;
 import no.ndla.taxonomy.service.NodeConnectionService;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
@@ -99,6 +100,7 @@ public class SubjectTopics {
     @Operation(
             summary = "Adds a new topic to a subject",
             security = {@SecurityRequirement(name = "oauth")})
+    @Created201ApiResponse
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createSubjectTopic(

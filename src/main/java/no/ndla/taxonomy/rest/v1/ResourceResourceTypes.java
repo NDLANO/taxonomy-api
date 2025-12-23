@@ -20,6 +20,7 @@ import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.ResourceResourceTypeDTO;
 import no.ndla.taxonomy.rest.v1.dtos.ResourceResourceTypePOST;
+import no.ndla.taxonomy.rest.v1.responses.Created201ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -47,6 +48,7 @@ public class ResourceResourceTypes {
     @Operation(
             summary = "Adds a resource type to a resource",
             security = {@SecurityRequirement(name = "oauth")})
+    @Created201ApiResponse
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createResourceResourceType(

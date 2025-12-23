@@ -18,6 +18,7 @@ import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.VersionPostPut;
+import no.ndla.taxonomy.rest.v1.responses.Created201ApiResponse;
 import no.ndla.taxonomy.service.VersionService;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
@@ -70,6 +71,7 @@ public class Versions extends CrudController<Version> {
     @Operation(
             summary = "Creates a new version",
             security = {@SecurityRequirement(name = "oauth")})
+    @Created201ApiResponse
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @Transactional
     public ResponseEntity<Void> createVersion(

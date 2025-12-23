@@ -2205,6 +2205,16 @@ export type components = {
             grepCodes: string[];
             visible: boolean;
         };
+        MetadataPUT: {
+            /** @description Custom fields, Only updated if present */
+            customFields?: {
+                [key: string]: string;
+            };
+            /** @description Set of grep codes, Only updated if present */
+            grepCodes?: string[];
+            /** @description Visibility of the node, Only updated if present */
+            visible?: boolean;
+        };
         Node: {
             /**
              * @description The stored name of the node
@@ -2496,7 +2506,7 @@ export type components = {
              * @description The language used at create time. Used to set default translation.
              * @example nb
              */
-            language: string;
+            language?: string;
             /**
              * @description The name of the node. Required on create.
              * @example Trigonometry
@@ -2508,7 +2518,7 @@ export type components = {
              * @description Type of node.
              * @example topic
              */
-            nodeType: components["schemas"]["NodeType"];
+            nodeType?: components["schemas"]["NodeType"];
             /** @description The quality evaluation of the node. Consist of a score from 1 to 5 and a comment. Can be null to remove existing evaluation. */
             qualityEvaluation?: components["schemas"]["QualityEvaluationDTO"];
             /**
@@ -2618,28 +2628,28 @@ export type components = {
                 [key: string]: string;
             };
             /** @description Filter out programme contexts */
-            filterProgrammes: boolean;
+            filterProgrammes?: boolean;
             /** @description Ids to fetch for query */
             ids?: string[];
             /** @description Include all contexts */
-            includeContexts: boolean;
+            includeContexts?: boolean;
             /**
              * @description ISO-639-1 language code
              * @example nb
              */
-            language: string;
+            language?: string;
             /** @description Filter by nodeType */
             nodeType?: components["schemas"]["NodeType"][];
             /**
              * Format: int32
              * @description Which page to fetch
              */
-            page: number;
+            page?: number;
             /**
              * Format: int32
              * @description How many results to return per page
              */
-            pageSize: number;
+            pageSize?: number;
             /**
              * Format: uri
              * @description Id to parent id in context.
@@ -3621,9 +3631,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -3673,9 +3684,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -3741,9 +3753,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -3787,9 +3800,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -3932,7 +3946,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Metadata"];
+                "application/json": components["schemas"]["MetadataPUT"];
             };
         };
         responses: {
@@ -3984,9 +3998,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -4030,9 +4045,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -4175,7 +4191,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Metadata"];
+                "application/json": components["schemas"]["MetadataPUT"];
             };
         };
         responses: {
@@ -4262,9 +4278,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -4343,9 +4360,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -4704,7 +4722,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Metadata"];
+                "application/json": components["schemas"]["MetadataPUT"];
             };
         };
         responses: {
@@ -5331,9 +5349,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -5377,9 +5396,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -5475,9 +5495,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -5527,9 +5548,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -5832,9 +5854,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -5892,9 +5915,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -6070,9 +6094,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -6146,7 +6171,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Metadata"];
+                "application/json": components["schemas"]["MetadataPUT"];
             };
         };
         responses: {
@@ -6363,9 +6388,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -6409,9 +6435,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -6566,9 +6593,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -6624,9 +6652,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -6818,7 +6847,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Metadata"];
+                "application/json": components["schemas"]["MetadataPUT"];
             };
         };
         responses: {
@@ -7073,9 +7102,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -7119,9 +7149,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -7264,9 +7295,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -7310,9 +7342,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -7469,9 +7502,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -7529,9 +7563,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -7774,7 +7809,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Metadata"];
+                "application/json": components["schemas"]["MetadataPUT"];
             };
         };
         responses: {
@@ -8120,9 +8155,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -8180,9 +8216,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content?: never;

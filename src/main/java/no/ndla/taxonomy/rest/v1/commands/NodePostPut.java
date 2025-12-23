@@ -21,7 +21,7 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.UpdatableDto;
 import no.ndla.taxonomy.service.dtos.QualityEvaluationDTO;
 
-@Schema(requiredProperties = {"nodeType", "language"})
+@Schema(name = "NodePostPut")
 public class NodePostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(

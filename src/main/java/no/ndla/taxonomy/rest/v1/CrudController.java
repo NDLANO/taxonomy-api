@@ -17,6 +17,7 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
+import no.ndla.taxonomy.rest.v1.responses.Created201ApiResponse;
 import no.ndla.taxonomy.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -127,6 +128,7 @@ public abstract class CrudController<T extends DomainEntity> {
     @Operation(
             summary = "Creates a single entity",
             security = {@SecurityRequirement(name = "oauth")})
+    @Created201ApiResponse
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     protected ResponseEntity<Void> createEntity(T entity, UpdatableDto<T> command) {

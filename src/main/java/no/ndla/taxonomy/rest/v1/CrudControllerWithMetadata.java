@@ -15,6 +15,7 @@ import no.ndla.taxonomy.domain.EntityWithMetadata;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
+import no.ndla.taxonomy.rest.v1.dtos.MetadataPUT;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.QualityEvaluationService;
@@ -53,7 +54,7 @@ public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends
             summary = "Updates metadata for entity",
             security = {@SecurityRequirement(name = "oauth")})
     @Transactional
-    public MetadataDTO putMetadata(@PathVariable("id") URI id, @RequestBody MetadataDTO entityToUpdate) {
+    public MetadataDTO putMetadata(@PathVariable("id") URI id, @RequestBody MetadataPUT entityToUpdate) {
         var entity = repository.findByPublicId(id);
         if (entity instanceof EntityWithMetadata em) {
             var result = em.getMetadata().mergeWith(entityToUpdate);
