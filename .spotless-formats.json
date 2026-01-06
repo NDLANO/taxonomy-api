@@ -1,0 +1,51 @@
+[
+  {
+    "includes": ["glob:build.mill"],
+    "steps": [
+      {
+        "$type": "ScalaFmt"
+      }
+    ]
+  },
+  {
+    "includes": ["glob:**.java"],
+    "steps": [
+      {
+        "$type": "PalantirJavaFormat",
+        "version": "2.81.0",
+        "style": "PALANTIR",
+        "formatJavadoc": false
+      },
+      {
+        "$type": "Indent",
+        "type": "SPACE",
+        "numSpacesPerTab": "4"
+      },
+      {
+        "$type": "LicenseHeader",
+        "delimiter": "package ",
+        "header": {
+          "file": "license-header"
+        }
+      },
+      {
+        "$type": "TrimTrailingWhitespace"
+      },
+      {
+        "$type": "EndWithNewline"
+      },
+      {
+        "$type": "CleanthatJava",
+        "version": "2.23",
+        "sourceJdkVersion": "21",
+        "includeDraft": false,
+        "mutators": [
+          "SafeAndConsensual",
+          "ArithmethicAssignment",
+          "ForEachToIterableForEach",
+          "LiteralsFirstInComparisons"
+        ]
+      }
+    ]
+  }
+]

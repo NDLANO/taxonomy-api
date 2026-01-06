@@ -5,11 +5,11 @@ package build
 import mill._
 import mill.javalib.*
 import mill.javalib.publish.*
+import mill.javalib.spotless.*
 import mill.javalib.spring.boot.SpringBootModule
 import millbuild.*
 
-
-object `package` extends SpringBootModule, MavenModule, PublishModule, TypescriptPlugin {
+object `package` extends MavenModule, SpringBootModule, SpotlessModule {
   def jvmId = "temurin:21"
   def javacOptions = super.javacOptions() ++ Seq("-parameters")
   override def springBootPlatformVersion = "3.5.9"
@@ -67,17 +67,6 @@ object `package` extends SpringBootModule, MavenModule, PublishModule, Typescrip
     Seq(),
     VersionControl(None, None, None, None),
     Seq()
-  )
-
-  def publishVersion = "0.0.1-SNAPSHOT"
-
-  def publishProperties = super.publishProperties() ++ Map(
-    ("project.build.sourceEncoding", "UTF-8"),
-    ("testcontainers.version", "2.0.2"),
-    ("spotless.version", "3.0.0"),
-    ("javamelody.version", "2.5.0"),
-    ("project.reporting.outputEncoding", "UTF-8"),
-    ("java.version", "21")
   )
 
   def mainClass = Some("no.ndla.taxonomy.TaxonomyApplication")
