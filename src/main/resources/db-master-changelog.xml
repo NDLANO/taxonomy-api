@@ -861,4 +861,11 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20260113 Delete unused resource types" author="Gunnar Velle">
+        <sql>
+            DELETE FROM resource_type
+            WHERE public_id IN ('urn:resourcetype:historicalMaterial', 'urn:resourcetype:literaryText', 'urn:resourcetype:filmClip');
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
