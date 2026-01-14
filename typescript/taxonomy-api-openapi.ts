@@ -2198,6 +2198,9 @@ export type components = {
             /** Format: int32 */
             count: number;
         };
+        LanguageFieldString: {
+            [key: string]: string;
+        };
         Metadata: {
             customFields: {
                 [key: string]: string;
@@ -3170,9 +3173,7 @@ export type components = {
              */
             rank: number;
             /** @description Name of the relevance of the parent connection */
-            relevance: {
-                [key: string]: string;
-            };
+            relevance: components["schemas"]["LanguageFieldString"];
             /**
              * Format: uri
              * @description Id of the relevance of the parent connection
@@ -3201,9 +3202,7 @@ export type components = {
              */
             id: string;
             /** @description The name of the node */
-            name: {
-                [key: string]: string;
-            };
+            name: components["schemas"]["LanguageFieldString"];
             /** @description The context path */
             path: string;
             /** @description The context url */

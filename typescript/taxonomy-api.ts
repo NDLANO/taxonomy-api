@@ -8,6 +8,7 @@ export type Context = schemas["Context"];
 export type ContextPOST = schemas["ContextPOST"];
 export type Grade = schemas["Grade"];
 export type GradeAverage = schemas["GradeAverage"];
+export type LanguageFieldString = schemas["LanguageFieldString"];
 export type Metadata = schemas["Metadata"];
 export type MetadataPUT = schemas["MetadataPUT"];
 export type Node = schemas["Node"];
