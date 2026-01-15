@@ -147,7 +147,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Optional<GradeAverage> getChildQualityEvaluationAverage() {
-        if (this.childQualityEvaluationSum == 0) {
+        if (this.childQualityEvaluationCount == 0 || this.childQualityEvaluationSum == 0) {
             return Optional.empty();
         }
         var gradeAverage = new GradeAverage(this.childQualityEvaluationSum, this.childQualityEvaluationCount);
@@ -192,7 +192,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
         var newSum = totalSum - sumToRemove;
         var newCount = childAvg.get().getCount() - previousGradeAverage.getCount();
 
-        if (newCount == 0) {
+        if (newCount <= 0 || newSum <= 0) {
             this.childQualityEvaluationSum = 0;
             this.childQualityEvaluationCount = 0;
         } else {
@@ -222,8 +222,13 @@ public class Node extends DomainObject implements EntityWithMetadata {
             var newCount = avg.getCount() - 1;
             var oldSum = avg.getAverageSum();
             var newSum = oldSum - previousGrade.get().toInt();
-            this.childQualityEvaluationCount = newCount;
-            this.childQualityEvaluationSum = newSum;
+            if (newCount <= 0 || newSum <= 0) {
+                this.childQualityEvaluationCount = 0;
+                this.childQualityEvaluationSum = 0;
+            } else {
+                this.childQualityEvaluationCount = newCount;
+                this.childQualityEvaluationSum = newSum;
+            }
         } else { // Both grades are present
             var oldSum = avg.getAverageSum();
             var newSum = oldSum - previousGrade.get().toInt() + newGrade.get().toInt();

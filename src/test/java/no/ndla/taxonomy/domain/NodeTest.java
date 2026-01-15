@@ -9,6 +9,8 @@ package no.ndla.taxonomy.domain;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.getField;
+import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 import jakarta.transaction.Transactional;
 import java.net.URI;
@@ -543,5 +545,62 @@ public class NodeTest extends AbstractIntegrationTest {
 
         parent.updateChildQualityEvaluationAverage(Optional.of(Grade.Four), Optional.empty());
         testAverageAndCount(parent, 5, 2);
+    }
+
+    @Test
+    public void removing_last_grade_does_not_leave_negative_sum() {
+        var parent = builder.node(n -> n.nodeType(NodeType.SUBJECT));
+        setField(parent, "childQualityEvaluationSum", 1);
+        setField(parent, "childQualityEvaluationCount", 1);
+
+        parent.updateChildQualityEvaluationAverage(Optional.of(Grade.Two), Optional.empty());
+
+        assertEquals(0, getField(parent, "childQualityEvaluationSum"));
+        assertEquals(0, getField(parent, "childQualityEvaluationCount"));
+    }
+
+    @Test
+    public void average_is_missing_when_count_is_zero_even_if_sum_is_nonzero() {
+        var parent = builder.node(n -> n.nodeType(NodeType.SUBJECT));
+        setField(parent, "childQualityEvaluationSum", -2);
+        setField(parent, "childQualityEvaluationCount", 0);
+
+        assertTrue(parent.getChildQualityEvaluationAverage().isEmpty());
+    }
+
+    @Test
+    public void removing_more_than_exists_resets_average_to_zero() {
+        var parent = builder.node(n -> n.nodeType(NodeType.SUBJECT));
+        setField(parent, "childQualityEvaluationSum", 5);
+        setField(parent, "childQualityEvaluationCount", 1);
+
+        parent.removeGradeAverageTreeFromAverageCalculation(new GradeAverage(5, 2));
+
+        assertEquals(0, getField(parent, "childQualityEvaluationSum"));
+        assertEquals(0, getField(parent, "childQualityEvaluationCount"));
+    }
+
+    @Test
+    public void removing_grade_with_positive_count_but_nonpositive_sum_resets_average() {
+        var parent = builder.node(n -> n.nodeType(NodeType.SUBJECT));
+        setField(parent, "childQualityEvaluationSum", 1);
+        setField(parent, "childQualityEvaluationCount", 2);
+
+        parent.updateChildQualityEvaluationAverage(Optional.of(Grade.Two), Optional.empty());
+
+        assertEquals(0, getField(parent, "childQualityEvaluationSum"));
+        assertEquals(0, getField(parent, "childQualityEvaluationCount"));
+    }
+
+    @Test
+    public void removing_average_tree_with_positive_count_but_nonpositive_sum_resets_average() {
+        var parent = builder.node(n -> n.nodeType(NodeType.SUBJECT));
+        setField(parent, "childQualityEvaluationSum", 1);
+        setField(parent, "childQualityEvaluationCount", 2);
+
+        parent.removeGradeAverageTreeFromAverageCalculation(new GradeAverage(2, 1));
+
+        assertEquals(0, getField(parent, "childQualityEvaluationSum"));
+        assertEquals(0, getField(parent, "childQualityEvaluationCount"));
     }
 }

@@ -309,6 +309,11 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     }
 
     @Override
+    public void disconnectAllParents(Node entity) {
+        Set.copyOf(entity.getParentConnections()).forEach(this::disconnectParentChildConnection);
+    }
+
+    @Override
     public void disconnectAllChildren(Node entity) {
         Set.copyOf(entity.getChildConnections()).forEach(this::disconnectParentChildConnection);
     }

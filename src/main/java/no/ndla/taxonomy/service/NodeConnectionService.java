@@ -27,6 +27,8 @@ public interface NodeConnectionService {
 
     void disconnectAllParents(URI nodeId);
 
+    void disconnectAllParents(Node entity);
+
     void updateParentChild(
             NodeConnection nodeConnection, Relevance relevance, Optional<Integer> newRank, Optional<Boolean> isPrimary);
 

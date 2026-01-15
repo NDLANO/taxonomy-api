@@ -60,6 +60,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         nodeService.delete(topicId);
 
         assertFalse(nodeRepository.findFirstByPublicId(topicId).isPresent());
+        verify(nodeConnectionService).disconnectAllParents(createdTopic);
         verify(nodeConnectionService).disconnectAllChildren(createdTopic);
     }
 
