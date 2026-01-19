@@ -1182,6 +1182,29 @@ public class NodesTest extends RestTest {
     }
 
     @Test
+    public void deleting_resource_updates_parent_quality_evaluation_average() throws Exception {
+        var subjectId = "urn:subject:1";
+        var topicId = "urn:topic:1";
+        var resourceId = "urn:resource:1";
+        builder.node(NodeType.SUBJECT, n -> n.name("S1").publicId(subjectId).child(NodeType.TOPIC, c -> c.name("T1")
+                .publicId(topicId)
+                .child(NodeType.RESOURCE, rc -> rc.name("R1").publicId(resourceId))));
+
+        testUtils.updateResourceRawInput("/v1/nodes/" + resourceId, "{\"qualityEvaluation\": {\"grade\": 2}}");
+        var dbTopic = nodeRepository.getByPublicId(URI.create(topicId));
+        var dbSubject = nodeRepository.getByPublicId(URI.create(subjectId));
+        assertTrue(dbTopic.getChildQualityEvaluationAverage().isPresent());
+        assertTrue(dbSubject.getChildQualityEvaluationAverage().isPresent());
+
+        testUtils.deleteResource("/v1/nodes/" + resourceId);
+
+        var dbTopicAfter = nodeRepository.getByPublicId(URI.create(topicId));
+        var dbSubjectAfter = nodeRepository.getByPublicId(URI.create(subjectId));
+        assertTrue(dbTopicAfter.getChildQualityEvaluationAverage().isEmpty());
+        assertTrue(dbSubjectAfter.getChildQualityEvaluationAverage().isEmpty());
+    }
+
+    @Test
     public void update_and_clone_topic_resource_and_quality_evaluation_matches() throws Exception {
         // Create structure with resources and quality evaluation
         var parent = builder.node(NodeType.SUBJECT, s1 -> s1.name("S1")

@@ -67,6 +67,7 @@ public class NodeService {
                 .findFirstByPublicId(publicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
 
+        connectionService.disconnectAllParents(nodeToDelete);
         connectionService.disconnectAllChildren(nodeToDelete);
 
         nodeRepository.delete(nodeToDelete);
