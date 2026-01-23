@@ -2909,6 +2909,12 @@ export type components = {
              * @example Lecture
              */
             name: string;
+            /**
+             * Format: int32
+             * @description Sort order of the resource type
+             * @example 1
+             */
+            order?: number;
             /** @description Sub resource types */
             subtypes?: components["schemas"]["ResourceType"][];
             /** @description List of language codes supported by translations */
