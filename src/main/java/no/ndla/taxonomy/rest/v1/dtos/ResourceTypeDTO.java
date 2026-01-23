@@ -43,6 +43,10 @@ public class ResourceTypeDTO {
     @Schema(description = "List of language codes supported by translations")
     private Set<String> supportedLanguages;
 
+    @JsonProperty
+    @Schema(description = "Sort order of the resource type", example = "1")
+    public int order;
+
     public ResourceTypeDTO() {}
 
     public ResourceTypeDTO(ResourceType resourceType, String language, int recursionLevels) {
@@ -54,6 +58,7 @@ public class ResourceTypeDTO {
                 this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
 
         this.name = resourceType.getTranslatedName(language);
+        this.order = resourceType.getOrder();
 
         if (recursionLevels > 0 && !resourceType.getSubtypes().isEmpty()) {
             this.subtypes = Optional.of(resourceType.getSubtypes().stream()
