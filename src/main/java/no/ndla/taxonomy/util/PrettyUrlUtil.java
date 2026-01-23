@@ -91,6 +91,6 @@ public class PrettyUrlUtil {
         if (!title.contains("/r/") && !title.contains("/e/") && !title.contains("/f/")) {
             return "";
         }
-        return title.substring(title.lastIndexOf("/") + 1);
+        return title.substring(title.lastIndexOf('/') + 1);
     }
 }

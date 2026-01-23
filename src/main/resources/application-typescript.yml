@@ -2,7 +2,7 @@ server.port: 5000
 
 spring:
   datasource:
-    url: jdbc:tc:postgresql:17.5:///taxonomy_api
+    url: jdbc:tc:postgresql:17.5:///public
     username: test
     password: test
     hikari:

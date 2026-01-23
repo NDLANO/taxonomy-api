@@ -24,5 +24,5 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      - name: Build with maven
-        run: mvn --batch-mode --update-snapshots -P integration verify
+      - name: Build with mill
+        run: ./mill test
