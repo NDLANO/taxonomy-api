@@ -1,6 +1,0 @@
-CALL restart_docker.cmd
-SET SPRING_DATASOURCE_URL=jdbc:postgresql://127.0.0.1:5432/postgres
-SET SPRING_DATASOURCE_PASSWORD=
-SET SPRING_DATASOURCE_USERNAME=postgres
-SET EMBEDDED=false
-mvn clean install
