@@ -4,8 +4,6 @@
 
 Rest service and relational database for organizing content.
 
-Are you a developer? Go [here](projectBuild.md) for project build documentation.
-
 ## What does this service do?
 
 This API is for organising and categorising the content provided by NDLA. At the heart of the structure are the *resources*, which
