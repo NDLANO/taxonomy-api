@@ -43,4 +43,4 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 COPY --from=builder /app/target/taxonomy-service.jar /app/out.jar
 ENV SPRING_PROFILES_ACTIVE=""
 ENV SPRING_PROFILES_ACTIVE="docker${SPRING_PROFILES_ACTIVE:+,$SPRING_PROFILES_ACTIVE}"
-ENTRYPOINT ["sh", "-c", "exec java -jar /app/out.jar $JAVA_OPTS"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/out.jar"]
