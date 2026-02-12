@@ -21,27 +21,17 @@ jobs:
     name: Generate typescript types
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.CI_GITHUB_TOKEN }}
-      - uses: coursier/cache-action@v6
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ vars.JAVA_VERSION }}
+      - uses: coursier/cache-action@v8
+      - uses: jdx/mise-action@v3
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22.15.0"
-      - name: Enable yarn v4
-        run: |
-          corepack enable
-          yarn set version 4.10.3
       - name: Login to ECR repo
         run:
           RES=$(aws sts assume-role --role-arn $CI_RELEASE_ROLE --role-session-name
@@ -55,6 +45,7 @@ jobs:
           --password-stdin
       - name: Generate typescript types
         run: |
+          corepack enable
           mvn -P integration verify -Dtest=VersionServiceIntegrationTest
           cd typescript/
           yarn
