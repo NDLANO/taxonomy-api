@@ -9,10 +9,6 @@
 import fs from "node:fs";
 import openapiTS, { astToString } from "openapi-typescript";
 
-if (process.argv.length !== 2) {
-  throw new Error("Invalid use");
-}
-
 async function generate_types() {
   const jsonFile = `./openapi.json`;
   console.log(`Parsing ${jsonFile} to generate typescript files...`);
@@ -25,7 +21,6 @@ async function generate_types() {
     rootTypes: true,
     rootTypesKeepCasing: true,
     rootTypesNoSchemaPrefix: true,
-    makePathsEnum: true,
   });
 
   const outputPath = `./taxonomy-api.ts`;
@@ -37,4 +32,4 @@ async function generate_types() {
   fs.writeFileSync(outputPath, output);
 }
 
-generate_types(process.argv[2]);
+generate_types();
