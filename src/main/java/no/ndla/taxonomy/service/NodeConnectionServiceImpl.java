@@ -104,7 +104,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
             if (connectionType == NodeConnectionType.BRANCH && child.getNodeType() == NodeType.TOPIC)
                 throw new DuplicateConnectionException();
 
-            var alreadyConnected = parent.getResourceChildren().stream()
+            var alreadyConnected = parent.getChildConnections().stream()
                     .anyMatch(connection -> connection.getChild().orElse(null) == child
                             && connection.getConnectionType() == connectionType);
 
