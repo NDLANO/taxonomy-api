@@ -147,7 +147,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         }
 
         var newConnection = createConnection(parent, child, relevance, rank, isPrimary, connectionType);
-        qualityEvaluationService.updateQualityEvaluationOfNewConnection(parent, child);
+        qualityEvaluationService.updateQualityEvaluationOfNewConnection(newConnection);
         draftApiClient.updateNotesWithNewConnection(newConnection);
         return nodeConnectionRepository.saveAndFlush(newConnection);
     }

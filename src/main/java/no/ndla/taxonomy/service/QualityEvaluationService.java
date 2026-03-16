@@ -44,10 +44,21 @@ public class QualityEvaluationService {
 
         var newGrade = nodeCommand.qualityEvaluation.getValue().map(QualityEvaluationDTO::getGrade);
 
-        updateQualityEvaluationOfParents(node.getNodeType(), node.getParentNodes(), oldGrade, newGrade);
+        updateQualityEvaluationOfParents(
+                node.getNodeType(), node.getParentNodesForQualityEvaluation(), oldGrade, newGrade);
     }
 
-    public void updateQualityEvaluationOfNewConnection(Node parent, Node child) {
+    public void updateQualityEvaluationOfNewConnection(NodeConnection connection) {
+        if (connection.getConnectionType() == NodeConnectionType.LINK) {
+            return;
+        }
+
+        var parent = connection.getParent().orElse(null);
+        var child = connection.getChild().orElse(null);
+        if (parent == null || child == null) {
+            return;
+        }
+
         // Update parents quality evaluation average with the newly linked one.
         updateQualityEvaluationOfParents(
                 child.getNodeType(), List.of(parent), Optional.empty(), child.getQualityEvaluationGrade());
@@ -59,15 +70,18 @@ public class QualityEvaluationService {
 
     private void addGradeAverageTreeToParents(Node node, GradeAverage averageToAdd) {
         node.addGradeAverageTreeToAverageCalculation(averageToAdd);
-        node.getParentNodes().forEach(parent -> addGradeAverageTreeToParents(parent, averageToAdd));
+        node.getParentNodesForQualityEvaluation().forEach(parent -> addGradeAverageTreeToParents(parent, averageToAdd));
     }
 
     private void removeGradeAverageTreeFromParents(Node node, GradeAverage averageToRemove) {
         node.removeGradeAverageTreeFromAverageCalculation(averageToRemove);
-        node.getParentNodes().forEach(parent -> removeGradeAverageTreeFromParents(parent, averageToRemove));
+        node.getParentNodesForQualityEvaluation()
+                .forEach(parent -> removeGradeAverageTreeFromParents(parent, averageToRemove));
     }
 
     public void removeQualityEvaluationOfDeletedConnection(NodeConnection connectionToDelete) {
+        if (connectionToDelete.getConnectionType() == NodeConnectionType.LINK) return;
+
         var noChild = connectionToDelete.getChild().isEmpty();
         var noParent = connectionToDelete.getParent().isEmpty();
         if (noChild || noParent) return;
@@ -106,7 +120,7 @@ public class QualityEvaluationService {
         var updatedParents = parents.stream()
                 .peek(p -> {
                     p.updateChildQualityEvaluationAverage(oldGrade, newGrade);
-                    var parentsParents = p.getParentNodes();
+                    var parentsParents = p.getParentNodesForQualityEvaluation();
                     updateQualityEvaluationOfRecursive(parentsParents, oldGrade, newGrade);
                 })
                 .toList();
@@ -128,6 +142,9 @@ public class QualityEvaluationService {
         nodeRepository.wipeQualityEvaluationAverages();
         var nodeStream = nodeRepository.findNodesWithQualityEvaluation();
         nodeStream.forEach(node -> updateQualityEvaluationOfParents(
-                node.getNodeType(), node.getParentNodes(), Optional.empty(), node.getQualityEvaluationGrade()));
+                node.getNodeType(),
+                node.getParentNodesForQualityEvaluation(),
+                Optional.empty(),
+                node.getQualityEvaluationGrade()));
     }
 }

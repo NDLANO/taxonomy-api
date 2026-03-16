@@ -256,7 +256,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public List<Optional<Grade>> getChildGradesRecursively() {
-        var children = getChildNodes();
+        var children = getChildNodesForQualityEvaluation();
         return children.stream()
                 .flatMap(child -> {
                     ArrayList<Optional<Grade>> childGrades = new ArrayList<>(child.getChildGradesRecursively());
@@ -490,8 +490,26 @@ public class Node extends DomainObject implements EntityWithMetadata {
                 .toList();
     }
 
+    public Collection<Node> getChildNodesForQualityEvaluation() {
+        return childConnections.stream()
+                .filter(connection -> connection.getConnectionType() != NodeConnectionType.LINK)
+                .map(NodeConnection::getChild)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .toList();
+    }
+
     public Collection<Node> getParentNodes() {
         return parentConnections.stream()
+                .map(NodeConnection::getParent)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .toList();
+    }
+
+    public Collection<Node> getParentNodesForQualityEvaluation() {
+        return parentConnections.stream()
+                .filter(connection -> connection.getConnectionType() != NodeConnectionType.LINK)
                 .map(NodeConnection::getParent)
                 .filter(Optional::isPresent)
                 .map(Optional::get)

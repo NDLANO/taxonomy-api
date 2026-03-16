@@ -521,6 +521,26 @@ public class NodeTest extends AbstractIntegrationTest {
         assertEquals(5, avg.getCount());
     }
 
+    @Test
+    public void qualityEvaluationAverageIgnoresLinkChildren() {
+        var linkedTopic = builder.node(NodeType.TOPIC, topic -> topic.name("Linked topic")
+                .child(NodeType.RESOURCE, resource -> resource.name("Linked resource")
+                        .qualityEvaluation(Grade.One)));
+
+        var parentNode = builder.node(NodeType.SUBJECT, subject -> subject.name("S1")
+                .child(NodeType.TOPIC, topic -> topic.name("Branch topic")
+                        .child(NodeType.RESOURCE, resource -> resource.name("Branch resource")
+                                .qualityEvaluation(Grade.Four)))
+                .link(linkedTopic));
+
+        parentNode.updateEntireAverageTree();
+
+        assertTrue(parentNode.getChildQualityEvaluationAverage().isPresent());
+        var avg = parentNode.getChildQualityEvaluationAverage().get();
+        assertEquals(4, avg.getAverageValue());
+        assertEquals(1, avg.getCount());
+    }
+
     public void testAverageAndCount(Node node, double expectedAverage, int expectedCount) {
         assertTrue(node.getChildQualityEvaluationAverage().isPresent());
         var avg = node.getChildQualityEvaluationAverage().get();
