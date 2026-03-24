@@ -114,6 +114,10 @@ public class NodeDTO {
     @Schema(description = "A number representing the average grade of all children nodes recursively.")
     private Optional<GradeAverageDTO> gradeAverage = Optional.empty();
 
+    @JsonProperty
+    @Schema(description = "The technical evaluation of the node.")
+    private Optional<TechnicalEvaluationDTO> technicalEvaluation = Optional.empty();
+
     public NodeDTO() {}
 
     public NodeDTO(
@@ -137,6 +141,7 @@ public class NodeDTO {
 
         this.qualityEvaluation = QualityEvaluationDTO.fromNode(entity);
         this.gradeAverage = GradeAverageDTO.fromNode(entity);
+        this.technicalEvaluation = TechnicalEvaluationDTO.fromNode(entity);
         this.id = entity.getPublicId();
         this.contentUri = Optional.ofNullable(entity.getContentUri());
 
@@ -321,5 +326,9 @@ public class NodeDTO {
 
     public String getLanguage() {
         return language;
+    }
+
+    public Optional<TechnicalEvaluationDTO> getTechnicalEvaluation() {
+        return technicalEvaluation;
     }
 }
