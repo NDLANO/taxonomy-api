@@ -89,6 +89,7 @@ public class QualityEvaluationService {
 
         // Lock the parent tree once upfront to avoid double lock+refresh discarding changes.
         var allNodes = lockParentTree(List.of(parent));
+        lockAndRefresh(child);
 
         // Update parents quality evaluation average with the newly linked one.
         updateQualityEvaluationOfParents(
