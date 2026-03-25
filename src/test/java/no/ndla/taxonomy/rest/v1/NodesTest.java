@@ -1866,21 +1866,23 @@ public class NodesTest extends RestTest {
     }
 
     @Test
-    public void can_update_requires_technical_evaluation() throws Exception {
+    public void that_updating_requires_technical_evaluation_to_false_removes_comment() throws Exception {
         var node = builder.node(NodeType.TOPIC);
         var publicId = node.getPublicId();
 
         testUtils.updateResourceRawInput(
                 "/v1/nodes/" + publicId,
-                "{\"nodeType\":\"TOPIC\",\"technicalEvaluation\": {\"requiresEvaluation\": true}}");
+                "{\"nodeType\":\"TOPIC\",\"technicalEvaluation\": {\"requiresEvaluation\": true, \"comment\": \"Needs review\"}}");
         var found = nodeRepository.getByPublicId(publicId);
         assertTrue(found.requiresTechnicalEvaluation());
+        assertEquals("Needs review", found.getTechnicalEvaluationComment().orElseThrow());
 
         testUtils.updateResourceRawInput(
                 "/v1/nodes/" + publicId,
                 "{\"nodeType\":\"TOPIC\",\"technicalEvaluation\": {\"requiresEvaluation\": false}}");
         var found2 = nodeRepository.getByPublicId(publicId);
         assertFalse(found2.requiresTechnicalEvaluation());
+        assertTrue(found2.getTechnicalEvaluationComment().isEmpty());
     }
 
     @Test
@@ -1912,7 +1914,7 @@ public class NodesTest extends RestTest {
         var nodeDTO = testUtils.getObject(NodeDTO.class, response);
         assertTrue(nodeDTO.getTechnicalEvaluation()
                 .map(TechnicalEvaluationDTO::requiresEvaluation)
-                .orElse(false));
+                .orElseThrow());
     }
 
     @Test
@@ -1933,12 +1935,13 @@ public class NodesTest extends RestTest {
         command.nodeType = NodeType.TOPIC;
         command.name = Optional.of("Test topic");
         command.technicalEvaluation =
-                UpdateOrDelete.Update(new TechnicalEvaluationDTO(false, Optional.of("Needs review")));
+                UpdateOrDelete.Update(new TechnicalEvaluationDTO(true, Optional.of("Needs review")));
 
         var response = testUtils.createResource("/v1/nodes", command);
         var id = getId(response);
 
         var node = nodeRepository.getByPublicId(id);
+        assertTrue(node.requiresTechnicalEvaluation());
         assertEquals("Needs review", node.getTechnicalEvaluationComment().orElseThrow());
     }
 
@@ -1949,22 +1952,17 @@ public class NodesTest extends RestTest {
 
         testUtils.updateResourceRawInput(
                 "/v1/nodes/" + publicId,
-                "{\"nodeType\":\"TOPIC\",\"technicalEvaluation\": {\"comment\": \"Needs review\"}}");
+                "{\"nodeType\":\"TOPIC\",\"technicalEvaluation\": {\"requiresEvaluation\": true}}");
         var found = nodeRepository.getByPublicId(publicId);
-        assertEquals("Needs review", found.getTechnicalEvaluationComment().orElseThrow());
-    }
-
-    @Test
-    public void technical_evaluation_comment_persists_when_field_omitted_in_update() throws Exception {
-        var node = builder.node(NodeType.TOPIC);
-        var publicId = node.getPublicId();
+        assertTrue(found.requiresTechnicalEvaluation());
+        assertTrue(found.getTechnicalEvaluationComment().isEmpty());
 
         testUtils.updateResourceRawInput(
                 "/v1/nodes/" + publicId,
-                "{\"nodeType\":\"TOPIC\",\"technicalEvaluation\": {\"comment\": \"Needs review\"}}");
-        testUtils.updateResourceRawInput("/v1/nodes/" + publicId, "{\"nodeType\":\"TOPIC\",\"name\":\"some-name\"}");
-        var found = nodeRepository.getByPublicId(publicId);
-        assertEquals("Needs review", found.getTechnicalEvaluationComment().orElseThrow());
+                "{\"nodeType\":\"TOPIC\",\"technicalEvaluation\": {\"requiresEvaluation\": true, \"comment\": \"Needs review\"}}");
+        var found2 = nodeRepository.getByPublicId(publicId);
+        assertTrue(found2.requiresTechnicalEvaluation());
+        assertEquals("Needs review", found2.getTechnicalEvaluationComment().orElseThrow());
     }
 
     @Test
@@ -1974,7 +1972,7 @@ public class NodesTest extends RestTest {
 
         testUtils.updateResourceRawInput(
                 "/v1/nodes/" + publicId,
-                "{\"nodeType\":\"TOPIC\",\"technicalEvaluation\": {\"comment\": \"Needs review\"}}");
+                "{\"nodeType\":\"TOPIC\",\"technicalEvaluation\": {\"requiresEvaluation\": true, \"comment\": \"Needs review\"}}");
 
         var response = testUtils.getResource("/v1/nodes/" + publicId);
         var nodeDTO = testUtils.getObject(NodeDTO.class, response);
