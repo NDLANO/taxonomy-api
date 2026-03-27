@@ -13,8 +13,10 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
+import no.ndla.taxonomy.util.PrettyUrlUtil;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -745,5 +747,21 @@ public class Node extends DomainObject implements EntityWithMetadata {
     @Override
     public void setTranslations(List<JsonTranslation> translations) {
         this.translations = translations;
+    }
+
+    public Set<String> translatedPrettyNames() {
+        var pretties = this.translations.stream()
+                .map(JsonTranslation::getName)
+                .filter(Objects::nonNull)
+                .map(PrettyUrlUtil::prettyName)
+                .collect(Collectors.toSet());
+        getPrettyName().ifPresent(pretties::add);
+        return pretties;
+    }
+
+    public Optional<String> getPrettyName() {
+        var defaultTranslation = this.getTranslatedName(Constants.DefaultLanguage);
+        var name = Optional.ofNullable(defaultTranslation);
+        return name.map(PrettyUrlUtil::prettyName);
     }
 }

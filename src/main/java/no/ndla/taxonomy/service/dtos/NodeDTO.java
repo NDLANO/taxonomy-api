@@ -92,6 +92,10 @@ public class NodeDTO {
     private Optional<String> url = Optional.empty();
 
     @JsonProperty
+    @Schema(description = "A pretty url based on the name and context in the default language.")
+    private Optional<String> defaultUrl = Optional.empty();
+
+    @JsonProperty
     @Schema(description = "A list of all contexts this node is part of")
     private List<TaxonomyContextDTO> contexts = new ArrayList<>();
 
@@ -117,6 +121,14 @@ public class NodeDTO {
     @JsonProperty
     @Schema(description = "The technical evaluation of the node.")
     private Optional<TechnicalEvaluationDTO> technicalEvaluation = Optional.empty();
+
+    @JsonProperty
+    @Schema(description = "Url safe names for the node.")
+    private Set<String> urlName = new TreeSet<>();
+
+    @JsonProperty
+    @Schema(description = "Url safe name for the node in the default language.")
+    private String defaultUrlName;
 
     public NodeDTO() {}
 
@@ -154,6 +166,9 @@ public class NodeDTO {
         this.supportedLanguages =
                 this.translations.stream().map(t -> t.language).collect(Collectors.toCollection(TreeSet::new));
 
+        this.urlName = entity.translatedPrettyNames();
+        this.defaultUrlName = entity.getPrettyName().orElse(null);
+
         this.language = languageCode; // TODO: Must handle programmes and subject better
         // this.language = supportedLanguages.contains(languageCode)
         //        ? languageCode
@@ -189,6 +204,7 @@ public class NodeDTO {
             this.relevanceId = Optional.of(contextDto.relevanceId());
             this.contextId = Optional.of(contextDto.contextId());
             this.url = Optional.of(contextDto.url());
+            this.defaultUrl = Optional.of(contextDto.defaultUrl());
             this.context = Optional.of(contextDto);
         });
 
@@ -227,6 +243,22 @@ public class NodeDTO {
                 .filter(Objects::nonNull)
                 .toList();
         var relevance = Relevance.unsafeGetRelevance(URI.create(ctx.relevanceId()));
+        var url = PrettyUrlUtil.createPrettyUrl(
+                        Optional.of(ctx.rootName()),
+                        LanguageField.fromNode(entity),
+                        this.language,
+                        ctx.contextId(),
+                        entity.getNodeType())
+                .orElse(ctx.path());
+
+        var defaultUrl = PrettyUrlUtil.createPrettyUrl(
+                        Optional.of(ctx.rootName()),
+                        LanguageField.fromNode(entity),
+                        Constants.DefaultLanguage,
+                        ctx.contextId(),
+                        entity.getNodeType())
+                .orElse(ctx.path());
+
         return new TaxonomyContextDTO(
                 entity.getPublicId(),
                 entity.getPublicId(),
@@ -254,13 +286,8 @@ public class NodeDTO {
                 ctx.contextId(),
                 ctx.rank(),
                 ctx.connectionId(),
-                PrettyUrlUtil.createPrettyUrl(
-                                Optional.of(ctx.rootName()),
-                                LanguageField.fromNode(entity),
-                                this.language,
-                                ctx.contextId(),
-                                entity.getNodeType())
-                        .orElse(ctx.path()),
+                url,
+                defaultUrl,
                 parents);
     }
 

@@ -42,6 +42,12 @@ public class PrettyUrlUtil {
         return Optional.of(builder.toString());
     }
 
+    public static String prettyName(String name) {
+        var builder = new StringBuilder();
+        buildUrlFragment(builder, cleanString(name));
+        return builder.toString();
+    }
+
     private static String nodeTypeMapping(NodeType nodeType) {
         return switch (nodeType) {
             case SUBJECT -> "/f";

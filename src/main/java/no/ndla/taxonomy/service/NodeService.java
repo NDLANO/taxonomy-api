@@ -358,6 +358,22 @@ public class NodeService {
                                     }
                                 })
                                 .toList();
+                        var url = PrettyUrlUtil.createPrettyUrl(
+                                        Optional.of(context.rootName()),
+                                        LanguageField.fromNode(node),
+                                        language,
+                                        context.contextId(),
+                                        node.getNodeType())
+                                .orElse(context.path());
+
+                        var defaultUrl = PrettyUrlUtil.createPrettyUrl(
+                                        Optional.of(context.rootName()),
+                                        LanguageField.fromNode(node),
+                                        Constants.DefaultLanguage,
+                                        context.contextId(),
+                                        node.getNodeType())
+                                .orElse(context.path());
+
                         return new TaxonomyContextDTO(
                                 node.getPublicId(),
                                 node.getPublicId(),
@@ -378,13 +394,8 @@ public class NodeService {
                                 context.contextId(),
                                 context.rank(),
                                 context.connectionId(),
-                                PrettyUrlUtil.createPrettyUrl(
-                                                Optional.of(context.rootName()),
-                                                LanguageField.fromNode(node),
-                                                language,
-                                                context.contextId(),
-                                                node.getNodeType())
-                                        .orElse(context.path()),
+                                url,
+                                defaultUrl,
                                 parents);
                     });
                 })

@@ -33,6 +33,7 @@ import java.util.Optional;
             "rank",
             "connectionId",
             "url",
+            "defaultUrl",
             "parents",
             "parentContextIds",
             "relevanceId",
@@ -98,6 +99,9 @@ public record TaxonomyContextDTO(
 
         @JsonProperty @Schema(description = "Pretty-url of this particular context")
         String url,
+
+        @JsonProperty @Schema(description = "Pretty-url of this particular context in the default language")
+        String defaultUrl,
 
         @JsonProperty @Schema(description = "List of all parents to this context. Empty if node is fetched as child")
         List<TaxonomyCrumbDTO> parents) {}
