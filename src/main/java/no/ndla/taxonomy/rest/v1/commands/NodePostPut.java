@@ -20,6 +20,7 @@ import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.UpdatableDto;
 import no.ndla.taxonomy.service.dtos.QualityEvaluationDTO;
+import no.ndla.taxonomy.service.dtos.TechnicalEvaluationDTO;
 
 @Schema(name = "NodePostPut")
 public class NodePostPut implements UpdatableDto<Node> {
@@ -71,6 +72,17 @@ public class NodePostPut implements UpdatableDto<Node> {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public UpdateOrDelete<QualityEvaluationDTO> qualityEvaluation = UpdateOrDelete.Default();
 
+    @JsonProperty
+    @Schema(
+            implementation = TechnicalEvaluationDTO.class,
+            description =
+                    "The technical evaluation of the node. Contains a flag and an optional comment. Can be null to remove existing evaluation.",
+            types = {"object", "null"})
+    @JsonDeserialize(using = TechnicalEvaluationDTODeserializer.class)
+    @JsonSerialize(using = TechnicalEvaluationDTOSerializer.class)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public UpdateOrDelete<TechnicalEvaluationDTO> technicalEvaluation = UpdateOrDelete.Default();
+
     public Optional<String> getNodeId() {
         return nodeId;
     }
@@ -99,6 +111,16 @@ public class NodePostPut implements UpdatableDto<Node> {
             this.qualityEvaluation.getValue().ifPresent(qe -> {
                 node.setQualityEvaluation(qe.getGrade());
                 node.setQualityEvaluationComment(qe.getNote());
+            });
+        }
+
+        if (this.technicalEvaluation.isDelete()) {
+            node.setRequiresTechnicalEvaluation(false);
+            node.setTechnicalEvaluationComment(Optional.empty());
+        } else {
+            this.technicalEvaluation.getValue().ifPresent(te -> {
+                node.setRequiresTechnicalEvaluation(te.requiresEvaluation());
+                node.setTechnicalEvaluationComment(te.requiresEvaluation() ? te.getComment() : Optional.empty());
             });
         }
 

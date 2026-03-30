@@ -89,6 +89,12 @@ public class Node extends DomainObject implements EntityWithMetadata {
     @Column(name = "child_quality_evaluation_count")
     private int childQualityEvaluationCount;
 
+    @Column(name = "requires_technical_evaluation")
+    private boolean requiresTechnicalEvaluation;
+
+    @Column(name = "technical_evaluation_comment")
+    private String technicalEvaluationComment;
+
     // Needed for hibernate
     public Node() {}
 
@@ -274,6 +280,22 @@ public class Node extends DomainObject implements EntityWithMetadata {
 
     public void setQualityEvaluationComment(Optional<String> qualityEvaluationComment) {
         this.qualityEvaluationComment = qualityEvaluationComment.orElse(null);
+    }
+
+    public boolean requiresTechnicalEvaluation() {
+        return requiresTechnicalEvaluation;
+    }
+
+    public void setRequiresTechnicalEvaluation(boolean requiresTechnicalEvaluation) {
+        this.requiresTechnicalEvaluation = requiresTechnicalEvaluation;
+    }
+
+    public Optional<String> getTechnicalEvaluationComment() {
+        return Optional.ofNullable(technicalEvaluationComment);
+    }
+
+    public void setTechnicalEvaluationComment(Optional<String> technicalEvaluationComment) {
+        this.technicalEvaluationComment = technicalEvaluationComment.orElse(null);
     }
 
     public String getPathPart() {

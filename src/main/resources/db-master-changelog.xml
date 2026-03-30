@@ -868,4 +868,11 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20260324 Add requires_technical_evaluation and technical_evaluation_comment to node" author="Amandus Thorsrud">
+        <addColumn tableName="node">
+            <column name="requires_technical_evaluation" type="boolean" />
+            <column name="technical_evaluation_comment" type="text"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
