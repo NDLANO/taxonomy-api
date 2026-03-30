@@ -2292,6 +2292,8 @@ export type components = {
             resourceTypes: components["schemas"]["ResourceTypeWithConnection"][];
             /** @description List of language codes supported by translations */
             supportedLanguages: string[];
+            /** @description The technical evaluation of the node. */
+            technicalEvaluation?: components["schemas"]["TechnicalEvaluationDTO"];
             /** @description All translations of this node */
             translations: components["schemas"]["Translation"][];
             /** @description A pretty url based on name and context. Empty if no context. */
@@ -2389,6 +2391,8 @@ export type components = {
             resourceTypes: components["schemas"]["ResourceTypeWithConnection"][];
             /** @description List of language codes supported by translations */
             supportedLanguages: string[];
+            /** @description The technical evaluation of the node. */
+            technicalEvaluation?: components["schemas"]["TechnicalEvaluationDTO"];
             /** @description All translations of this node */
             translations: components["schemas"]["Translation"][];
             /** @description A pretty url based on name and context. Empty if no context. */
@@ -2529,6 +2533,8 @@ export type components = {
              * @description The node is a root node. Default is false. Only used if present.
              */
             root?: boolean;
+            /** @description The technical evaluation of the node. Contains a flag and an optional comment. Can be null to remove existing evaluation. */
+            technicalEvaluation?: components["schemas"]["TechnicalEvaluationDTO"];
             /** @description The node is visible. Default is true. */
             visible?: boolean;
         };
@@ -2755,6 +2761,8 @@ export type components = {
             resourceTypes?: components["schemas"]["ResourceTypeWithConnection"][];
             /** @description List of language codes supported by translations */
             supportedLanguages?: string[];
+            /** @description The technical evaluation of the node. */
+            technicalEvaluation?: components["schemas"]["TechnicalEvaluationDTO"];
             /** @description All translations of this node */
             translations?: components["schemas"]["Translation"][];
             /** @description A pretty url based on name and context. Empty if no context. */
@@ -3214,6 +3222,12 @@ export type components = {
             /** @description The context url */
             url: string;
         };
+        TechnicalEvaluationDTO: {
+            /** @description Notes for the technical evaluation of this node. */
+            comment?: string;
+            /** @description Whether this node requires a technical evaluation. */
+            requiresEvaluation: boolean;
+        };
         /** @description The new topic */
         TopicPOST: {
             /**
@@ -3570,6 +3584,7 @@ export type SubjectTopicPOST = components['schemas']['SubjectTopicPOST'];
 export type SubjectTopicPUT = components['schemas']['SubjectTopicPUT'];
 export type TaxonomyContext = components['schemas']['TaxonomyContext'];
 export type TaxonomyCrumb = components['schemas']['TaxonomyCrumb'];
+export type TechnicalEvaluationDTO = components['schemas']['TechnicalEvaluationDTO'];
 export type TopicPOST = components['schemas']['TopicPOST'];
 export type TopicPostPut = components['schemas']['TopicPostPut'];
 export type TopicResource = components['schemas']['TopicResource'];
