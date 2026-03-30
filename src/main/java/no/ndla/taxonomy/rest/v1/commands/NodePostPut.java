@@ -120,7 +120,7 @@ public class NodePostPut implements UpdatableDto<Node> {
         } else {
             this.technicalEvaluation.getValue().ifPresent(te -> {
                 node.setRequiresTechnicalEvaluation(te.requiresEvaluation());
-                node.setTechnicalEvaluationComment(te.getComment());
+                node.setTechnicalEvaluationComment(te.requiresEvaluation() ? te.getComment() : Optional.empty());
             });
         }
 
