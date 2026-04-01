@@ -875,4 +875,9 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="20260401 Make requires_technical_evaluation not nullable" author="you">
+        <addNotNullConstraint tableName="node" columnName="requires_technical_evaluation" columnDataType="boolean"
+                              defaultNullValue="false"/>
+    </changeSet>
+
 </databaseChangeLog>
