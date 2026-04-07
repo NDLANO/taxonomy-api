@@ -21,7 +21,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <javamelody.version>2.5.0</javamelody.version>
         <spotless.version>3.1.0</spotless.version>
         <testcontainers.version>2.0.3</testcontainers.version>
@@ -287,7 +287,7 @@
                     <java>
                         <cleanthat>
                             <version>2.24</version>
-                            <sourceJdk>21</sourceJdk>
+                            <sourceJdk>${java.version}</sourceJdk>
                             <mutators>
                                 <mutator>SafeAndConsensual</mutator>
                             </mutators>
