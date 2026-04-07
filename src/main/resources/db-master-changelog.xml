@@ -875,9 +875,19 @@
         </addColumn>
     </changeSet>
 
-    <changeSet id="20260401 Make requires_technical_evaluation not nullable" author="you">
+    <changeSet id="20260401 Make requires_technical_evaluation not nullable" author="Amandus Thorsrud">
         <addNotNullConstraint tableName="node" columnName="requires_technical_evaluation" columnDataType="boolean"
                               defaultNullValue="false"/>
+    </changeSet>
+
+    <changeSet id="20260407" author="Amandus Thorsrud">
+        <dropNotNullConstraint
+                tableName="node"
+                columnName="requires_technical_evaluation"
+                columnDataType="boolean"/>
+        <update tableName="node">
+            <column name="requires_technical_evaluation" value="null"/>
+        </update>
     </changeSet>
 
 </databaseChangeLog>

@@ -12,15 +12,12 @@ import java.util.Optional;
 import no.ndla.taxonomy.service.dtos.TechnicalEvaluationDTO;
 
 public class TechnicalEvaluationDTODeserializer extends UpdateOrDelete.Deserializer<TechnicalEvaluationDTO> {
-    private Optional<String> getComment(JsonNode node) {
-        return Optional.ofNullable(node.get("comment")).map(JsonNode::textValue);
-    }
-
     @Override
     protected TechnicalEvaluationDTO deserializeInner(JsonNode node) {
-        var requiresEvaluationNode = node.get("requiresEvaluation");
-        var requiresEvaluation = requiresEvaluationNode != null && requiresEvaluationNode.asBoolean();
-        var comment = getComment(node);
+        var requiresEvaluation = Optional.ofNullable(node.get("requiresEvaluation"))
+                .filter(JsonNode::isBoolean)
+                .map(JsonNode::booleanValue);
+        var comment = Optional.ofNullable(node.get("comment")).map(JsonNode::textValue);
         return new TechnicalEvaluationDTO(requiresEvaluation, comment);
     }
 }
