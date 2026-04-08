@@ -14,9 +14,8 @@ import no.ndla.taxonomy.service.dtos.TechnicalEvaluationDTO;
 public class TechnicalEvaluationDTODeserializer extends UpdateOrDelete.Deserializer<TechnicalEvaluationDTO> {
     @Override
     protected TechnicalEvaluationDTO deserializeInner(JsonNode node) {
-        var requiresEvaluation = Optional.ofNullable(node.get("requiresEvaluation"))
-                .filter(JsonNode::isBoolean)
-                .map(JsonNode::booleanValue);
+        var requiresEvaluationNode = node.get("requiresEvaluation");
+        var requiresEvaluation = requiresEvaluationNode != null && requiresEvaluationNode.booleanValue();
         var comment = Optional.ofNullable(node.get("comment")).map(JsonNode::textValue);
         return new TechnicalEvaluationDTO(requiresEvaluation, comment);
     }
