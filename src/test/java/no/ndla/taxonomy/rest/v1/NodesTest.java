@@ -1840,12 +1840,12 @@ public class NodesTest extends RestTest {
     }
 
     @Test
-    public void requires_technical_evaluation_defaults_to_false() {
+    public void requires_technical_evaluation_defaults_to_empty() {
         var node = builder.node(NodeType.TOPIC);
         var id = node.getPublicId();
 
         var found = nodeRepository.getByPublicId(id);
-        assertFalse(found.requiresTechnicalEvaluation());
+        assertTrue(found.requiresTechnicalEvaluation().isEmpty());
         assertTrue(found.getTechnicalEvaluationComment().isEmpty());
     }
 
@@ -1854,25 +1854,25 @@ public class NodesTest extends RestTest {
         var command = new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
-                technicalEvaluation =
-                        UpdateOrDelete.Update(new TechnicalEvaluationDTO(true, Optional.of("Needs review")));
+                technicalEvaluation = UpdateOrDelete.Update(
+                        new TechnicalEvaluationDTO(Optional.of(true), Optional.of("Needs review")));
             }
         };
         var id = getId(testUtils.createResource("/v1/nodes", command));
 
         var found = nodeRepository.getByPublicId(id);
-        assertTrue(found.requiresTechnicalEvaluation());
+        assertTrue(found.requiresTechnicalEvaluation().orElseThrow());
         assertEquals("Needs review", found.getTechnicalEvaluationComment().orElseThrow());
 
         var command2 = new NodePostPut() {
             {
-                technicalEvaluation =
-                        UpdateOrDelete.Update(new TechnicalEvaluationDTO(false, Optional.of("Needs review")));
+                technicalEvaluation = UpdateOrDelete.Update(
+                        new TechnicalEvaluationDTO(Optional.of(false), Optional.of("Needs review")));
             }
         };
         testUtils.updateResource("/v1/nodes/" + id, command2);
         var found2 = nodeRepository.getByPublicId(id);
-        assertFalse(found2.requiresTechnicalEvaluation());
+        assertFalse(found2.requiresTechnicalEvaluation().orElseThrow());
         assertTrue(found2.getTechnicalEvaluationComment().isEmpty());
     }
 
@@ -1881,25 +1881,26 @@ public class NodesTest extends RestTest {
         var command = new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
-                technicalEvaluation = UpdateOrDelete.Update(new TechnicalEvaluationDTO(true, Optional.empty()));
+                technicalEvaluation =
+                        UpdateOrDelete.Update(new TechnicalEvaluationDTO(Optional.of(true), Optional.empty()));
             }
         };
         var id = getId(testUtils.createResource("/v1/nodes", command));
 
         var found = nodeRepository.getByPublicId(id);
-        assertTrue(found.requiresTechnicalEvaluation());
+        assertTrue(found.requiresTechnicalEvaluation().orElseThrow());
         assertTrue(found.getTechnicalEvaluationComment().isEmpty());
 
         var command2 = new NodePostPut() {
             {
-                technicalEvaluation =
-                        UpdateOrDelete.Update(new TechnicalEvaluationDTO(true, Optional.of("Needs review")));
+                technicalEvaluation = UpdateOrDelete.Update(
+                        new TechnicalEvaluationDTO(Optional.of(true), Optional.of("Needs review")));
             }
         };
         testUtils.updateResource("/v1/nodes/" + id, command2);
 
         var found2 = nodeRepository.getByPublicId(id);
-        assertTrue(found2.requiresTechnicalEvaluation());
+        assertTrue(found2.requiresTechnicalEvaluation().orElseThrow());
         assertEquals("Needs review", found2.getTechnicalEvaluationComment().orElseThrow());
     }
 
@@ -1908,14 +1909,14 @@ public class NodesTest extends RestTest {
         var command = new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
-                technicalEvaluation =
-                        UpdateOrDelete.Update(new TechnicalEvaluationDTO(false, Optional.of("Needs review")));
+                technicalEvaluation = UpdateOrDelete.Update(
+                        new TechnicalEvaluationDTO(Optional.of(false), Optional.of("Needs review")));
             }
         };
         var id = getId(testUtils.createResource("/v1/nodes", command));
 
         var found = nodeRepository.getByPublicId(id);
-        assertFalse(found.requiresTechnicalEvaluation());
+        assertFalse(found.requiresTechnicalEvaluation().orElseThrow());
         assertTrue(found.getTechnicalEvaluationComment().isEmpty());
     }
 
@@ -1924,8 +1925,8 @@ public class NodesTest extends RestTest {
         var command = new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
-                technicalEvaluation =
-                        UpdateOrDelete.Update(new TechnicalEvaluationDTO(true, Optional.of("Needs review")));
+                technicalEvaluation = UpdateOrDelete.Update(
+                        new TechnicalEvaluationDTO(Optional.of(true), Optional.of("Needs review")));
             }
         };
         var id = getId(testUtils.createResource("/v1/nodes", command));
@@ -1934,8 +1935,32 @@ public class NodesTest extends RestTest {
 
         var nodeDTO = testUtils.getObject(NodeDTO.class, response);
         var te = nodeDTO.getTechnicalEvaluation().orElseThrow();
-        assertTrue(te.requiresEvaluation());
+        assertTrue(te.requiresEvaluation().orElseThrow());
         assertEquals("Needs review", te.getComment().orElseThrow());
+    }
+
+    @Test
+    public void that_setting_comment_with_empty_requires_evaluation_does_nothing() throws Exception {
+        var command = new NodePostPut() {
+            {
+                nodeType = NodeType.TOPIC;
+                technicalEvaluation =
+                        UpdateOrDelete.Update(new TechnicalEvaluationDTO(Optional.of(true), Optional.empty()));
+            }
+        };
+        var id = getId(testUtils.createResource("/v1/nodes", command));
+
+        var command2 = new NodePostPut() {
+            {
+                technicalEvaluation = UpdateOrDelete.Update(
+                        new TechnicalEvaluationDTO(Optional.empty(), Optional.of("Needs review")));
+            }
+        };
+        testUtils.updateResource("/v1/nodes/" + id, command2);
+
+        var found = nodeRepository.getByPublicId(id);
+        assertTrue(found.requiresTechnicalEvaluation().orElseThrow());
+        assertTrue(found.getTechnicalEvaluationComment().isEmpty());
     }
 
     public void testQualityEvaluationAverage(Node inputNode, int expectedCount, double expectedAverage) {

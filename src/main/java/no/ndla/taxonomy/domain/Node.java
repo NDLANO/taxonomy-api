@@ -90,7 +90,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     private int childQualityEvaluationCount;
 
     @Column(name = "requires_technical_evaluation")
-    private boolean requiresTechnicalEvaluation;
+    private Boolean requiresTechnicalEvaluation;
 
     @Column(name = "technical_evaluation_comment")
     private String technicalEvaluationComment;
@@ -282,12 +282,12 @@ public class Node extends DomainObject implements EntityWithMetadata {
         this.qualityEvaluationComment = qualityEvaluationComment.orElse(null);
     }
 
-    public boolean requiresTechnicalEvaluation() {
-        return requiresTechnicalEvaluation;
+    public Optional<Boolean> requiresTechnicalEvaluation() {
+        return Optional.ofNullable(requiresTechnicalEvaluation);
     }
 
-    public void setRequiresTechnicalEvaluation(boolean requiresTechnicalEvaluation) {
-        this.requiresTechnicalEvaluation = requiresTechnicalEvaluation;
+    public void setRequiresTechnicalEvaluation(Optional<Boolean> requiresTechnicalEvaluation) {
+        this.requiresTechnicalEvaluation = requiresTechnicalEvaluation.orElse(null);
     }
 
     public Optional<String> getTechnicalEvaluationComment() {

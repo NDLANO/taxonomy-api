@@ -16,19 +16,19 @@ import no.ndla.taxonomy.domain.Node;
 public class TechnicalEvaluationDTO {
     @JsonProperty
     @Schema(description = "Whether this node requires a technical evaluation.")
-    private boolean requiresEvaluation;
+    private Optional<Boolean> requiresEvaluation = Optional.empty();
 
     @JsonProperty
     @Schema(description = "Notes for the technical evaluation of this node.")
     private Optional<String> comment = Optional.empty();
 
-    public TechnicalEvaluationDTO(boolean requiresEvaluation, Optional<String> comment) {
+    public TechnicalEvaluationDTO(Optional<Boolean> requiresEvaluation, Optional<String> comment) {
         this.requiresEvaluation = requiresEvaluation;
         this.comment = comment;
     }
 
     public static Optional<TechnicalEvaluationDTO> fromNode(Node node) {
-        if (!node.requiresTechnicalEvaluation()
+        if (node.requiresTechnicalEvaluation().isEmpty()
                 && node.getTechnicalEvaluationComment().isEmpty()) {
             return Optional.empty();
         }
@@ -36,11 +36,11 @@ public class TechnicalEvaluationDTO {
                 new TechnicalEvaluationDTO(node.requiresTechnicalEvaluation(), node.getTechnicalEvaluationComment()));
     }
 
-    public boolean requiresEvaluation() {
+    public Optional<Boolean> requiresEvaluation() {
         return requiresEvaluation;
     }
 
-    public void setRequiresEvaluation(boolean requiresEvaluation) {
+    public void setRequiresEvaluation(Optional<Boolean> requiresEvaluation) {
         this.requiresEvaluation = requiresEvaluation;
     }
 
