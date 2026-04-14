@@ -88,8 +88,8 @@ public class QualityEvaluationService {
         }
 
         // Lock the parent tree once upfront to avoid double lock+refresh discarding changes.
-        var allNodes = lockParentTree(List.of(parent));
-        lockAndRefresh(child);
+        // var allNodes = lockParentTree(List.of(parent));
+        // lockAndRefresh(child);
 
         // Update parents quality evaluation average with the newly linked one.
         updateQualityEvaluationOfParents(
@@ -99,7 +99,7 @@ public class QualityEvaluationService {
             addGradeAverageTreeToParents(parent, childAverage);
         });
 
-        nodeRepository.saveAll(allNodes);
+        // nodeRepository.saveAll(allNodes);
     }
 
     private void addGradeAverageTreeToParents(Node node, GradeAverage averageToAdd) {
@@ -133,9 +133,9 @@ public class QualityEvaluationService {
         if (child.getChildQualityEvaluationAverage().isEmpty()) return;
         var childAverage = child.getChildQualityEvaluationAverage().get();
 
-        var allNodes = lockParentTree(List.of(parent));
+        // var allNodes = lockParentTree(List.of(parent));
         removeGradeAverageTreeFromParents(parent, childAverage);
-        nodeRepository.saveAll(allNodes);
+        // nodeRepository.saveAll(allNodes);
     }
 
     @Transactional
@@ -154,9 +154,9 @@ public class QualityEvaluationService {
     @Transactional
     public void updateQualityEvaluationOfRecursive(
             Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        var allNodes = lockParentTree(parents);
+        // var allNodes = lockParentTree(parents);
         updateQualityEvaluationOfRecursiveUnlocked(parents, oldGrade, newGrade);
-        nodeRepository.saveAll(allNodes);
+        // nodeRepository.saveAll(allNodes);
     }
 
     private void updateQualityEvaluationOfRecursiveUnlocked(
