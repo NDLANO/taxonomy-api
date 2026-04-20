@@ -2240,6 +2240,10 @@ export type components = {
             contextids: string[];
             /** @description A list of all contexts this node is part of */
             contexts: components["schemas"]["TaxonomyContext"][];
+            /** @description A pretty url based on the name and context in the default language. */
+            defaultUrl?: string;
+            /** @description Url safe name for the node in the default language. */
+            defaultUrlName?: string;
             /** @description A number representing the average grade of all children nodes recursively. */
             gradeAverage?: components["schemas"]["GradeAverage"];
             /**
@@ -2298,6 +2302,8 @@ export type components = {
             translations: components["schemas"]["Translation"][];
             /** @description A pretty url based on name and context. Empty if no context. */
             url?: string;
+            /** @description Url safe names for the node. */
+            urlName?: string[];
         };
         NodeChild: {
             /**
@@ -2327,6 +2333,10 @@ export type components = {
             contextids: string[];
             /** @description A list of all contexts this node is part of */
             contexts: components["schemas"]["TaxonomyContext"][];
+            /** @description A pretty url based on the name and context in the default language. */
+            defaultUrl?: string;
+            /** @description Url safe name for the node in the default language. */
+            defaultUrlName?: string;
             /** @description A number representing the average grade of all children nodes recursively. */
             gradeAverage?: components["schemas"]["GradeAverage"];
             /**
@@ -2397,6 +2407,8 @@ export type components = {
             translations: components["schemas"]["Translation"][];
             /** @description A pretty url based on name and context. Empty if no context. */
             url?: string;
+            /** @description Url safe names for the node. */
+            urlName?: string[];
         };
         NodeConnection: {
             /**
@@ -2696,6 +2708,10 @@ export type components = {
             contextids?: string[];
             /** @description A list of all contexts this node is part of */
             contexts?: components["schemas"]["TaxonomyContext"][];
+            /** @description A pretty url based on the name and context in the default language. */
+            defaultUrl?: string;
+            /** @description Url safe name for the node in the default language. */
+            defaultUrlName?: string;
             /** @description A number representing the average grade of all children nodes recursively. */
             gradeAverage?: components["schemas"]["GradeAverage"];
             /**
@@ -2767,6 +2783,8 @@ export type components = {
             translations?: components["schemas"]["Translation"][];
             /** @description A pretty url based on name and context. Empty if no context. */
             url?: string;
+            /** @description Url safe names for the node. */
+            urlName?: string[];
         };
         QualityEvaluationDTO: {
             /** @description The grade (1-5) of the article */
@@ -3154,6 +3172,8 @@ export type components = {
             contextId: string;
             /** @description Whether a 'standard'-article, 'topic-article'-article or a 'learningpath' */
             contextType?: string;
+            /** @description Pretty-url of this particular context in the default language */
+            defaultUrl: string;
             /**
              * Format: uri
              * @description The publicId of the node connected via content-uri
