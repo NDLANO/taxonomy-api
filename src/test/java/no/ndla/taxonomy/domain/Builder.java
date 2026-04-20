@@ -128,7 +128,6 @@ public class Builder {
         if (null != consumer) consumer.accept(node);
 
         entityManager.persist(node.node);
-
         contextUpdaterService.updateContexts(node.node);
 
         return node.node;
@@ -377,7 +376,6 @@ public class Builder {
 
         public NodeBuilder child(Node child) {
             entityManager.persist(NodeConnection.create(node, child, Relevance.CORE));
-
             contextUpdaterService.updateContexts(child);
 
             return this;
