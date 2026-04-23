@@ -763,7 +763,7 @@
             <column name="child_quality_evaluation_sum" type="int" defaultValueNumeric="0" />
         </addColumn>
     </changeSet>
-    
+
     <changeSet id="20250819 Recreate resource_resourcetype foreign key with cascade delete" author="Gunnar Velle">
         <dropForeignKeyConstraint baseTableName="resource_resource_type" constraintName="resource_resource_type_resource_type_id_fkey"/>
         <addForeignKeyConstraint baseTableName="resource_resource_type" baseColumnNames="resource_type_id"
@@ -779,7 +779,7 @@
             WHERE public_id = 'urn:resourcetype:tasksAndActivities';
         </sql>
     </changeSet>
-    
+
     <changeSet id="20251007 Add NodeConnectionType" author="Gunnar Velle">
         <addColumn tableName="node_connection">
             <column name="connection_type" type="varchar(255)" defaultValue="BRANCH">
@@ -887,6 +887,14 @@
                 columnDataType="boolean"/>
         <update tableName="node">
             <column name="requires_technical_evaluation" value="null"/>
+        </update>
+    </changeSet>
+
+    <changeSet id="20260423 Set requires_technical_evaluation to true if null and has quality evaluation"
+               author="Amandus Thorsrud">
+        <update tableName="node">
+            <column name="requires_technical_evaluation" valueBoolean="true"/>
+            <where>requires_technical_evaluation IS NULL AND quality_evaluation IS NOT NULL</where>
         </update>
     </changeSet>
 
